@@ -100,10 +100,25 @@ active_loc  = st.session_state.get(active_loc_key)
 active_step = st.session_state.get(active_step_key)
 
 # ── Top controls ──────────────────────────────────────────────────────────────
-ctrl1, ctrl2, ctrl3, ctrl4 = st.columns([3, 1, 1, 1])
+ctrl1, ctrl2, ctrl3, ctrl4, ctrl5 = st.columns([3, 1, 1, 1, 1])
 
 with ctrl2:
     save_clicked = st.button("💾 Save", use_container_width=True, type="primary")
+
+with ctrl5:
+    if st.button("🚀 Push to Render", use_container_width=True,
+                 help="Commit all saved coord changes and push to GitHub so Render picks them up."):
+        import subprocess, os
+        script = BASE_DIR / "push_coords.sh"
+        result = subprocess.run(
+            ["bash", str(script)],
+            capture_output=True, text=True, cwd=str(BASE_DIR)
+        )
+        output = (result.stdout + result.stderr).strip()
+        if result.returncode == 0:
+            st.success("✅ Pushed to Render! Redeploy starts in ~1 minute.\n\n" + output)
+        else:
+            st.error("Push failed:\n\n" + output)
 
 with ctrl3:
     if st.button("🤖 Auto-configure", use_container_width=True,

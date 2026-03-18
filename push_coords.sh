@@ -4,7 +4,7 @@
 
 cd "$(dirname "$0")"
 
-CHANGED=$(git diff --name-only config/annotation_coords/ && git ls-files --others --exclude-standard config/annotation_coords/)
+CHANGED=$(git diff --name-only config/ && git ls-files --others --exclude-standard config/)
 
 if [ -z "$CHANGED" ]; then
   echo "No coord changes to push."
@@ -15,7 +15,7 @@ echo "Changed files:"
 echo "$CHANGED"
 echo ""
 
-git add config/annotation_coords/
+git add config/
 git commit -m "Update annotation positions"
 git push
 

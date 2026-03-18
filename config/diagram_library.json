@@ -13,7 +13,7 @@
           "category_id": "ASD_VSD_CCAVC",
           "anatomy_type": "biventricle",
           "location_set": "standard_biventricle",
-          "has_coords": false,
+          "has_coords": true,
           "coord_file": "config/annotation_coords/AP_window.json",
           "image_width": 520,
           "image_height": 505
@@ -26,7 +26,7 @@
           "category_id": "ASD_VSD_CCAVC",
           "anatomy_type": "biventricle",
           "location_set": "standard_biventricle",
-          "has_coords": false,
+          "has_coords": true,
           "coord_file": "config/annotation_coords/ASD_-_Amplatzer.json",
           "image_width": 555,
           "image_height": 525
@@ -39,7 +39,7 @@
           "category_id": "ASD_VSD_CCAVC",
           "anatomy_type": "biventricle",
           "location_set": "standard_biventricle",
-          "has_coords": false,
+          "has_coords": true,
           "coord_file": "config/annotation_coords/ASD_.json",
           "image_width": 645,
           "image_height": 537
@@ -52,7 +52,7 @@
           "category_id": "ASD_VSD_CCAVC",
           "anatomy_type": "biventricle",
           "location_set": "standard_biventricle",
-          "has_coords": false,
+          "has_coords": true,
           "coord_file": "config/annotation_coords/ASD_VSD_PDA.json",
           "image_width": 606,
           "image_height": 500
@@ -65,7 +65,7 @@
           "category_id": "ASD_VSD_CCAVC",
           "anatomy_type": "biventricle",
           "location_set": "standard_biventricle",
-          "has_coords": false,
+          "has_coords": true,
           "coord_file": "config/annotation_coords/ASD_VSD.json",
           "image_width": 823,
           "image_height": 506
@@ -78,7 +78,7 @@
           "category_id": "ASD_VSD_CCAVC",
           "anatomy_type": "biventricle",
           "location_set": "standard_biventricle",
-          "has_coords": false,
+          "has_coords": true,
           "coord_file": "config/annotation_coords/ASD_sinus_venosus_SVC_type.json",
           "image_width": 672,
           "image_height": 505
@@ -91,7 +91,7 @@
           "category_id": "ASD_VSD_CCAVC",
           "anatomy_type": "biventricle",
           "location_set": "standard_biventricle",
-          "has_coords": false,
+          "has_coords": true,
           "coord_file": "config/annotation_coords/ASD_PDA.json",
           "image_width": 606,
           "image_height": 500
@@ -104,7 +104,7 @@
           "category_id": "ASD_VSD_CCAVC",
           "anatomy_type": "post_glenn",
           "location_set": "post_glenn",
-          "has_coords": false,
+          "has_coords": true,
           "coord_file": "config/annotation_coords/CAVC_-_PAB_with_BDG.json",
           "image_width": 706,
           "image_height": 522
@@ -117,7 +117,7 @@
           "category_id": "ASD_VSD_CCAVC",
           "anatomy_type": "biventricle",
           "location_set": "standard_biventricle",
-          "has_coords": false,
+          "has_coords": true,
           "coord_file": "config/annotation_coords/VSD_CoA_bicuspid_AoV_s_p_repair.json",
           "image_width": 672,
           "image_height": 529
@@ -130,7 +130,7 @@
           "category_id": "ASD_VSD_CCAVC",
           "anatomy_type": "biventricle",
           "location_set": "standard_biventricle",
-          "has_coords": false,
+          "has_coords": true,
           "coord_file": "config/annotation_coords/VSD.json",
           "image_width": 599,
           "image_height": 510
