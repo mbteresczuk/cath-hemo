@@ -7,8 +7,8 @@
     "SVC": {
       "side": "right",
       "annotation_type": "saturation",
-      "sat_x": 719,
-      "sat_y": 69
+      "sat_x": 142,
+      "sat_y": 107
     },
     "IVC": {
       "side": "right",
@@ -28,7 +28,7 @@
       "side": "right",
       "annotation_type": "saturation_and_pressure",
       "sat_x": 144,
-      "sat_y": 97,
+      "sat_y": 76,
       "pressure_x": 82,
       "pressure_y": 84
     },
@@ -45,8 +45,8 @@
       "annotation_type": "saturation_and_pressure",
       "sat_x": 355,
       "sat_y": 140,
-      "pressure_x": 422,
-      "pressure_y": 142
+      "pressure_x": 415,
+      "pressure_y": 141
     },
     "RPCWP": {
       "side": "left",
