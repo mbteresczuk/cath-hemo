@@ -183,7 +183,21 @@
       "id": "Uploaded",
       "display_name": "Uploaded Diagrams",
       "folder": "diagrams/Uploaded",
-      "diagrams": []
+      "diagrams": [
+        {
+          "id": "tric_atresia__tga_Glenn",
+          "filename": "tric atresia, tga Glenn.bmp",
+          "display_name": "tric atresia, tga Glenn",
+          "path": "diagrams/Uploaded/tric atresia, tga Glenn.bmp",
+          "category_id": "Uploaded",
+          "anatomy_type": "post_glenn",
+          "location_set": "post_glenn",
+          "has_coords": false,
+          "coord_file": "config/annotation_coords/tric_atresia__tga_Glenn.json",
+          "image_width": 845,
+          "image_height": 525
+        }
+      ]
     }
   ]
 }
