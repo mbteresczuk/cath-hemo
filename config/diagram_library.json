@@ -192,7 +192,7 @@
           "category_id": "Uploaded",
           "anatomy_type": "post_glenn",
           "location_set": "post_glenn",
-          "has_coords": false,
+          "has_coords": true,
           "coord_file": "config/annotation_coords/tric_atresia__tga_Glenn.json",
           "image_width": 845,
           "image_height": 525
