@@ -48,6 +48,12 @@ COLORS = {
 CIRCLE_RADIUS = 16
 CIRCLE_OUTLINE_WIDTH = 2
 
+# Ventricular chambers display sys/mean (e.g. 34/10) instead of the
+# standard sys/dia block with mean below.
+_VENTRICULAR_LOCS = {
+    "RV", "LV", "RV_systemic", "LV_systemic", "LV_pulmonary",
+}
+
 
 def _load_fonts():
     """Load Arial fonts from macOS system; fall back to default if unavailable."""
@@ -135,13 +141,27 @@ def draw_saturation_circle(draw, cx, cy, saturation, side, fonts, radius=CIRCLE_
         draw.text((cx - tw // 2, cy - th // 2), text, fill=color, font=font)
 
 
-def _calc_pressure_bbox(draw, x, y, systolic, diastolic, mean, fonts, anchor="left"):
+def _calc_pressure_bbox(draw, x, y, systolic, diastolic, mean, fonts, anchor="left",
+                        ventricular=False):
     """Calculate the bounding box for a pressure annotation block."""
     font_bold = fonts["bold_small"]
     font_reg = fonts["regular"]
 
     if systolic is None and diastolic is None:
         return None
+
+    if ventricular:
+        # Show sys/mean on one line (e.g. 34/10); ignore diastolic on diagram
+        if systolic is not None and mean is not None:
+            line1 = f"{int(systolic)}/{int(mean)}"
+        elif systolic is not None:
+            line1 = str(int(systolic))
+        else:
+            line1 = str(int(mean))
+        tw, th = _text_size(draw, line1, font_bold)
+        text_x = x - tw if anchor == "right" else x
+        pad = 2
+        return (text_x - pad, y - pad, text_x + tw + pad, y + th + pad)
 
     if systolic is not None and diastolic is not None:
         line1 = f"{int(systolic)}/{int(diastolic)}"
@@ -165,12 +185,19 @@ def _calc_pressure_bbox(draw, x, y, systolic, diastolic, mean, fonts, anchor="le
     return (text_x - pad, y - pad, text_x + max_w + pad, y + total_h + pad)
 
 
-def draw_pressure_annotation(draw, x, y, systolic, diastolic, mean, side, fonts, anchor="left"):
+def draw_pressure_annotation(draw, x, y, systolic, diastolic, mean, side, fonts,
+                             anchor="left", ventricular=False):
     """
-    Draw pressure in format:
+    Draw pressure annotation.
+
+    Standard format (atria, great vessels):
         systolic/diastolic
         ──────────────────
         mean
+
+    Ventricular format (RV, LV, etc.) — sys/mean on one line:
+        systolic/mean
+
     anchor: 'left' (x is left edge) or 'right' (x is right edge)
     White background ensures readability over anatomy lines.
     """
@@ -181,7 +208,24 @@ def draw_pressure_annotation(draw, x, y, systolic, diastolic, mean, side, fonts,
     if systolic is None and diastolic is None:
         return
 
-    # Build the top line
+    if ventricular:
+        # Single line: sys/mean (e.g. 34/10)
+        if systolic is not None and mean is not None:
+            line1 = f"{int(systolic)}/{int(mean)}"
+        elif systolic is not None:
+            line1 = str(int(systolic))
+        else:
+            line1 = str(int(mean))
+        tw, th = _text_size(draw, line1, font_bold)
+        text_x = x - tw if anchor == "right" else x
+        bbox = _calc_pressure_bbox(draw, x, y, systolic, diastolic, mean, fonts, anchor,
+                                   ventricular=True)
+        if bbox:
+            draw.rectangle(bbox, fill="white")
+        draw.text((text_x, y), line1, fill=color, font=font_bold)
+        return
+
+    # Standard format: sys/dia on top, mean below overline
     if systolic is not None and diastolic is not None:
         line1 = f"{int(systolic)}/{int(diastolic)}"
     elif systolic is not None:
@@ -369,16 +413,20 @@ def annotate_diagram(image_path: str, coords: dict, hemodynamics: dict) -> Image
                 draw_saturation_circle(draw, sat_cx, sat_cy, sat, side, fonts)
 
         elif ann_type == "saturation_and_pressure":
+            is_ventricular = loc_name in _VENTRICULAR_LOCS
             if sat_cx is not None and sat is not None:
                 draw_saturation_circle(draw, sat_cx, sat_cy, sat, side, fonts)
             if press_cx is not None and any(v is not None for v in [systolic, diastolic, mean]):
                 draw_pressure_annotation(draw, press_cx, press_cy,
-                                         systolic, diastolic, mean, side, fonts)
+                                         systolic, diastolic, mean, side, fonts,
+                                         ventricular=is_ventricular)
 
         elif ann_type == "pressure_only":
+            is_ventricular = loc_name in _VENTRICULAR_LOCS
             if press_cx is not None and any(v is not None for v in [systolic, diastolic, mean]):
                 draw_pressure_annotation(draw, press_cx, press_cy,
-                                         systolic, diastolic, mean, side, fonts)
+                                         systolic, diastolic, mean, side, fonts,
+                                         ventricular=is_ventricular)
 
         elif ann_type == "pcwp":
             if press_cx is not None:
