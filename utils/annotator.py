@@ -56,24 +56,30 @@ _VENTRICULAR_LOCS = {
 
 
 def _load_fonts():
-    """Load Arial fonts from macOS system; fall back to default if unavailable."""
+    """Load Calibri 11 fonts; fall back to Arial then PIL default."""
+    _here = Path(__file__).parent.parent / "assets" / "fonts"
+
+    calibri_regular = [
+        str(_here / "Calibri.ttf"),
+        "/Applications/Microsoft Word.app/Contents/Resources/DFonts/Calibri.ttf",
+        "/System/Library/Fonts/Supplemental/Arial.ttf",
+        "/Library/Fonts/Arial.ttf",
+    ]
+    calibri_bold = [
+        str(_here / "Calibrib.ttf"),
+        "/Applications/Microsoft Word.app/Contents/Resources/DFonts/Calibrib.ttf",
+        "/System/Library/Fonts/Supplemental/Arial Bold.ttf",
+        "/Library/Fonts/Arial Bold.ttf",
+    ]
+
     font_paths = {
-        "bold_large": [
-            "/System/Library/Fonts/Supplemental/Arial Bold.ttf",
-            "/Library/Fonts/Arial Bold.ttf",
-        ],
-        "regular": [
-            "/System/Library/Fonts/Supplemental/Arial.ttf",
-            "/Library/Fonts/Arial.ttf",
-        ],
-        "bold_small": [
-            "/System/Library/Fonts/Supplemental/Arial Bold.ttf",
-            "/Library/Fonts/Arial Bold.ttf",
-        ],
+        "bold_large": calibri_bold,
+        "regular":    calibri_regular,
+        "bold_small": calibri_bold,
     }
 
     fonts = {}
-    sizes = {"bold_large": 13, "regular": 11, "bold_small": 12}
+    sizes = {"bold_large": 11, "regular": 11, "bold_small": 11}
 
     for key, paths in font_paths.items():
         font = None
