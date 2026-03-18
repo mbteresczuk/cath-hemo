@@ -1,0 +1,504 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1"/>
+<meta name="apple-mobile-web-app-capable" content="yes"/>
+<meta name="apple-mobile-web-app-title" content="CathHemo"/>
+<meta name="theme-color" content="#8B1A2B"/>
+<title>Cath Hemo</title>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --crimson:#8B1A2B;--navy:#1B2B3A;--bg:#F8F6F3;--surface:#fff;
+  --border:#D8D3CC;--muted:#6B7280;
+}
+html,body{height:100%;background:var(--bg);color:var(--navy);
+  font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',system-ui,sans-serif;
+  font-size:16px;-webkit-tap-highlight-color:transparent}
+.screen{display:none;padding:20px 16px 32px;min-height:100vh}
+.screen.active{display:block}
+h1{font-size:22px;font-weight:700;margin-bottom:4px}
+h2{font-size:17px;font-weight:700;margin-bottom:14px}
+p.sub{color:var(--muted);font-size:14px;margin-bottom:18px}
+.btn{display:flex;align-items:center;justify-content:center;gap:8px;
+  width:100%;padding:14px;border-radius:10px;border:none;font-size:16px;
+  font-weight:600;cursor:pointer;margin-bottom:10px;transition:opacity .15s}
+.btn:active{opacity:.75}.btn:disabled{opacity:.4;pointer-events:none}
+.btn-primary{background:var(--crimson);color:#fff}
+.btn-secondary{background:var(--navy);color:#fff}
+.btn-outline{background:transparent;color:var(--crimson);border:1.5px solid var(--crimson)}
+.card{background:var(--surface);border:1px solid var(--border);border-radius:12px;
+  padding:16px;margin-bottom:14px}
+label{display:block;font-size:13px;font-weight:600;color:var(--muted);margin-bottom:6px}
+textarea,input[type=text]{width:100%;padding:11px 13px;border:1.5px solid var(--border);
+  border-radius:8px;font-size:14px;font-family:monospace;background:var(--bg);color:var(--navy);
+  resize:vertical;-webkit-appearance:none}
+textarea:focus,input:focus{outline:none;border-color:var(--crimson)}
+.pills{display:flex;background:#EDE9E3;border-radius:10px;padding:3px;margin-bottom:16px}
+.pill{flex:1;padding:9px;text-align:center;border-radius:8px;font-weight:600;
+  font-size:14px;cursor:pointer;color:var(--muted);border:none;background:none}
+.pill.active{background:var(--surface);color:var(--crimson);
+  box-shadow:0 1px 3px rgba(0,0,0,.12)}
+.tab-content{display:none}.tab-content.active{display:block}
+.camera-zone{display:flex;flex-direction:column;align-items:center;justify-content:center;
+  gap:12px;width:100%;padding:36px 0;border:2px dashed var(--border);border-radius:12px;
+  background:var(--bg);cursor:pointer;color:var(--muted);font-size:14px;font-weight:600;
+  margin-bottom:14px}
+.camera-zone svg{width:44px;height:44px}
+.preview-img{width:100%;border-radius:10px;margin-bottom:14px;max-height:220px;object-fit:cover}
+.spinner-wrap{text-align:center;padding:40px 0}
+.spinner{width:32px;height:32px;border:3px solid var(--border);border-top-color:var(--crimson);
+  border-radius:50%;animation:spin .7s linear infinite;margin:0 auto 14px}
+@keyframes spin{to{transform:rotate(360deg)}}
+.section-label{font-size:11px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;
+  color:var(--muted);margin:20px 0 10px}
+.chip-list{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}
+.chip{font-size:12px;padding:4px 10px;border-radius:20px;background:#EDE9E3;
+  color:var(--navy);font-weight:500}
+.diagram-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:20px}
+.dcard{border:2px solid var(--border);border-radius:12px;overflow:hidden;cursor:pointer;
+  background:var(--surface);transition:border-color .15s}
+.dcard.sel{border-color:var(--crimson);box-shadow:0 0 0 3px rgba(139,26,43,.15)}
+.dcard img{width:100%;aspect-ratio:4/3;object-fit:contain;background:#fff;display:block}
+.dcard-name{padding:6px 8px;font-size:11px;font-weight:600;color:var(--navy);
+  text-align:center;border-top:1px solid var(--border);line-height:1.3}
+.search-wrap{position:relative;margin-bottom:14px}
+.search-wrap svg{position:absolute;left:10px;top:50%;transform:translateY(-50%);
+  width:18px;height:18px;color:var(--muted)}
+.search-input{padding-left:36px!important;font-family:inherit!important}
+table{width:100%;border-collapse:collapse;font-size:14px}
+th{text-align:left;padding:8px 6px;font-size:12px;font-weight:700;color:var(--muted);
+  border-bottom:1.5px solid var(--border)}
+td{padding:9px 6px;border-bottom:1px solid var(--border)}
+td:last-child{text-align:right;font-weight:600;font-family:monospace}
+.alert{background:#FFF3CD;border:1px solid #FBBF24;border-radius:8px;
+  padding:10px 12px;font-size:13px;margin-bottom:10px}
+.error-alert{background:#FEE2E2;border:1px solid #F87171}
+.narrative{font-size:14px;line-height:1.7;font-family:Georgia,serif;white-space:pre-wrap}
+.nav{display:flex;justify-content:space-between;align-items:center;margin-bottom:18px}
+.back-btn{background:none;border:1.5px solid var(--crimson);color:var(--crimson);
+  padding:8px 14px;border-radius:8px;font-weight:600;font-size:14px;cursor:pointer}
+.img-wrap{border-radius:12px;overflow:hidden;border:1px solid var(--border);
+  margin-bottom:14px;background:#fff;touch-action:pinch-zoom}
+.img-wrap img{width:100%;display:block}
+</style>
+</head>
+<body>
+
+<!-- ── SCREEN 1: DATA ENTRY ─────────────────────────── -->
+<div id="s-entry" class="screen active">
+  <h1>Enter Data</h1>
+  <p class="sub">Scan a cath sheet or type values manually.</p>
+
+  <div class="pills">
+    <button class="pill active" onclick="switchTab('scan')">Scan Sheet</button>
+    <button class="pill" onclick="switchTab('type')">Type Values</button>
+  </div>
+
+  <!-- Scan tab -->
+  <div id="tab-scan" class="tab-content active">
+    <input type="file" id="file-input" accept="image/*" capture="environment"
+           style="display:none" onchange="handleFile(this)"/>
+    <input type="file" id="file-input-lib" accept="image/*"
+           style="display:none" onchange="handleFile(this)"/>
+
+    <div id="scan-idle">
+      <div class="camera-zone" onclick="document.getElementById('file-input').click()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+          <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/>
+          <circle cx="12" cy="13" r="4"/>
+        </svg>
+        Take Photo of Cath Sheet
+      </div>
+      <button class="btn btn-outline" onclick="document.getElementById('file-input-lib').click()">
+        Choose from Photo Library
+      </button>
+    </div>
+
+    <div id="scan-loading" style="display:none" class="spinner-wrap">
+      <div class="spinner"></div>
+      <p style="color:var(--muted);font-size:14px">Extracting values…</p>
+    </div>
+
+    <div id="scan-result" style="display:none">
+      <img id="scan-preview" class="preview-img" src="" alt="Captured sheet"/>
+      <div class="alert" id="scan-msg"></div>
+    </div>
+  </div>
+
+  <!-- Type tab -->
+  <div id="tab-type" class="tab-content">
+    <label for="hemo-text">Hemodynamic Data</label>
+    <textarea id="hemo-text" rows="11"
+      placeholder="SVC 79&#10;IVC 81&#10;RA 75 10/8 9&#10;RV 75 50/5&#10;MPA 75 50/30 38&#10;RPCWP 12&#10;LA 98 10/5 8&#10;LV 98 95/10&#10;Aorta 98 95/55 72"
+      oninput="onHemoInput(this.value)"
+      spellcheck="false" autocorrect="off" autocapitalize="off"></textarea>
+    <div id="parse-preview"></div>
+  </div>
+
+  <div style="margin-top:20px">
+    <button class="btn btn-primary" id="btn-next" onclick="goToSelector()" disabled>
+      Select Diagram →
+    </button>
+  </div>
+</div>
+
+<!-- ── SCREEN 2: DIAGRAM SELECTOR ──────────────────── -->
+<div id="s-selector" class="screen">
+  <div class="nav">
+    <button class="back-btn" onclick="goTo('s-entry')">← Back</button>
+    <h2 style="margin:0">Select Diagram</h2>
+    <div style="width:60px"></div>
+  </div>
+
+  <div class="search-wrap">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+      <circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/>
+    </svg>
+    <input type="text" class="search-input" id="search-input"
+           placeholder="Search diagnosis (e.g. TOF, ASD, Fontan)"
+           oninput="onSearch(this.value)"/>
+  </div>
+
+  <div id="diagram-grid" class="diagram-grid"></div>
+
+  <button class="btn btn-primary" id="btn-generate" onclick="goToOutput()" disabled>
+    Generate Report →
+  </button>
+  <p id="sel-hint" style="text-align:center;color:var(--muted);font-size:13px;margin-top:6px">
+    Tap a diagram to select it
+  </p>
+</div>
+
+<!-- ── SCREEN 3: OUTPUT ────────────────────────────── -->
+<div id="s-output" class="screen">
+  <div id="output-loading" class="spinner-wrap">
+    <div class="spinner" style="width:40px;height:40px;border-width:4px"></div>
+    <p style="color:var(--muted)">Generating report…</p>
+  </div>
+
+  <div id="output-error" style="display:none">
+    <div class="alert error-alert" id="output-error-msg"></div>
+    <button class="btn btn-outline" onclick="retryReport()">Retry</button>
+    <button class="btn btn-secondary" onclick="reset()">← Start Over</button>
+  </div>
+
+  <div id="output-result" style="display:none">
+    <div class="img-wrap">
+      <img id="result-img" src="" alt="Annotated diagram"/>
+    </div>
+    <div style="display:flex;gap:8px;margin-bottom:20px">
+      <button class="btn btn-outline" style="margin-bottom:0" onclick="saveImage()">Save Image</button>
+      <button class="btn btn-secondary" style="margin-bottom:0" onclick="shareReport()">Share</button>
+    </div>
+
+    <div id="stepup-section"></div>
+
+    <div class="section-label">Calculations (Fick Method)</div>
+    <div class="card" style="padding:4px 0">
+      <table id="calcs-table">
+        <thead><tr><th>Parameter</th><th>Value</th><th>Units</th></tr></thead>
+        <tbody id="calcs-body"></tbody>
+      </table>
+    </div>
+
+    <div class="section-label">Hemodynamics Narrative</div>
+    <div class="card">
+      <p class="narrative" id="narrative-text"></p>
+    </div>
+    <button class="btn btn-outline" onclick="copyNarrative()" id="copy-btn">
+      Copy Narrative
+    </button>
+
+    <div id="warnings-section" style="margin-top:8px"></div>
+
+    <button class="btn btn-secondary" style="margin-top:16px" onclick="reset()">← New Report</button>
+  </div>
+</div>
+
+<script>
+// ── State ──────────────────────────────────────────────────────────────
+let hemoText = ''
+let selectedDiagram = null
+let lastResult = null
+let parseTimer = null
+let searchTimer = null
+
+// ── Screen navigation ──────────────────────────────────────────────────
+function goTo(id) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'))
+  document.getElementById(id).classList.add('active')
+  window.scrollTo(0, 0)
+}
+
+function goToSelector() {
+  goTo('s-selector')
+  loadDiagrams('')
+}
+
+async function goToOutput() {
+  if (!selectedDiagram || !hemoText.trim()) return
+  goTo('s-output')
+  document.getElementById('output-loading').style.display = 'block'
+  document.getElementById('output-error').style.display = 'none'
+  document.getElementById('output-result').style.display = 'none'
+  await runReport()
+}
+
+function reset() {
+  hemoText = ''
+  selectedDiagram = null
+  lastResult = null
+  document.getElementById('hemo-text').value = ''
+  document.getElementById('parse-preview').innerHTML = ''
+  document.getElementById('btn-next').disabled = true
+  document.getElementById('scan-idle').style.display = 'block'
+  document.getElementById('scan-loading').style.display = 'none'
+  document.getElementById('scan-result').style.display = 'none'
+  document.getElementById('search-input').value = ''
+  switchTab('scan')
+  goTo('s-entry')
+}
+
+// ── Tabs ───────────────────────────────────────────────────────────────
+function switchTab(name) {
+  document.querySelectorAll('.pill').forEach((p, i) => {
+    p.classList.toggle('active', (i === 0 && name === 'scan') || (i === 1 && name === 'type'))
+  })
+  document.getElementById('tab-scan').classList.toggle('active', name === 'scan')
+  document.getElementById('tab-type').classList.toggle('active', name === 'type')
+}
+
+// ── OCR ────────────────────────────────────────────────────────────────
+async function handleFile(input) {
+  const file = input.files[0]
+  if (!file) return
+
+  // Show preview image
+  const previewEl = document.getElementById('scan-preview')
+  previewEl.src = URL.createObjectURL(file)
+  document.getElementById('scan-idle').style.display = 'none'
+  document.getElementById('scan-loading').style.display = 'block'
+  document.getElementById('scan-result').style.display = 'none'
+
+  const form = new FormData()
+  form.append('image', file)
+
+  try {
+    const res = await fetch('/api/ocr', { method: 'POST', body: form })
+    const data = await res.json()
+    if (!res.ok) throw new Error(data.detail || 'OCR failed')
+
+    // Populate text area and switch tab
+    document.getElementById('hemo-text').value = data.text
+    hemoText = data.text
+    document.getElementById('btn-next').disabled = !hemoText.trim()
+    updateParsePreview(hemoText)
+
+    document.getElementById('scan-loading').style.display = 'none'
+    document.getElementById('scan-result').style.display = 'block'
+    const msg = document.getElementById('scan-msg')
+    msg.className = 'alert'
+    msg.textContent = '✓ Values extracted — tap "Type Values" tab to review or edit.'
+    switchTab('type')
+  } catch (err) {
+    document.getElementById('scan-loading').style.display = 'none'
+    document.getElementById('scan-result').style.display = 'block'
+    const msg = document.getElementById('scan-msg')
+    msg.className = 'alert error-alert'
+    msg.textContent = 'Scan failed: ' + err.message + '. Please type the values manually.'
+    document.getElementById('scan-idle').style.display = 'block'
+    switchTab('type')
+  }
+
+  input.value = ''
+}
+
+// ── Hemo text input ────────────────────────────────────────────────────
+function onHemoInput(val) {
+  hemoText = val
+  document.getElementById('btn-next').disabled = !val.trim()
+  clearTimeout(parseTimer)
+  if (!val.trim()) { document.getElementById('parse-preview').innerHTML = ''; return }
+  parseTimer = setTimeout(() => updateParsePreview(val), 400)
+}
+
+async function updateParsePreview(text) {
+  try {
+    const res = await fetch('/api/parse', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ text })
+    })
+    const data = await res.json()
+    const entries = Object.entries(data.parsed || {})
+    if (!entries.length) { document.getElementById('parse-preview').innerHTML = ''; return }
+
+    const chips = entries.map(([loc, v]) => {
+      const parts = [loc]
+      if (v.sat != null) parts.push(v.sat + '%')
+      if (v.systolic != null) parts.push(v.diastolic != null ? v.systolic+'/'+v.diastolic : ''+v.systolic)
+      if (v.mean != null) parts.push('m'+v.mean)
+      return `<span class="chip">${parts.join(' ')}</span>`
+    }).join('')
+
+    document.getElementById('parse-preview').innerHTML =
+      `<div class="section-label">${entries.length} location${entries.length!==1?'s':''} recognized</div>
+       <div class="chip-list">${chips}</div>`
+  } catch {}
+}
+
+// ── Diagram selector ───────────────────────────────────────────────────
+let searchDebounce = null
+function onSearch(q) {
+  clearTimeout(searchDebounce)
+  searchDebounce = setTimeout(() => loadDiagrams(q), 350)
+}
+
+async function loadDiagrams(q) {
+  const grid = document.getElementById('diagram-grid')
+  grid.innerHTML = '<div style="grid-column:1/-1;text-align:center;padding:32px"><div class="spinner"></div></div>'
+  try {
+    const url = q.trim()
+      ? `/api/diagrams/match?q=${encodeURIComponent(q)}&top_n=20`
+      : `/api/diagrams/match?q=&top_n=20`
+    const res = await fetch(url)
+    const data = await res.json()
+    const diagrams = data.results || []
+
+    if (!diagrams.length) {
+      grid.innerHTML = '<p style="grid-column:1/-1;text-align:center;color:var(--muted);padding:32px">No diagrams found.</p>'
+      return
+    }
+
+    grid.innerHTML = diagrams.map(d => `
+      <div class="dcard${selectedDiagram?.id === d.id ? ' sel' : ''}"
+           onclick="selectDiagram(${JSON.stringify(JSON.stringify(d))})" data-id="${d.id}">
+        <img src="${d.thumbnail_url}" alt="${d.display_name}"
+             onerror="this.style.opacity=0.3;this.style.height='80px'"/>
+        <div class="dcard-name">${d.display_name}</div>
+      </div>`).join('')
+  } catch (e) {
+    grid.innerHTML = `<p style="grid-column:1/-1" class="alert error-alert">${e.message}</p>`
+  }
+}
+
+function selectDiagram(jsonStr) {
+  selectedDiagram = JSON.parse(jsonStr)
+  // Update selection highlights
+  document.querySelectorAll('.dcard').forEach(el => {
+    el.classList.toggle('sel', el.dataset.id === selectedDiagram.id)
+  })
+  document.getElementById('btn-generate').disabled = false
+  document.getElementById('sel-hint').style.display = 'none'
+}
+
+// ── Report generation ──────────────────────────────────────────────────
+async function runReport() {
+  try {
+    const patientData = JSON.parse(localStorage.getItem('patientDefaults') || '{}')
+    const res = await fetch('/api/report', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        hemo_text: hemoText,
+        diagram_id: selectedDiagram.id,
+        patient_data: {
+          hgb: patientData.hgb || 12.0,
+          avo2: patientData.avo2 || 125,
+          anesthesia: patientData.anesthesia || 'general anesthesia',
+          anatomy_type: selectedDiagram.anatomy_type || 'biventricle',
+          fio2: '21%'
+        }
+      })
+    })
+    const data = await res.json()
+    if (!res.ok) throw new Error(data.detail || 'Report generation failed')
+
+    lastResult = data
+    renderOutput(data)
+  } catch (e) {
+    document.getElementById('output-loading').style.display = 'none'
+    document.getElementById('output-error').style.display = 'block'
+    document.getElementById('output-error-msg').textContent = e.message
+  }
+}
+
+function retryReport() {
+  document.getElementById('output-loading').style.display = 'block'
+  document.getElementById('output-error').style.display = 'none'
+  runReport()
+}
+
+function renderOutput(data) {
+  document.getElementById('output-loading').style.display = 'none'
+  document.getElementById('output-result').style.display = 'block'
+
+  // Image
+  document.getElementById('result-img').src = 'data:image/png;base64,' + data.annotated_image_b64
+
+  // Narrative
+  document.getElementById('narrative-text').textContent = data.narrative || ''
+
+  // Step-ups
+  const stepUps = data.step_ups || []
+  const stepSection = document.getElementById('stepup-section')
+  if (stepUps.length) {
+    stepSection.innerHTML = '<div class="section-label">Step-up Alerts</div>' +
+      stepUps.map(s =>
+        `<div class="alert">${cap(s.level)} step-up: ${s.from} ${s.from_sat}% → ${s.to} ${s.to_sat}% (Δ${s.delta?.toFixed(1)}%)</div>`
+      ).join('')
+  } else { stepSection.innerHTML = '' }
+
+  // Calculations
+  const c = data.calculations || {}
+  const rows = [
+    c.qs   != null ? `<tr><td>Qs</td><td>${c.qs.toFixed(2)}</td><td>L/min/m²</td></tr>` : '',
+    c.qp   != null ? `<tr><td>Qp</td><td>${c.qp.toFixed(2)}</td><td>L/min/m²</td></tr>` : '',
+    c.qp_qs!= null ? `<tr><td>Qp:Qs</td><td>${c.qp_qs.toFixed(2)}:1</td><td></td></tr>` : '',
+    c.pvri != null ? `<tr><td>PVRi</td><td>${c.pvri.toFixed(2)}</td><td>iWU</td></tr>` : '',
+    c.svri != null ? `<tr><td>SVRi</td><td>${c.svri.toFixed(2)}</td><td>iWU</td></tr>` : '',
+    c.rp_rs!= null ? `<tr><td>Rp/Rs</td><td>${c.rp_rs.toFixed(3)}</td><td></td></tr>` : '',
+    c.tpg  != null ? `<tr><td>TPG</td><td>${c.tpg.toFixed(0)}</td><td>mmHg</td></tr>` : '',
+  ].join('')
+  document.getElementById('calcs-body').innerHTML = rows
+
+  // Warnings
+  const warnings = c.warnings || []
+  document.getElementById('warnings-section').innerHTML =
+    warnings.map(w => `<div class="alert">${w}</div>`).join('')
+}
+
+// ── Actions ────────────────────────────────────────────────────────────
+async function copyNarrative() {
+  const text = document.getElementById('narrative-text').textContent
+  try { await navigator.clipboard.writeText(text) } catch {
+    const el = document.createElement('textarea')
+    el.value = text; document.body.appendChild(el); el.select()
+    document.execCommand('copy'); document.body.removeChild(el)
+  }
+  const btn = document.getElementById('copy-btn')
+  btn.textContent = '✓ Copied!'
+  setTimeout(() => { btn.textContent = 'Copy Narrative' }, 2000)
+}
+
+async function saveImage() {
+  if (!lastResult) return
+  const a = document.createElement('a')
+  a.href = 'data:image/png;base64,' + lastResult.annotated_image_b64
+  a.download = 'cath_diagram.png'
+  a.click()
+}
+
+async function shareReport() {
+  const text = document.getElementById('narrative-text').textContent
+  if (navigator.share) {
+    try { await navigator.share({ title: 'Hemodynamic Report', text }) } catch {}
+  } else { copyNarrative() }
+}
+
+function cap(s) { return s ? s.charAt(0).toUpperCase() + s.slice(1) : '' }
+</script>
+</body>
+</html>

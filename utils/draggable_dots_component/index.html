@@ -1,0 +1,374 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    html, body { width: 100%; background: transparent; overflow: hidden; }
+
+    #wrap {
+      position: relative;
+      width: 100%;
+      display: inline-block;
+    }
+
+    #diagram-img {
+      width: 100%;
+      display: block;
+      user-select: none;
+      -webkit-user-drag: none;
+      pointer-events: none;
+    }
+
+    /* Armed state: crosshair cursor on the container */
+    #wrap.armed { cursor: crosshair !important; }
+    #wrap.armed .dot { cursor: crosshair !important; }
+
+    /* Dot base styles */
+    .dot {
+      position: absolute;
+      width: 16px;
+      height: 16px;
+      border-radius: 50%;
+      cursor: grab;
+      transform: translate(-50%, -50%);
+      border: 2px solid rgba(255,255,255,0.9);
+      box-shadow: 0 1px 6px rgba(0,0,0,0.55);
+      z-index: 10;
+      transition: transform 0.1s;
+    }
+    .dot:hover:not(.dragging) {
+      transform: translate(-50%, -50%) scale(1.4);
+      box-shadow: 0 2px 10px rgba(0,0,0,0.6);
+    }
+    .dot.dragging {
+      cursor: grabbing !important;
+      transform: translate(-50%, -50%) scale(1.5);
+      z-index: 100;
+      transition: none;
+    }
+    .dot.sat      { background: #F97316; }   /* orange */
+    .dot.pressure { background: #3B82F6; }   /* blue  */
+
+    /* Labels */
+    .dot-label {
+      position: absolute;
+      font-size: 8px;
+      font-weight: 700;
+      color: #1a1a1a;
+      white-space: nowrap;
+      z-index: 11;
+      pointer-events: none;
+      transform: translateX(-50%);
+      text-shadow: 0 0 3px #fff, 0 0 3px #fff, 0 0 3px #fff;
+      background: rgba(255,255,255,0.55);
+      padding: 1px 3px;
+      border-radius: 3px;
+    }
+
+    /* Top banner when armed */
+    #armed-banner {
+      display: none;
+      position: absolute;
+      top: 6px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: rgba(249,115,22,0.92);
+      color: #fff;
+      font-size: 11px;
+      font-weight: 700;
+      padding: 5px 12px;
+      border-radius: 10px;
+      pointer-events: none;
+      z-index: 30;
+      white-space: nowrap;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+    }
+    #wrap.armed #armed-banner { display: block; }
+
+    /* Bottom hint when NOT armed and dots are present */
+    #drag-hint {
+      display: none;
+      position: absolute;
+      bottom: 6px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: rgba(0,0,0,0.45);
+      color: #fff;
+      font-size: 9px;
+      padding: 3px 9px;
+      border-radius: 8px;
+      pointer-events: none;
+      z-index: 20;
+      white-space: nowrap;
+    }
+    #wrap.has-dots:not(.armed) #drag-hint { display: block; }
+  </style>
+</head>
+<body>
+  <div id="wrap">
+    <img id="diagram-img" alt="cardiac diagram" />
+    <div id="armed-banner">📍 Click image to place position</div>
+    <div id="drag-hint">Drag orange/blue dots to reposition</div>
+  </div>
+
+  <script>
+    // ─── Streamlit component API ────────────────────────────────────────────────
+    // NOTE: isStreamlitMessage: true is REQUIRED — Streamlit ignores messages without it
+    function postMsg(type, extra) {
+      window.parent.postMessage({ isStreamlitMessage: true, type, ...extra }, "*");
+    }
+    const sendReady  = ()  => postMsg("streamlit:componentReady", { apiVersion: 1 });
+    const sendValue  = (v) => postMsg("streamlit:setComponentValue", { value: v, dataType: "json" });
+    const sendHeight = (h) => postMsg("streamlit:setFrameHeight", { height: h });
+
+    // ─── State ──────────────────────────────────────────────────────────────────
+    let state       = {};   // mirror of coords["locations"]
+    let origW       = 800;
+    let origH       = 600;
+    let armedLoc    = null;
+    let armedStep   = null;
+    let armedType   = null;
+    let isDragging  = false;
+    let pendingArgs = null;
+    let lastB64     = null;
+
+    // Active drag tracking (global, single dot at a time)
+    let activeDot  = null;
+    let activeLoc  = null;
+    let activeStep = null;
+    let activeLbl  = null;
+    let mx0, my0, dx0, dy0;
+
+    const wrap    = document.getElementById("wrap");
+    const imgEl   = document.getElementById("diagram-img");
+    const banner  = document.getElementById("armed-banner");
+
+    // ─── Apply args from Streamlit ──────────────────────────────────────────────
+    function applyArgs(args) {
+      origW     = args.image_width  || 800;
+      origH     = args.image_height || 600;
+      state     = JSON.parse(JSON.stringify(args.coords_locations || {}));
+      armedLoc  = args.armed_loc  || null;
+      armedStep = args.armed_step || null;
+      armedType = args.armed_type || null;
+
+      // Armed banner text
+      if (armedLoc && armedStep) {
+        wrap.classList.add("armed");
+        banner.textContent = `📍 Click to place  ${armedLoc.replace(/_/g, " ")}  (${armedStep === "sat" ? "SATURATION" : "PRESSURE"})`;
+      } else {
+        wrap.classList.remove("armed");
+        banner.textContent = "";
+      }
+
+      // Image
+      const b64 = args.imageBase64 || "";
+      if (b64 !== lastB64) {
+        lastB64 = b64;
+        imgEl.onload = () => { buildDots(); syncHeight(); };
+        imgEl.src = "data:image/png;base64," + b64;
+        // Handle cached / already loaded
+        if (imgEl.complete && imgEl.naturalWidth > 0) {
+          imgEl.onload = null;
+          buildDots();
+          syncHeight();
+        }
+      } else {
+        buildDots();
+        syncHeight();
+      }
+    }
+
+    function syncHeight() {
+      const h = imgEl.getBoundingClientRect().height || imgEl.clientHeight;
+      if (h > 0) sendHeight(Math.ceil(h) + 8);
+    }
+
+    function displayScale() {
+      return imgEl.clientWidth / origW;
+    }
+
+    // ─── Build dots ─────────────────────────────────────────────────────────────
+    function buildDots() {
+      wrap.querySelectorAll(".dot, .dot-label").forEach(e => e.remove());
+
+      const s   = displayScale();
+      let nDots = 0;
+
+      Object.entries(state).forEach(([loc, coord]) => {
+        if (coord.skipped) return;
+        const ann = coord.annotation_type || "saturation_and_pressure";
+
+        if (["saturation", "saturation_and_pressure"].includes(ann)) {
+          const sx = coord.sat_x != null ? coord.sat_x : coord.x;
+          const sy = coord.sat_y != null ? coord.sat_y : coord.y;
+          if (sx != null && sy != null) { addDot(loc, "sat", sx, sy, s); nDots++; }
+        }
+
+        if (["pressure_only", "saturation_and_pressure", "pcwp"].includes(ann)) {
+          const px = coord.pressure_x;
+          const py = coord.pressure_y;
+          if (px != null && py != null) { addDot(loc, "pressure", px, py, s); nDots++; }
+        }
+      });
+
+      nDots > 0 ? wrap.classList.add("has-dots") : wrap.classList.remove("has-dots");
+    }
+
+    function addDot(loc, step, ix, iy, s) {
+      // Dot element
+      const dot = document.createElement("div");
+      dot.className = `dot ${step}`;
+      dot.style.left = (ix * s) + "px";
+      dot.style.top  = (iy * s) + "px";
+
+      // Label element
+      const lbl = document.createElement("div");
+      lbl.className = "dot-label";
+      lbl.textContent = loc.replace(/_/g, " ") + (step === "pressure" ? " ·P" : "");
+      lbl.style.left = (ix * s) + "px";
+      lbl.style.top  = ((iy * s) - 14) + "px";
+
+      // Drag start
+      dot.addEventListener("mousedown", e => {
+        e.stopPropagation(); e.preventDefault();
+        isDragging = true;
+        activeDot = dot; activeLoc = loc; activeStep = step; activeLbl = lbl;
+        mx0 = e.clientX; my0 = e.clientY;
+        dx0 = parseFloat(dot.style.left);
+        dy0 = parseFloat(dot.style.top);
+        dot.classList.add("dragging");
+      });
+      dot.addEventListener("touchstart", e => {
+        e.stopPropagation(); e.preventDefault();
+        isDragging = true;
+        activeDot = dot; activeLoc = loc; activeStep = step; activeLbl = lbl;
+        mx0 = e.touches[0].clientX; my0 = e.touches[0].clientY;
+        dx0 = parseFloat(dot.style.left);
+        dy0 = parseFloat(dot.style.top);
+        dot.classList.add("dragging");
+      }, { passive: false });
+
+      wrap.appendChild(dot);
+      wrap.appendChild(lbl);
+    }
+
+    // ─── Global drag move / end ─────────────────────────────────────────────────
+    document.addEventListener("mousemove", e => {
+      if (!isDragging || !activeDot) return;
+      moveDot(e.clientX, e.clientY);
+    });
+    document.addEventListener("touchmove", e => {
+      if (!isDragging || !activeDot) return;
+      e.preventDefault();
+      moveDot(e.touches[0].clientX, e.touches[0].clientY);
+    }, { passive: false });
+
+    document.addEventListener("mouseup",  finishDrag);
+    document.addEventListener("touchend", finishDrag);
+
+    function moveDot(cx, cy) {
+      const rect = wrap.getBoundingClientRect();
+      const nx = Math.max(0, Math.min(rect.width,  dx0 + cx - mx0));
+      const ny = Math.max(0, Math.min(rect.height, dy0 + cy - my0));
+      activeDot.style.left = nx + "px";
+      activeDot.style.top  = ny + "px";
+      if (activeLbl) {
+        activeLbl.style.left = nx + "px";
+        activeLbl.style.top  = (ny - 14) + "px";
+      }
+    }
+
+    function finishDrag() {
+      if (!isDragging || !activeDot) return;
+      isDragging = false;
+      activeDot.classList.remove("dragging");
+
+      const s  = displayScale();
+      const nx = Math.round(parseFloat(activeDot.style.left) / s);
+      const ny = Math.round(parseFloat(activeDot.style.top)  / s);
+
+      if (!state[activeLoc]) state[activeLoc] = {};
+      if (activeStep === "sat") {
+        state[activeLoc].sat_x = nx;
+        state[activeLoc].sat_y = ny;
+        delete state[activeLoc].x;
+        delete state[activeLoc].y;
+      } else {
+        state[activeLoc].pressure_x = nx;
+        state[activeLoc].pressure_y = ny;
+      }
+
+      activeDot = null; activeLoc = null; activeStep = null; activeLbl = null;
+      sendValue({ locations: state, type: "drag" });
+
+      // Apply any deferred Streamlit render
+      if (pendingArgs) { const a = pendingArgs; pendingArgs = null; applyArgs(a); }
+    }
+
+    // ─── Click-to-place (when armed) ────────────────────────────────────────────
+    wrap.addEventListener("click", e => {
+      if (!armedLoc || !armedStep) return;
+      if (e.target.classList.contains("dot")) return; // ignore dot clicks
+
+      const rect = wrap.getBoundingClientRect();
+      const s    = displayScale();
+      const ix   = Math.round((e.clientX - rect.left) / s);
+      const iy   = Math.round((e.clientY - rect.top)  / s);
+
+      if (!state[armedLoc]) {
+        state[armedLoc] = { annotation_type: armedType || "saturation_and_pressure" };
+      }
+      if (armedStep === "sat") {
+        state[armedLoc].sat_x = ix;
+        state[armedLoc].sat_y = iy;
+        delete state[armedLoc].x;
+        delete state[armedLoc].y;
+      } else {
+        state[armedLoc].pressure_x = ix;
+        state[armedLoc].pressure_y = iy;
+      }
+
+      sendValue({ locations: state, type: "click" });
+    });
+
+    // ─── Listen for Streamlit messages ──────────────────────────────────────────
+    // React Strict Mode double-mounts components (mount → cleanup → remount).
+    // One iframe becomes "active" (gets a streamlit:render reply); the other
+    // ("ghost") never does.  We cap retries at 25 (~8 s) so the ghost iframe
+    // stops spamming "unregistered ComponentInstance" warnings in the console.
+    let _registered  = false;
+    let _retryCount  = 0;
+    const _MAX_RETRY = 25;          // 500ms + 25×300ms ≈ 8 s then give up
+
+    function _bootReady() {
+      if (_registered || _retryCount >= _MAX_RETRY) return;
+      _retryCount++;
+      sendReady();
+      setTimeout(_bootReady, 300);
+    }
+
+    window.addEventListener("message", ev => {
+      if (ev.data.type !== "streamlit:render") return;
+      _registered = true;          // stop retrying
+      if (isDragging) {
+        pendingArgs = ev.data.args; // buffer until drag ends
+      } else {
+        applyArgs(ev.data.args);
+      }
+    });
+
+    // Recompute dot positions on resize (keeps dots aligned with image)
+    window.addEventListener("resize", () => {
+      if (!isDragging) buildDots();
+      syncHeight();
+    });
+
+    // Delay first attempt by 500ms — gives React's useEffect time to register
+    // the ComponentInstance before our first message arrives.
+    setTimeout(_bootReady, 500);
+  </script>
+</body>
+</html>

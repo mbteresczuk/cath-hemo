@@ -1,0 +1,475 @@
+"""
+PIL-based annotation rendering for cardiac cath diagrams.
+Draws saturation circles, pressure labels, and PCWP annotations.
+"""
+import io
+import os
+from pathlib import Path
+from PIL import Image, ImageDraw, ImageFont
+
+# macOS TCC may block os.getcwd() for sandboxed Python processes.
+# Many stdlib functions (os.path.abspath, pathlib) call os.getcwd() internally.
+# Fix: chdir to a known-accessible directory if getcwd() is broken.
+try:
+    os.getcwd()
+except (PermissionError, OSError):
+    os.chdir("/tmp")
+
+
+def pil_to_bytes(img: Image.Image, fmt: str = "PNG") -> bytes:
+    """Convert a PIL Image to bytes for st.image() without temp file writes."""
+    buf = io.BytesIO()
+    img.save(buf, format=fmt)
+    return buf.getvalue()
+
+
+def safe_open_image(path) -> Image.Image:
+    """Open an image by reading all bytes into memory first.
+
+    macOS TCC may block PIL's lazy file reads. Reading bytes with
+    Python's built-in open() bypasses this restriction.
+    """
+    with open(path, "rb") as f:
+        data = f.read()
+    return Image.open(io.BytesIO(data))
+
+BASE_DIR = Path(__file__).parent.parent
+
+# All annotations in black — no color coding
+COLORS = {
+    "right_circle":    "#000000",
+    "right_pressure":  "#000000",
+    "left_circle":     "#000000",
+    "left_pressure":   "#000000",
+    "pcwp":            "#000000",
+    "dot_marker":      "#FF6600",   # Orange only for setup-mode placement dots
+}
+
+CIRCLE_RADIUS = 16
+CIRCLE_OUTLINE_WIDTH = 2
+
+
+def _load_fonts():
+    """Load Arial fonts from macOS system; fall back to default if unavailable."""
+    font_paths = {
+        "bold_large": [
+            "/System/Library/Fonts/Supplemental/Arial Bold.ttf",
+            "/Library/Fonts/Arial Bold.ttf",
+        ],
+        "regular": [
+            "/System/Library/Fonts/Supplemental/Arial.ttf",
+            "/Library/Fonts/Arial.ttf",
+        ],
+        "bold_small": [
+            "/System/Library/Fonts/Supplemental/Arial Bold.ttf",
+            "/Library/Fonts/Arial Bold.ttf",
+        ],
+    }
+
+    fonts = {}
+    sizes = {"bold_large": 13, "regular": 11, "bold_small": 12}
+
+    for key, paths in font_paths.items():
+        font = None
+        for path in paths:
+            if os.path.exists(path):
+                try:
+                    font = ImageFont.truetype(path, sizes[key])
+                    break
+                except Exception:
+                    pass
+        if font is None:
+            font = ImageFont.load_default()
+        fonts[key] = font
+
+    return fonts
+
+
+_FONTS = None
+
+
+def get_fonts():
+    global _FONTS
+    if _FONTS is None:
+        _FONTS = _load_fonts()
+    return _FONTS
+
+
+def load_image_as_rgba(image_path: str) -> Image.Image:
+    """Load image and convert to RGBA for drawing."""
+    img = safe_open_image(image_path)
+    if img.mode not in ("RGBA",):
+        img = img.convert("RGBA")
+    return img
+
+
+def _text_size(draw, text, font):
+    """Get text (width, height) compatibly across Pillow versions."""
+    try:
+        bbox = font.getbbox(text)
+        return bbox[2] - bbox[0], bbox[3] - bbox[1]
+    except AttributeError:
+        return draw.textsize(text, font=font)
+
+
+def draw_saturation_circle(draw, cx, cy, saturation, side, fonts, radius=CIRCLE_RADIUS):
+    """
+    Draw a circle with saturation value inside.
+    side='right' -> blue circle/text
+    side='left'  -> red circle/text
+    """
+    color = COLORS["right_circle"] if side == "right" else COLORS["left_circle"]
+    font = fonts["bold_large"]
+
+    # White fill so diagram lines don't show through
+    draw.ellipse(
+        [cx - radius, cy - radius, cx + radius, cy + radius],
+        fill="white",
+        outline=color,
+        width=CIRCLE_OUTLINE_WIDTH,
+    )
+
+    if saturation is not None:
+        text = str(int(saturation))
+        tw, th = _text_size(draw, text, font)
+        draw.text((cx - tw // 2, cy - th // 2), text, fill=color, font=font)
+
+
+def _calc_pressure_bbox(draw, x, y, systolic, diastolic, mean, fonts, anchor="left"):
+    """Calculate the bounding box for a pressure annotation block."""
+    font_bold = fonts["bold_small"]
+    font_reg = fonts["regular"]
+
+    if systolic is None and diastolic is None:
+        return None
+
+    if systolic is not None and diastolic is not None:
+        line1 = f"{int(systolic)}/{int(diastolic)}"
+    elif systolic is not None:
+        line1 = str(int(systolic))
+    else:
+        line1 = str(int(diastolic))
+
+    tw, th = _text_size(draw, line1, font_bold)
+    text_x = x - tw if anchor == "right" else x
+
+    total_h = th + 3  # text + gap to overline
+    max_w = tw
+    if mean is not None:
+        mean_text = str(int(mean))
+        mw, _ = _text_size(draw, mean_text, font_reg)
+        total_h += 2 + 12  # overline + gap + mean text height
+        max_w = max(max_w, mw)
+
+    pad = 2
+    return (text_x - pad, y - pad, text_x + max_w + pad, y + total_h + pad)
+
+
+def draw_pressure_annotation(draw, x, y, systolic, diastolic, mean, side, fonts, anchor="left"):
+    """
+    Draw pressure in format:
+        systolic/diastolic
+        ──────────────────
+        mean
+    anchor: 'left' (x is left edge) or 'right' (x is right edge)
+    White background ensures readability over anatomy lines.
+    """
+    color = COLORS["right_pressure"] if side == "right" else COLORS["left_pressure"]
+    font_bold = fonts["bold_small"]
+    font_reg = fonts["regular"]
+
+    if systolic is None and diastolic is None:
+        return
+
+    # Build the top line
+    if systolic is not None and diastolic is not None:
+        line1 = f"{int(systolic)}/{int(diastolic)}"
+    elif systolic is not None:
+        line1 = str(int(systolic))
+    else:
+        line1 = str(int(diastolic))
+
+    tw, th = _text_size(draw, line1, font_bold)
+
+    # Adjust x for right-anchor
+    text_x = x - tw if anchor == "right" else x
+
+    # Draw white background behind the pressure text block
+    bbox = _calc_pressure_bbox(draw, x, y, systolic, diastolic, mean, fonts, anchor)
+    if bbox:
+        draw.rectangle(bbox, fill="white")
+
+    draw.text((text_x, y), line1, fill=color, font=font_bold)
+
+    if mean is not None:
+        # Draw overline 3px below text bottom — width matches mean text, not sys/dia text
+        line_y = y + th + 3
+        mean_text = str(int(mean))
+        mw, mh = _text_size(draw, mean_text, font_reg)
+        mean_x = (x - mw) if anchor == "right" else text_x
+        draw.line([(mean_x, line_y), (mean_x + mw, line_y)], fill=color, width=1)
+        draw.text((mean_x, line_y + 2), mean_text, fill=color, font=font_reg)
+
+
+def draw_pcwp_annotation(draw, x, y, label, systolic, diastolic, mean, fonts):
+    """
+    Draw PCWP label + pressure:
+        RPCW
+        17/12
+        ─────
+        14
+    White background ensures readability over anatomy lines.
+    """
+    color = COLORS["pcwp"]
+    font_bold = fonts["bold_small"]
+    font_reg = fonts["regular"]
+
+    # Calculate total height for white background
+    lw, lh = _text_size(draw, label, font_bold)
+    total_h = lh + 2
+    max_w = lw
+
+    if systolic is not None and diastolic is not None:
+        pressure_str = f"{int(systolic)}/{int(diastolic)}"
+        pw, ph = _text_size(draw, pressure_str, font_bold)
+        total_h += ph + 2
+        max_w = max(max_w, pw)
+        if mean is not None:
+            mean_text = str(int(mean))
+            mw, _ = _text_size(draw, mean_text, font_reg)
+            total_h += 3 + 12
+            max_w = max(max_w, mw)
+    elif mean is not None:
+        mean_text = str(int(mean))
+        mw, mh = _text_size(draw, mean_text, font_reg)
+        total_h += mh
+        max_w = max(max_w, mw)
+        pressure_str = None
+    else:
+        return
+
+    # Draw white background
+    pad = 2
+    draw.rectangle([x - pad, y - pad, x + max_w + pad, y + total_h + pad], fill="white")
+
+    # Draw label
+    draw.text((x, y), label, fill=color, font=font_bold)
+    y_cur = y + lh + 2
+
+    if systolic is not None and diastolic is not None:
+        pressure_str = f"{int(systolic)}/{int(diastolic)}"
+        pw, ph = _text_size(draw, pressure_str, font_bold)
+        draw.text((x, y_cur), pressure_str, fill=color, font=font_bold)
+        y_cur += ph + 2
+        if mean is not None:
+            mean_text = str(int(mean))
+            mw_mean, _ = _text_size(draw, mean_text, font_reg)
+            draw.line([(x, y_cur), (x + mw_mean, y_cur)], fill=color, width=1)
+            y_cur += 3
+            draw.text((x, y_cur), mean_text, fill=color, font=font_reg)
+    elif mean is not None:
+        draw.text((x, y_cur), str(int(mean)), fill=color, font=font_reg)
+
+
+def draw_placement_dots(img: Image.Image, placed_coords: dict) -> Image.Image:
+    """
+    Overlay colored dots for placed annotation points.
+    Used during coordinate setup mode.
+
+    Orange dot  = saturation circle position
+    Blue dot    = pressure text position
+    (Legacy x/y entries show a single orange dot.)
+    """
+    img = img.copy()
+    draw = ImageDraw.Draw(img)
+    fonts = get_fonts()
+    font = fonts["regular"]
+    r = 5
+    SAT_COLOR = "#FF6600"      # orange
+    PRESSURE_COLOR = "#0066FF"  # blue
+
+    for loc_name, coord in placed_coords.items():
+        # Saturation circle dot
+        sat_x = coord.get("sat_x", coord.get("x"))
+        sat_y = coord.get("sat_y", coord.get("y"))
+        if sat_x is not None and sat_x >= 0:
+            draw.ellipse([sat_x - r, sat_y - r, sat_x + r, sat_y + r],
+                         fill=SAT_COLOR, outline="black", width=1)
+            draw.text((sat_x + r + 2, sat_y - r), loc_name, fill=SAT_COLOR, font=font)
+
+        # Pressure text dot (only if using new format with separate positions)
+        press_x = coord.get("pressure_x")
+        press_y = coord.get("pressure_y")
+        if press_x is not None and press_x >= 0:
+            label = f"{loc_name}P"
+            draw.ellipse([press_x - r, press_y - r, press_x + r, press_y + r],
+                         fill=PRESSURE_COLOR, outline="black", width=1)
+            draw.text((press_x + r + 2, press_y - r), label, fill=PRESSURE_COLOR, font=font)
+
+    return img
+
+
+def _resolve_coords(coord: dict) -> tuple:
+    """
+    Resolve (sat_cx, sat_cy, pressure_cx, pressure_cy) from a location coord entry.
+
+    Supports two formats:
+      New: sat_x/sat_y + pressure_x/pressure_y (separate, configurable positions)
+      Old: x/y only (saturation position; pressure auto-offset to the right)
+    """
+    if "sat_x" in coord or "pressure_x" in coord:
+        # New format — fully independent positions
+        sat_cx = coord.get("sat_x")
+        sat_cy = coord.get("sat_y")
+        press_cx = coord.get("pressure_x")
+        press_cy = coord.get("pressure_y")
+    else:
+        # Legacy format — single x/y; pressure auto-offset right of circle
+        sat_cx = coord.get("x")
+        sat_cy = coord.get("y")
+        press_cx = (sat_cx + CIRCLE_RADIUS + 3) if sat_cx is not None else None
+        press_cy = (sat_cy - 8) if sat_cy is not None else None
+
+    return sat_cx, sat_cy, press_cx, press_cy
+
+
+def annotate_diagram(image_path: str, coords: dict, hemodynamics: dict) -> Image.Image:
+    """
+    Main annotation entry point.
+
+    Coord entries support two formats:
+      New: separate sat_x/sat_y for the saturation circle and
+           pressure_x/pressure_y for the pressure text block.
+      Old: single x/y (pressure auto-offset to the right of the circle).
+    """
+    img = load_image_as_rgba(image_path)
+    draw = ImageDraw.Draw(img)
+    fonts = get_fonts()
+
+    if not coords or "locations" not in coords:
+        return img
+
+    for loc_name, coord in coords["locations"].items():
+        hemo = hemodynamics.get(loc_name, {})
+        if not hemo:
+            continue
+
+        side = coord.get("side", "right")
+        ann_type = coord.get("annotation_type", "saturation_and_pressure")
+
+        sat = hemo.get("sat")
+        systolic = hemo.get("systolic")
+        diastolic = hemo.get("diastolic")
+        mean = hemo.get("mean")
+
+        sat_cx, sat_cy, press_cx, press_cy = _resolve_coords(coord)
+
+        if ann_type == "saturation":
+            if sat_cx is not None:
+                draw_saturation_circle(draw, sat_cx, sat_cy, sat, side, fonts)
+
+        elif ann_type == "saturation_and_pressure":
+            if sat_cx is not None and sat is not None:
+                draw_saturation_circle(draw, sat_cx, sat_cy, sat, side, fonts)
+            if press_cx is not None and any(v is not None for v in [systolic, diastolic, mean]):
+                draw_pressure_annotation(draw, press_cx, press_cy,
+                                         systolic, diastolic, mean, side, fonts)
+
+        elif ann_type == "pressure_only":
+            if press_cx is not None and any(v is not None for v in [systolic, diastolic, mean]):
+                draw_pressure_annotation(draw, press_cx, press_cy,
+                                         systolic, diastolic, mean, side, fonts)
+
+        elif ann_type == "pcwp":
+            if press_cx is not None:
+                # Use shorter display labels (RPCW/LPCW instead of RPCWP/LPCWP)
+                display_label = loc_name.replace("PCWP", "PCW")
+                draw_pcwp_annotation(draw, press_cx, press_cy,
+                                     display_label, systolic, diastolic, mean, fonts)
+
+    return img
+
+
+def image_to_bytes(img: Image.Image, fmt: str = "PNG") -> bytes:
+    """Convert PIL image to bytes for download or display."""
+    buf = io.BytesIO()
+    img.save(buf, format=fmt)
+    return buf.getvalue()
+
+
+def image_to_base64(img: Image.Image) -> str:
+    """Convert PIL image to base64-encoded PNG string."""
+    import base64
+    return base64.b64encode(image_to_bytes(img)).decode()
+
+
+SIDEBAR_WIDTH = 200
+
+
+def add_patient_sidebar(img: Image.Image, patient_data: dict) -> Image.Image:
+    """Append a patient info + hemodynamics summary panel to the right of the diagram.
+
+    patient_data keys used:
+      name, mrn, dob, doc          — patient demographics
+      avo2, abd, qp_manual,
+      qs_manual, pvri_manual        — hemodynamic summary (user-entered)
+    """
+    sw = SIDEBAR_WIDTH
+    canvas = Image.new("RGBA", (img.width + sw, img.height), "white")
+    canvas.paste(img, (0, 0))
+    draw = ImageDraw.Draw(canvas)
+    fonts = get_fonts()
+    bold = fonts["bold_small"]
+    reg = fonts["regular"]
+
+    bx = img.width  # x where sidebar begins
+    # Vertical border separating diagram from sidebar
+    draw.line([(bx, 0), (bx, img.height)], fill="black", width=2)
+
+    sx = bx + 8          # text left edge
+    rx = bx + sw - 8     # right edge for divider lines
+    y = 10
+    LH = 14              # line height
+
+    def divider():
+        nonlocal y
+        draw.line([(sx, y), (rx, y)], fill="black", width=1)
+        y += 5
+
+    def section_hdr(text):
+        nonlocal y
+        draw.text((sx, y), text, fill="black", font=bold)
+        y += LH
+        divider()
+
+    def field(label, value):
+        nonlocal y
+        draw.text((sx, y), label, fill="black", font=bold)
+        y += LH - 2
+        val = str(value) if value not in (None, "", "—") else "—"
+        # Truncate text that would overflow the sidebar
+        while len(val) > 1 and _text_size(draw, val, reg)[0] > sw - 16:
+            val = val[:-1]
+        draw.text((sx + 4, y), val, fill="black", font=reg)
+        y += LH + 3
+
+    # ── Patient section ──────────────────────────────────────────────────────
+    section_hdr("PATIENT")
+    field("Name:", patient_data.get("name", ""))
+    field("MRN:", patient_data.get("mrn", ""))
+    field("DOB:", patient_data.get("dob", ""))
+    field("Cath Date:", patient_data.get("doc", ""))
+
+    y += 4
+    # ── Hemodynamics section ─────────────────────────────────────────────────
+    section_hdr("HEMODYNAMICS")
+
+    avo2 = patient_data.get("avo2", "")
+    avo2_str = f"{avo2} mL/min/m\u00b2" if avo2 else "—"
+    field("aVO\u2082:", avo2_str)
+    field("ABD:", patient_data.get("abd", ""))
+    field("Qp:", patient_data.get("qp_manual", ""))
+    field("Qs:", patient_data.get("qs_manual", ""))
+    field("PVRi:", patient_data.get("pvri_manual", ""))
+
+    return canvas

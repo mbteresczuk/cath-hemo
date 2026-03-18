@@ -1,0 +1,329 @@
+"""
+Parse free-text hemodynamic data from a cath report paste.
+
+Handles multiple formats from cath lab systems:
+  SVC 79
+  RA 74 10/8 m9
+  RV 79% 34/4
+  MPA 80 34/10/21
+  RPCWP 17/12 14
+  LV 97 82/12
+  Ao 98 97/45 65
+
+Returns a dict keyed by canonical location name.
+"""
+import re
+
+# ---------------------------------------------------------------------------
+# Canonical location names and all their aliases (upper-cased for matching)
+# ---------------------------------------------------------------------------
+LOCATION_ALIASES = {
+    "SVC": ["SVC", "SUPERIOR VENA CAVA", "SUP VENA CAVA", "SUP VC"],
+    "IVC": ["IVC", "INFERIOR VENA CAVA", "INF VENA CAVA", "INF VC"],
+    "RA":  ["RA", "RIGHT ATRIUM", "R ATRIUM", "RT ATRIUM", "RT RA"],
+    "RV":  ["RV", "RIGHT VENTRICLE", "R VENTRICLE", "RT VENTRICLE",
+            "RVOT", "RV APEX", "RV BODY", "RVOTO"],
+    "MPA": ["MPA", "PA", "MAIN PA", "MAIN PULM", "MAIN PULMONARY",
+            "PULMONARY ARTERY", "PULM ART", "MP", "PAP"],
+    "RPA": ["RPA", "RIGHT PA", "R PA", "RT PA", "RIGHT PULMONARY",
+            "RIGHT PULM", "R PULM"],
+    "LPA": ["LPA", "LEFT PA", "L PA", "LEFT PULMONARY", "LEFT PULM",
+            "L PULM"],
+    "RPCWP": ["RPCWP", "RCWP", "RPCW", "RPWP", "RIGHT WEDGE",
+              "R WEDGE", "RIGHT PCW", "RIGHT PCWP", "RT WEDGE",
+              "RT PCW", "RT PCWP", "RPCWP"],
+    "LPCWP": ["LPCWP", "LCWP", "LPCW", "LPWP", "LEFT WEDGE",
+              "L WEDGE", "LEFT PCW", "LEFT PCWP", "LT WEDGE",
+              "LT PCW", "LT PCWP", "PCWP", "PCW", "WEDGE", "CWP"],
+    "LA":  ["LA", "LEFT ATRIUM", "L ATRIUM", "LT ATRIUM",
+            "LEFT AT", "L AT"],
+    "LV":  ["LV", "LEFT VENTRICLE", "L VENTRICLE", "LT VENTRICLE",
+            "LEFT VENT", "L VENT", "LT VENT"],
+    "Descending_Aorta": ["AO", "AORTA", "AORTIC", "AORTIC ARCH",
+                         "DESC AO", "DESC AORTA", "DESCENDING AO", "DAO"],
+    "Neoaorta":         ["NEO", "NEOAORTA", "NEO AO", "NEO-AO", "NEOAO"],
+    "Glenn_anastomosis":["GLENN", "BDGL", "BDG", "BILATERAL GLENN",
+                         "BILATERAL BDG", "BIDIRECTIONAL GLENN"],
+    "Fontan_IVC_limb":  ["FONTAN", "IVC LIMB", "FONTAN CIRCUIT",
+                          "FONTAN IVC", "IVC FONTAN"],
+    "RV_systemic":      ["RV SYSTEMIC", "SYSTEMIC RV", "SRV"],
+    "LV_systemic":      ["LV SYSTEMIC", "SYSTEMIC LV", "SLV"],
+    "LV_pulmonary":     ["LV PULMONARY", "PULM LV", "PLV"],
+    "Venous_atrium":    ["VENOUS ATRIUM", "VEN ATRIUM", "VA"],
+    "Arterial_atrium":  ["ARTERIAL ATRIUM", "ART ATRIUM", "AA"],
+    # Extra locations for per-diagram customization
+    "Ascending_Aorta":  ["ASC AO", "ASC AORTA", "ASCENDING AO", "AAO"],
+    "BTS":              ["BTS", "BT SHUNT", "BLALOCK"],
+    "Sano_conduit":     ["SANO", "SANO CONDUIT", "RV-PA CONDUIT", "RVPA"],
+    "Fontan_conduit":   ["FONTAN CONDUIT", "FONTAN BAFFLE", "FONTAN TUNNEL",
+                          "EXTRACARDIAC FONTAN", "LATERAL TUNNEL"],
+    "LSVC":             ["LSVC", "LEFT SVC", "L SVC", "LT SVC",
+                          "LEFT SUPERIOR VENA CAVA"],
+    "Coronary_sinus":   ["CS", "CORONARY SINUS", "COR SINUS"],
+    "Innominate_vein":  ["INNOMINATE", "INNOMINATE VEIN", "INNOM",
+                          "BRACHIOCEPHALIC", "BRACHIOCEPHALIC VEIN"],
+    "Hepatic_vein":     ["HV", "HEPATIC VEIN", "HEPATIC", "HEP VEIN"],
+    "Azygos_vein":      ["AZYGOS", "AZYGOS VEIN", "AZ VEIN"],
+    "RVOT":             ["RVOT", "RV OUTFLOW", "RV OUTFLOW TRACT"],
+    "LVOT":             ["LVOT", "LV OUTFLOW", "LV OUTFLOW TRACT"],
+    "Conduit":          ["CONDUIT", "RV PA CONDUIT"],
+    "PV_confluence":    ["PV CONFLUENCE", "PULM VEIN CONFLUENCE",
+                          "PULMONARY VEIN CONFLUENCE"],
+    "Baffle":           ["BAFFLE", "ATRIAL BAFFLE"],
+    "RV_body":          ["RV BODY"],
+    "RV_apex":          ["RV APEX"],
+    "RPV":              ["RPV", "RIGHT PULM VEIN", "RIGHT PULMONARY VEIN",
+                          "R PULM VEIN"],
+    "LPV":              ["LPV", "LEFT PULM VEIN", "LEFT PULMONARY VEIN",
+                          "L PULM VEIN"],
+    "RUPV":             ["RUPV", "RIGHT UPPER PV", "R UPPER PV", "RT UPPER PV",
+                          "RIGHT UPPER PULM VEIN", "RIGHT UPPER PULMONARY VEIN"],
+    "LUPV":             ["LUPV", "LEFT UPPER PV", "L UPPER PV", "LT UPPER PV",
+                          "LEFT UPPER PULM VEIN", "LEFT UPPER PULMONARY VEIN"],
+    "RLPV":             ["RLPV", "RIGHT LOWER PV", "R LOWER PV", "RT LOWER PV",
+                          "RIGHT LOWER PULM VEIN", "RIGHT LOWER PULMONARY VEIN"],
+    "LLPV":             ["LLPV", "LEFT LOWER PV", "L LOWER PV", "LT LOWER PV",
+                          "LEFT LOWER PULM VEIN", "LEFT LOWER PULMONARY VEIN"],
+}
+
+# Locations that DO NOT have oxygen saturations
+PRESSURE_ONLY = {"RPCWP", "LPCWP"}
+
+# ---------------------------------------------------------------------------
+# Build reverse lookup: ALIAS_UPPER → canonical name
+# ---------------------------------------------------------------------------
+_ALIAS_MAP: dict = {}
+for canonical, aliases in LOCATION_ALIASES.items():
+    for alias in aliases:
+        _ALIAS_MAP[alias.upper()] = canonical
+
+# Also allow canonical names typed directly (e.g. "Ascending_Aorta" or
+# "Ascending Aorta") — covers all standard + extra locations without
+# requiring the user to know the shorthand alias.
+for canonical in list(LOCATION_ALIASES.keys()):
+    _ALIAS_MAP.setdefault(canonical.upper(), canonical)
+    _ALIAS_MAP.setdefault(canonical.replace("_", " ").upper(), canonical)
+
+
+def _find_location(token_list, start=0):
+    """
+    Try to match 1, 2, or 3 consecutive tokens to a known location alias.
+    Returns (canonical_name, tokens_consumed) or (None, 0).
+    Tries longer matches first.
+    """
+    for length in (3, 2, 1):
+        candidate = " ".join(token_list[start : start + length]).upper()
+        if candidate in _ALIAS_MAP:
+            return _ALIAS_MAP[candidate], length
+    return None, 0
+
+
+def _parse_numbers(tokens):
+    """
+    Given a list of string tokens (after the location name has been removed),
+    extract: sat, systolic, diastolic, mean.
+
+    Rules:
+    - Token like  X/Y        → systolic=X, diastolic=Y
+    - Token like  X/Y/Z      → systolic=X, diastolic=Y, mean=Z
+    - Token like  mXX or mXX → mean=XX   (m prefix)
+    - Bare number 40–100     → saturation candidate (first one wins)
+    - Bare number            → fill systolic → diastolic → mean in order
+    """
+    sat = systolic = diastolic = mean = None
+
+    for tok in tokens:
+        tok = tok.strip().rstrip('%').strip()
+        if not tok:
+            continue
+
+        # m-prefixed mean
+        m = re.fullmatch(r'm(\d+\.?\d*)', tok, re.IGNORECASE)
+        if m:
+            mean = float(m.group(1))
+            continue
+
+        # Slash-separated: X/Y or X/Y/Z
+        sl = re.fullmatch(r'(\d+\.?\d*)/(\d+\.?\d*)(?:/(\d+\.?\d*))?', tok)
+        if sl:
+            systolic = float(sl.group(1))
+            diastolic = float(sl.group(2))
+            if sl.group(3):
+                mean = float(sl.group(3))
+            continue
+
+        # Bare number
+        nb = re.fullmatch(r'(\d+\.?\d*)', tok)
+        if nb:
+            val = float(nb.group(1))
+            if sat is None and systolic is None and 40 <= val <= 100:
+                sat = val
+            elif systolic is None:
+                systolic = val
+            elif diastolic is None:
+                diastolic = val
+            elif mean is None:
+                mean = val
+            continue
+
+    result = {}
+    if sat is not None:
+        result["sat"] = sat
+    if systolic is not None:
+        result["systolic"] = systolic
+    if diastolic is not None:
+        result["diastolic"] = diastolic
+    if mean is not None:
+        result["mean"] = mean
+    return result
+
+
+def _find_custom_location(token_list, start, extra_locations):
+    """
+    Fallback: try to match tokens against a list of custom location names
+    (those not registered in LOCATION_ALIASES).
+    Accepts both the underscore form (e.g. "Hepatic_vein") and the
+    space-separated display form (e.g. "Hepatic vein").
+    Returns (canonical_name, tokens_consumed) or (None, 0).
+    """
+    for length in (3, 2, 1):
+        if start + length > len(token_list):
+            continue
+        candidate = " ".join(token_list[start : start + length])
+        for extra in extra_locations:
+            if (candidate.upper() == extra.upper()
+                    or candidate.upper() == extra.replace("_", " ").upper()):
+                return extra, length
+    return None, 0
+
+
+def parse_hemodynamics(text: str, extra_locations: list = None) -> dict:
+    """
+    Parse a block of hemodynamic text into a dict keyed by canonical location.
+
+    Accepts:
+    - One location per line (most common)
+    - Multiple locations on one line (fallback)
+    - Colon or comma separators
+    - % signs, m-prefix for mean
+    - Slash-separated pressures
+
+    extra_locations: optional list of custom location names (canonical form,
+        e.g. ["Hepatic_vein", "My_Custom_Loc"]) that are not in LOCATION_ALIASES.
+        Used as a fallback when the standard alias lookup fails.
+
+    Returns:
+    {
+      'SVC':   {'sat': 79},
+      'RA':    {'sat': 74, 'systolic': 10, 'diastolic': 8, 'mean': 9},
+      'RPCWP': {'systolic': 17, 'diastolic': 12, 'mean': 14},
+      ...
+    }
+    """
+    result = {}
+
+    # Normalize: replace commas/colons/semicolons with spaces, strip
+    normalized = re.sub(r'[,:;]', ' ', text)
+    lines = normalized.splitlines()
+
+    for raw_line in lines:
+        line = raw_line.strip()
+        if not line or line.startswith('#'):
+            continue
+
+        # Tokenize
+        tokens = line.split()
+        if not tokens:
+            continue
+
+        # Multiple location entries might be on one line — keep scanning
+        pos = 0
+        while pos < len(tokens):
+            loc, consumed = _find_location(tokens, pos)
+
+            # Fallback: try truly custom location names not in LOCATION_ALIASES
+            if loc is None and extra_locations:
+                loc, consumed = _find_custom_location(tokens, pos, extra_locations)
+
+            if loc is None:
+                pos += 1
+                continue
+
+            pos += consumed
+
+            # Collect numeric tokens until the next location name
+            value_tokens = []
+            while pos < len(tokens):
+                # Peek: is the next token(s) a location?
+                next_loc, _ = _find_location(tokens, pos)
+                if next_loc is not None:
+                    break
+                value_tokens.append(tokens[pos])
+                pos += 1
+
+            parsed = _parse_numbers(value_tokens)
+
+            # For pressure-only locations (RPCWP, LPCWP), fix number interpretation
+            if loc in PRESSURE_ONLY:
+                if "sat" in parsed:
+                    # Re-interpret: sat was probably systolic
+                    v = parsed.pop("sat")
+                    if "systolic" not in parsed:
+                        parsed["systolic"] = v
+                # A lone systolic with no diastolic/mean is a mean wedge pressure
+                # e.g. "RPCWP 12" → mean=12, not systolic=12
+                if ("systolic" in parsed
+                        and "diastolic" not in parsed
+                        and "mean" not in parsed):
+                    parsed["mean"] = parsed.pop("systolic")
+
+            if parsed:
+                # Merge (in case location appears twice)
+                existing = result.get(loc, {})
+                existing.update(parsed)
+                result[loc] = existing
+
+    return result
+
+
+def format_parsed_for_display(parsed: dict) -> str:
+    """Return a human-readable summary of parsed hemodynamics for confirmation."""
+    lines = []
+    ORDER = ["SVC", "IVC", "LSVC", "Innominate_vein", "Coronary_sinus",
+             "Hepatic_vein", "Azygos_vein",
+             "RA", "RV", "RV_body", "RV_apex", "RVOT", "MPA", "RPA", "LPA",
+             "RPCWP", "LPCWP", "RPV", "LPV", "RUPV", "LUPV", "RLPV", "LLPV", "PV_confluence",
+             "LA", "LV", "LVOT", "Descending_Aorta", "Ascending_Aorta",
+             "Neoaorta", "Glenn_anastomosis", "Fontan_IVC_limb", "Fontan_conduit",
+             "RV_systemic", "LV_systemic", "LV_pulmonary",
+             "Venous_atrium", "Arterial_atrium",
+             "BTS", "Sano_conduit", "Conduit", "Baffle"]
+    seen = set()
+    for loc in ORDER:
+        if loc in parsed:
+            seen.add(loc)
+            d = parsed[loc]
+            parts = []
+            if "sat" in d:
+                parts.append(f"Sat {int(d['sat'])}%")
+            if "systolic" in d and "diastolic" in d:
+                parts.append(f"{int(d['systolic'])}/{int(d['diastolic'])}")
+                if "mean" in d:
+                    parts.append(f"mean {int(d['mean'])}")
+            elif "systolic" in d:
+                parts.append(str(int(d["systolic"])))
+            elif "mean" in d:
+                parts.append(f"mean {int(d['mean'])}")
+            lines.append(f"  {loc:<20} {' | '.join(parts)}")
+    # Any extras not in ORDER
+    for loc, d in parsed.items():
+        if loc not in seen:
+            parts = []
+            if "sat" in d:
+                parts.append(f"Sat {int(d['sat'])}%")
+            if "systolic" in d and "diastolic" in d:
+                parts.append(f"{int(d['systolic'])}/{int(d['diastolic'])}")
+                if "mean" in d:
+                    parts.append(f"mean {int(d['mean'])}")
+            lines.append(f"  {loc:<20} {' | '.join(parts)}")
+    return "\n".join(lines) if lines else "  (nothing parsed yet)"

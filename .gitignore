@@ -1,0 +1,13 @@
+# API key — never commit this
+.env
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+.DS_Store
+
+# Node
+mobile/node_modules/
+mobile/dist/
+mobile/.vite/

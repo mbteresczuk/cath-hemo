@@ -1,0 +1,189 @@
+{
+  "categories": [
+    {
+      "id": "ASD_VSD_CCAVC",
+      "display_name": "ASD / VSD / CCAVC / AP Window",
+      "folder": "diagrams/ASD_VSD_CCAVC",
+      "diagrams": [
+        {
+          "id": "AP_window",
+          "filename": "AP window.bmp",
+          "display_name": "AP window",
+          "path": "diagrams/ASD_VSD_CCAVC/AP window.bmp",
+          "category_id": "ASD_VSD_CCAVC",
+          "anatomy_type": "biventricle",
+          "location_set": "standard_biventricle",
+          "has_coords": false,
+          "coord_file": "config/annotation_coords/AP_window.json",
+          "image_width": 520,
+          "image_height": 505
+        },
+        {
+          "id": "ASD_-_Amplatzer",
+          "filename": "ASD - Amplatzer.bmp",
+          "display_name": "ASD - Amplatzer",
+          "path": "diagrams/ASD_VSD_CCAVC/ASD - Amplatzer.bmp",
+          "category_id": "ASD_VSD_CCAVC",
+          "anatomy_type": "biventricle",
+          "location_set": "standard_biventricle",
+          "has_coords": false,
+          "coord_file": "config/annotation_coords/ASD_-_Amplatzer.json",
+          "image_width": 555,
+          "image_height": 525
+        },
+        {
+          "id": "ASD_",
+          "filename": "ASD .bmp",
+          "display_name": "ASD",
+          "path": "diagrams/ASD_VSD_CCAVC/ASD .bmp",
+          "category_id": "ASD_VSD_CCAVC",
+          "anatomy_type": "biventricle",
+          "location_set": "standard_biventricle",
+          "has_coords": false,
+          "coord_file": "config/annotation_coords/ASD_.json",
+          "image_width": 645,
+          "image_height": 537
+        },
+        {
+          "id": "ASD_VSD_PDA",
+          "filename": "ASD VSD PDA.bmp",
+          "display_name": "ASD VSD PDA",
+          "path": "diagrams/ASD_VSD_CCAVC/ASD VSD PDA.bmp",
+          "category_id": "ASD_VSD_CCAVC",
+          "anatomy_type": "biventricle",
+          "location_set": "standard_biventricle",
+          "has_coords": false,
+          "coord_file": "config/annotation_coords/ASD_VSD_PDA.json",
+          "image_width": 606,
+          "image_height": 500
+        },
+        {
+          "id": "ASD_VSD",
+          "filename": "ASD VSD.bmp",
+          "display_name": "ASD VSD",
+          "path": "diagrams/ASD_VSD_CCAVC/ASD VSD.bmp",
+          "category_id": "ASD_VSD_CCAVC",
+          "anatomy_type": "biventricle",
+          "location_set": "standard_biventricle",
+          "has_coords": false,
+          "coord_file": "config/annotation_coords/ASD_VSD.json",
+          "image_width": 823,
+          "image_height": 506
+        },
+        {
+          "id": "ASD_sinus_venosus_SVC_type",
+          "filename": "ASD sinus venosus SVC type.bmp",
+          "display_name": "ASD sinus venosus SVC type",
+          "path": "diagrams/ASD_VSD_CCAVC/ASD sinus venosus SVC type.bmp",
+          "category_id": "ASD_VSD_CCAVC",
+          "anatomy_type": "biventricle",
+          "location_set": "standard_biventricle",
+          "has_coords": false,
+          "coord_file": "config/annotation_coords/ASD_sinus_venosus_SVC_type.json",
+          "image_width": 672,
+          "image_height": 505
+        },
+        {
+          "id": "ASD_PDA",
+          "filename": "ASD_PDA.bmp",
+          "display_name": "ASD PDA",
+          "path": "diagrams/ASD_VSD_CCAVC/ASD_PDA.bmp",
+          "category_id": "ASD_VSD_CCAVC",
+          "anatomy_type": "biventricle",
+          "location_set": "standard_biventricle",
+          "has_coords": false,
+          "coord_file": "config/annotation_coords/ASD_PDA.json",
+          "image_width": 606,
+          "image_height": 500
+        },
+        {
+          "id": "CAVC_-_PAB_with_BDG",
+          "filename": "CAVC - PAB with BDG.bmp",
+          "display_name": "CAVC - PAB with BDG",
+          "path": "diagrams/ASD_VSD_CCAVC/CAVC - PAB with BDG.bmp",
+          "category_id": "ASD_VSD_CCAVC",
+          "anatomy_type": "post_glenn",
+          "location_set": "post_glenn",
+          "has_coords": false,
+          "coord_file": "config/annotation_coords/CAVC_-_PAB_with_BDG.json",
+          "image_width": 706,
+          "image_height": 522
+        },
+        {
+          "id": "VSD_CoA_bicuspid_AoV_s_p_repair",
+          "filename": "VSD CoA bicuspid AoV s_p repair.bmp",
+          "display_name": "VSD CoA bicuspid AoV s p repair",
+          "path": "diagrams/ASD_VSD_CCAVC/VSD CoA bicuspid AoV s_p repair.bmp",
+          "category_id": "ASD_VSD_CCAVC",
+          "anatomy_type": "biventricle",
+          "location_set": "standard_biventricle",
+          "has_coords": false,
+          "coord_file": "config/annotation_coords/VSD_CoA_bicuspid_AoV_s_p_repair.json",
+          "image_width": 672,
+          "image_height": 529
+        },
+        {
+          "id": "VSD",
+          "filename": "VSD.bmp",
+          "display_name": "VSD",
+          "path": "diagrams/ASD_VSD_CCAVC/VSD.bmp",
+          "category_id": "ASD_VSD_CCAVC",
+          "anatomy_type": "biventricle",
+          "location_set": "standard_biventricle",
+          "has_coords": false,
+          "coord_file": "config/annotation_coords/VSD.json",
+          "image_width": 599,
+          "image_height": 510
+        }
+      ]
+    },
+    {
+      "id": "PA_IVS_TGA",
+      "display_name": "PA-IVS / TGA + VSD",
+      "folder": "diagrams/PA_IVS_TGA",
+      "diagrams": []
+    },
+    {
+      "id": "Coarctation_IAA",
+      "display_name": "Coarctation / Interrupted Aortic Arch",
+      "folder": "diagrams/Coarctation_IAA",
+      "diagrams": []
+    },
+    {
+      "id": "HLHS_MA_AA",
+      "display_name": "HLHS (Mitral Atresia / Aortic Atresia)",
+      "folder": "diagrams/HLHS_MA_AA",
+      "diagrams": []
+    },
+    {
+      "id": "TOF",
+      "display_name": "Tetralogy of Fallot",
+      "folder": "diagrams/TOF",
+      "diagrams": []
+    },
+    {
+      "id": "DTGA",
+      "display_name": "D-TGA Variants",
+      "folder": "diagrams/DTGA",
+      "diagrams": []
+    },
+    {
+      "id": "DORV",
+      "display_name": "DORV (Double Outlet Right Ventricle)",
+      "folder": "diagrams/DORV",
+      "diagrams": []
+    },
+    {
+      "id": "HLHS_MS_AS",
+      "display_name": "HLHS (Mitral Stenosis / Aortic Stenosis)",
+      "folder": "diagrams/HLHS_MS_AS",
+      "diagrams": []
+    },
+    {
+      "id": "Uploaded",
+      "display_name": "Uploaded Diagrams",
+      "folder": "diagrams/Uploaded",
+      "diagrams": []
+    }
+  ]
+}

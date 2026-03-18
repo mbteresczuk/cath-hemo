@@ -1,0 +1,17 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "Cath Dashboard",
+      "runtimeExecutable": "/usr/bin/python3",
+      "runtimeArgs": ["-m", "streamlit", "run", "/Users/maribethteresczuk/Public/claude_cath_app/app.py", "--server.port=8501", "--server.headless=true"],
+      "port": 8501
+    },
+    {
+      "name": "Cath API",
+      "runtimeExecutable": "/usr/bin/python3",
+      "runtimeArgs": ["-m", "uvicorn", "api.main:app", "--port", "8000", "--loop", "asyncio", "--http", "h11"],
+      "port": 8000
+    }
+  ]
+}
