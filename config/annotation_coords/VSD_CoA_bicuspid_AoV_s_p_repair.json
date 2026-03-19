@@ -97,8 +97,8 @@
       "annotation_type": "saturation_and_pressure",
       "sat_x": 142,
       "sat_y": 185,
-      "pressure_x": 63,
-      "pressure_y": 171
+      "pressure_x": 67,
+      "pressure_y": 172
     },
     "LUPV": {
       "side": "left",
@@ -113,7 +113,7 @@
       "annotation_type": "saturation_and_pressure",
       "sat_x": 143,
       "sat_y": 221,
-      "pressure_x": 62,
+      "pressure_x": 66,
       "pressure_y": 215
     },
     "LLPV": {

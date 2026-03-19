@@ -32,14 +32,6 @@
       "pressure_x": 364,
       "pressure_y": 381
     },
-    "Neoaorta": {
-      "side": "left",
-      "annotation_type": "saturation_and_pressure",
-      "sat_x": 359,
-      "sat_y": 271,
-      "pressure_x": 283,
-      "pressure_y": 208
-    },
     "MPA": {
       "side": "right",
       "annotation_type": "saturation_and_pressure",
@@ -147,6 +139,13 @@
       "sat_y": 215,
       "pressure_x": 401,
       "pressure_y": 237
+    },
+    "Ascending": {
+      "side": "left",
+      "annotation_type": "pressure_only",
+      "custom": true,
+      "pressure_x": 274,
+      "pressure_y": 198
     }
   }
 }
