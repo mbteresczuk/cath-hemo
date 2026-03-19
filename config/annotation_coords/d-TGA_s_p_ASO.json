@@ -45,16 +45,16 @@
       "annotation_type": "saturation_and_pressure",
       "sat_x": 177,
       "sat_y": 139,
-      "pressure_x": 93,
-      "pressure_y": 136
+      "pressure_x": 83,
+      "pressure_y": 137
     },
     "LPA": {
       "side": "right",
       "annotation_type": "saturation_and_pressure",
-      "sat_x": 300,
-      "sat_y": 85,
-      "pressure_x": 290,
-      "pressure_y": 117
+      "sat_x": 361,
+      "sat_y": 160,
+      "pressure_x": 416,
+      "pressure_y": 167
     },
     "RPCWP": {
       "side": "left",
@@ -65,8 +65,8 @@
     "LPCWP": {
       "side": "left",
       "annotation_type": "pcwp",
-      "pressure_x": 481,
-      "pressure_y": 214
+      "pressure_x": 474,
+      "pressure_y": 225
     },
     "LA": {
       "side": "left",
@@ -105,8 +105,8 @@
       "annotation_type": "saturation_and_pressure",
       "sat_x": 398,
       "sat_y": 216,
-      "pressure_x": 436,
-      "pressure_y": 197
+      "pressure_x": 445,
+      "pressure_y": 204
     },
     "RLPV": {
       "side": "left",
@@ -121,7 +121,7 @@
       "annotation_type": "saturation_and_pressure",
       "sat_x": 413,
       "sat_y": 251,
-      "pressure_x": 461,
+      "pressure_x": 459,
       "pressure_y": 245
     },
     "Ascending_aorta": {
