@@ -81,16 +81,40 @@ st.subheader("Export")
 btn_col1, btn_col2, btn_col3, btn_col4 = st.columns(4)
 
 with btn_col1:
-    # Primary share: combined diagram + narrative as a single image
-    if st.session_state.get("share_img_bytes"):
-        st.download_button(
-            "📤 Share (Diagram + Narrative)",
-            data=st.session_state["share_img_bytes"],
-            file_name=f"cath_report_{diag['id']}.png",
-            mime="image/png",
-            use_container_width=True,
-            type="primary",
+    # Share: downloads the diagram image AND opens the email client
+    # with the narrative pre-filled in the body — one click does both.
+    share_bytes = st.session_state.get("share_img_bytes")
+    if share_bytes:
+        import base64, urllib.parse
+        img_b64 = base64.b64encode(share_bytes).decode()
+        subject = urllib.parse.quote(
+            f"Cath Report – {patient_data.get('name', '')} {patient_data.get('doc', '')}".strip(" –")
         )
+        body = urllib.parse.quote(narrative or "")
+        filename = f"cath_report_{diag['id']}.png"
+        st.components.v1.html(f"""
+        <button onclick="
+          /* 1. Download the diagram image */
+          var a = document.createElement('a');
+          a.href = 'data:image/png;base64,{img_b64}';
+          a.download = '{filename}';
+          document.body.appendChild(a);
+          a.click();
+          document.body.removeChild(a);
+          /* 2. Open email client with narrative pre-filled */
+          setTimeout(function(){{
+            window.location.href = 'mailto:?subject={subject}&body={body}';
+          }}, 300);
+        "
+        style="background:#0068c9;color:white;border:none;padding:10px 16px;
+               border-radius:6px;cursor:pointer;font-size:15px;width:100%;
+               font-family:sans-serif;font-weight:600;">
+          📤 Share (Diagram + Narrative)
+        </button>
+        <div style="font-size:11px;color:#666;margin-top:4px;">
+          Downloads diagram · opens email with narrative
+        </div>
+        """, height=70)
     else:
         st.button("📤 Share (Diagram + Narrative)", disabled=True,
                   use_container_width=True, type="primary")

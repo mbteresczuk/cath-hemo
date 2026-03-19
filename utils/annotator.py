@@ -211,13 +211,15 @@ def draw_pressure_annotation(draw, x, y, systolic, diastolic, mean, side, fonts,
         mw, mh = _text_size(draw, mean_text, font)
         text_x = x - mw if anchor == "right" else x
         pad = 2
-        total_h = 1 + 3 + mh         # overline + gap + text
+        total_h = 2 + 4 + mh         # overline thickness + gap + text
         draw.rectangle(
             [text_x - pad, y - pad, text_x + mw + pad, y + total_h + pad],
             fill="white"
         )
-        draw.line([(text_x, y), (text_x + mw, y)], fill=color, width=1)
-        _draw_text(draw, text_x, y + 3, mean_text, font, color)
+        # Overline: 2px thick so it is clearly visible
+        draw.line([(text_x, y), (text_x + mw, y)], fill=color, width=2)
+        draw.line([(text_x, y + 1), (text_x + mw, y + 1)], fill=color, width=1)
+        _draw_text(draw, text_x, y + 4, mean_text, font, color)
         return
 
     # Standard format: sys/dia on top, mean below overline
@@ -253,8 +255,9 @@ def draw_pressure_annotation(draw, x, y, systolic, diastolic, mean, side, fonts,
     if mean_text is not None:
         line_y = y + th + 3
         mean_x = (x - mw) if anchor == "right" else text_x
-        draw.line([(mean_x, line_y), (mean_x + mw, line_y)], fill=color, width=1)
-        _draw_text(draw, mean_x, line_y + 3, mean_text, font, color)
+        draw.line([(mean_x, line_y), (mean_x + mw, line_y)], fill=color, width=2)
+        draw.line([(mean_x, line_y + 1), (mean_x + mw, line_y + 1)], fill=color, width=1)
+        _draw_text(draw, mean_x, line_y + 4, mean_text, font, color)
 
 
 def draw_pcwp_annotation(draw, x, y, label, systolic, diastolic, mean, fonts):
@@ -281,12 +284,12 @@ def draw_pcwp_annotation(draw, x, y, label, systolic, diastolic, mean, fonts):
         if mean is not None:
             mean_text = str(int(mean))
             mw, mh = _text_size(draw, mean_text, font)
-            total_h += 3 + 1 + 3 + mh
+            total_h += 2 + 4 + mh   # overline (2px) + gap + text
             max_w = max(max_w, mw)
     elif mean is not None:
         mean_text = str(int(mean))
         mw, mh = _text_size(draw, mean_text, font)
-        total_h += mh
+        total_h += 2 + 4 + mh       # overline (2px) + gap + text
         max_w = max(max_w, mw)
         pressure_str = None
     else:
@@ -306,11 +309,18 @@ def draw_pcwp_annotation(draw, x, y, label, systolic, diastolic, mean, fonts):
         if mean is not None:
             mean_text = str(int(mean))
             mw_mean, _ = _text_size(draw, mean_text, font)
-            draw.line([(x, y_cur), (x + mw_mean, y_cur)], fill=color, width=1)
-            y_cur += 3
+            draw.line([(x, y_cur), (x + mw_mean, y_cur)], fill=color, width=2)
+            draw.line([(x, y_cur + 1), (x + mw_mean, y_cur + 1)], fill=color, width=1)
+            y_cur += 4
             _draw_text(draw, x, y_cur, mean_text, font, color)
     elif mean is not None:
-        _draw_text(draw, x, y_cur, str(int(mean)), font, color)
+        # Mean-only PCWP: overline above the mean value
+        mean_text = str(int(mean))
+        mw_mean, _ = _text_size(draw, mean_text, font)
+        draw.line([(x, y_cur), (x + mw_mean, y_cur)], fill=color, width=2)
+        draw.line([(x, y_cur + 1), (x + mw_mean, y_cur + 1)], fill=color, width=1)
+        y_cur += 4
+        _draw_text(draw, x, y_cur, mean_text, font, color)
 
 
 def draw_placement_dots(img: Image.Image, placed_coords: dict) -> Image.Image:
