@@ -73,8 +73,8 @@
       "annotation_type": "saturation_and_pressure",
       "sat_x": 310,
       "sat_y": 220,
-      "pressure_x": 353,
-      "pressure_y": 246
+      "pressure_x": 347,
+      "pressure_y": 245
     },
     "LV": {
       "side": "left",
