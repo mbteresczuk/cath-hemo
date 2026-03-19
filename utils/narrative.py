@@ -81,6 +81,7 @@ def generate_hemodynamic_narrative(hemodynamics, calculations, patient_data, ste
 
     fio2         = patient_data.get("fio2", "21%")
     avo2         = float(patient_data.get("avo2") or 125.0)
+    hgb          = float(patient_data.get("hgb") or 12.0)
     anatomy_type = patient_data.get("anatomy_type", "biventricle")
 
     # ═══════════════════════════════════════════════════════════════════════
@@ -369,8 +370,11 @@ def generate_hemodynamic_narrative(hemodynamics, calculations, patient_data, ste
     svri  = calculations.get("svri")
 
     if qs is not None:
+        # Format Hgb: show one decimal only if it's not a whole number
+        hgb_str = f"{hgb:.1f}".rstrip("0").rstrip(".") if hgb != int(hgb) else str(int(hgb))
         calc_sentences.append(
-            f"Using Fick and an assumed aVO2 of {int(avo2)} mL/min/m\u00b2, "
+            f"Using Fick and an assumed aVO\u2082 of {int(avo2)} mL/min/m\u00b2 "
+            f"and Hgb of {hgb_str} g/dL, "
             f"Qs was equal to {qs:.2f} L/min/m\u00b2."
         )
 
