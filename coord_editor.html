@@ -1,310 +1,283 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Coord Editor</title>
-  <style>
-    /* ── Reset & base ─────────────────────────────────── */
-    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-    body {
-      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-      font-size: 14px;
-      background: #f0f2f5;
-      height: 100vh;
-      display: flex;
-      flex-direction: column;
-      overflow: hidden;
-    }
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Coord Editor · Cath Hemo</title>
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+body {
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  font-size: 13px;
+  background: #0f172a;
+  color: #e2e8f0;
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  user-select: none;
+}
 
-    /* ── Top bar ──────────────────────────────────────── */
-    #topbar {
-      display: flex;
-      align-items: center;
-      gap: 12px;
-      padding: 8px 14px;
-      background: #1e293b;
-      color: #fff;
-      flex-shrink: 0;
-      flex-wrap: wrap;
-    }
-    #topbar h1 { font-size: 15px; font-weight: 700; letter-spacing: 0.3px; white-space: nowrap; }
-    #diag-select {
-      flex: 1; min-width: 180px; max-width: 340px;
-      padding: 5px 8px; border-radius: 6px; border: none;
-      font-size: 13px; background: #334155; color: #fff;
-    }
-    #diag-select option { background: #1e293b; }
+/* ── Top bar ───────────────────────────────────────────────────────── */
+#topbar {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 12px;
+  background: #1e293b;
+  border-bottom: 1px solid #334155;
+  flex-shrink: 0;
+  flex-wrap: wrap;
+}
+#topbar h1 { font-size: 14px; font-weight: 700; color: #f1f5f9; white-space: nowrap; }
 
-    #save-btn {
-      padding: 6px 18px; border-radius: 6px; border: none;
-      background: #22c55e; color: #fff; font-weight: 700;
-      font-size: 13px; cursor: pointer; white-space: nowrap;
-      transition: background 0.15s;
-    }
-    #save-btn:hover { background: #16a34a; }
-    #save-btn:disabled { background: #475569; cursor: default; }
+#diag-select {
+  flex: 1; min-width: 160px; max-width: 320px;
+  padding: 5px 8px; border-radius: 6px;
+  border: 1px solid #475569; background: #0f172a; color: #f1f5f9;
+  font-size: 13px; cursor: pointer;
+}
+#diag-select option, #diag-select optgroup { background: #1e293b; }
 
-    #auto-btn {
-      padding: 6px 14px; border-radius: 6px; border: none;
-      background: #6366f1; color: #fff; font-weight: 600;
-      font-size: 13px; cursor: pointer; white-space: nowrap;
-    }
-    #auto-btn:hover { background: #4f46e5; }
+.tb-btn {
+  padding: 6px 14px; border-radius: 6px; border: none;
+  font-size: 12px; font-weight: 600; cursor: pointer;
+  white-space: nowrap; transition: opacity 0.15s, background 0.15s;
+}
+.tb-btn:disabled { opacity: 0.4; cursor: default; }
+#save-btn  { background: #22c55e; color: #fff; }
+#save-btn:hover:not(:disabled) { background: #16a34a; }
+#auto-btn  { background: #6366f1; color: #fff; }
+#auto-btn:hover:not(:disabled) { background: #4f46e5; }
+#push-btn  { background: #f97316; color: #fff; }
+#push-btn:hover:not(:disabled) { background: #ea580c; }
 
-    #push-btn {
-      padding: 6px 14px; border-radius: 6px; border: none;
-      background: #f97316; color: #fff; font-weight: 600;
-      font-size: 13px; cursor: pointer; white-space: nowrap;
-    }
-    #push-btn:hover { background: #ea580c; }
+#zoom-wrap { display: flex; align-items: center; gap: 4px; margin-left: 4px; }
+.zoom-btn {
+  width: 28px; height: 28px; border-radius: 6px; border: 1px solid #475569;
+  background: #1e293b; color: #f1f5f9; font-size: 16px; cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+}
+.zoom-btn:hover { background: #334155; }
+#zoom-label { font-size: 11px; color: #94a3b8; min-width: 36px; text-align: center; }
 
-    #status {
-      font-size: 12px; color: #94a3b8; white-space: nowrap;
-      min-width: 80px; text-align: right;
-      margin-left: auto;
-    }
-    #status.saved  { color: #4ade80; }
-    #status.saving { color: #fbbf24; }
-    #status.error  { color: #f87171; }
+#status {
+  font-size: 11px; margin-left: auto; white-space: nowrap; padding: 4px 10px;
+  border-radius: 20px; font-weight: 600;
+}
+#status.idle   { color: #64748b; }
+#status.saved  { color: #4ade80; background: rgba(74,222,128,0.1); }
+#status.saving { color: #fbbf24; background: rgba(251,191,36,0.1); }
+#status.error  { color: #f87171; background: rgba(248,113,113,0.1); }
 
-    /* ── Main layout ──────────────────────────────────── */
-    #main {
-      display: flex;
-      flex: 1;
-      overflow: hidden;
-    }
+/* ── Layout ──────────────────────────────────────────────────────────── */
+#layout { display: flex; flex: 1; overflow: hidden; }
 
-    /* ── Sidebar ──────────────────────────────────────── */
-    #sidebar {
-      width: 200px;
-      flex-shrink: 0;
-      background: #fff;
-      border-right: 1px solid #e2e8f0;
-      display: flex;
-      flex-direction: column;
-      overflow: hidden;
-    }
-    #sidebar-header {
-      padding: 10px 12px 6px;
-      font-weight: 700;
-      font-size: 12px;
-      color: #475569;
-      text-transform: uppercase;
-      letter-spacing: 0.5px;
-      border-bottom: 1px solid #e2e8f0;
-      flex-shrink: 0;
-    }
-    #loc-list {
-      overflow-y: auto;
-      flex: 1;
-      padding: 6px 0;
-    }
-    .loc-row {
-      display: flex;
-      align-items: center;
-      gap: 6px;
-      padding: 5px 10px;
-      cursor: pointer;
-      border-left: 3px solid transparent;
-      transition: background 0.1s;
-      font-size: 12px;
-    }
-    .loc-row:hover { background: #f1f5f9; }
-    .loc-row.active { background: #eff6ff; border-left-color: #3b82f6; }
-    .loc-dot {
-      width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0;
-    }
-    .loc-dot.sat      { background: #f97316; }
-    .loc-dot.pressure { background: #3b82f6; }
-    .loc-dot.both { background: linear-gradient(90deg, #f97316 50%, #3b82f6 50%); }
-    .loc-dot.missing { background: #e2e8f0; border: 1.5px dashed #94a3b8; }
-    .loc-name { flex: 1; color: #1e293b; }
-    .loc-check { color: #22c55e; font-size: 11px; }
+/* ── Sidebar ──────────────────────────────────────────────────────────── */
+#sidebar {
+  width: 190px; flex-shrink: 0;
+  background: #1e293b; border-right: 1px solid #334155;
+  display: flex; flex-direction: column; overflow: hidden;
+}
+#sidebar-title {
+  padding: 10px 12px 8px;
+  font-size: 11px; font-weight: 700; text-transform: uppercase;
+  letter-spacing: 0.6px; color: #64748b; border-bottom: 1px solid #334155;
+  flex-shrink: 0;
+}
+#loc-list { overflow-y: auto; flex: 1; padding: 4px 0; }
+.loc-row {
+  display: flex; align-items: center; gap: 7px;
+  padding: 7px 10px; cursor: pointer;
+  border-left: 3px solid transparent;
+  transition: background 0.1s;
+}
+.loc-row:hover { background: #263345; }
+.loc-row.focused { background: #1e3a5f; border-left-color: #3b82f6; }
+.loc-row.armed   { background: #2d1e0f; border-left-color: #f97316; }
+.loc-indicator {
+  width: 11px; height: 11px; border-radius: 50%; flex-shrink: 0;
+  border: 1.5px solid rgba(255,255,255,0.2);
+}
+.loc-indicator.ok-both { background: linear-gradient(135deg, #f97316 50%, #3b82f6 50%); }
+.loc-indicator.ok-sat  { background: #f97316; }
+.loc-indicator.ok-press{ background: #3b82f6; }
+.loc-indicator.missing { background: #1e293b; border-color: #ef4444; border-style: dashed; }
+.loc-name { flex: 1; font-size: 12px; color: #cbd5e1; }
+.loc-status { font-size: 10px; }
+.loc-status.complete { color: #4ade80; }
+.loc-status.partial  { color: #fbbf24; }
+.loc-status.missing  { color: #f87171; }
 
-    /* ── Canvas area ──────────────────────────────────── */
-    #canvas-wrap {
-      flex: 1;
-      overflow: auto;
-      display: flex;
-      align-items: flex-start;
-      justify-content: center;
-      padding: 16px;
-      background: #e2e8f0;
-    }
-    #editor-wrap {
-      position: relative;
-      display: inline-block;
-      box-shadow: 0 4px 24px rgba(0,0,0,0.18);
-      border-radius: 4px;
-      overflow: visible;
-      background: #fff;
-      cursor: default;
-    }
-    #editor-wrap.armed { cursor: crosshair !important; }
+/* Progress */
+#prog-wrap { padding: 8px 12px; border-top: 1px solid #334155; flex-shrink: 0; }
+#prog-bar { height: 4px; background: #334155; border-radius: 2px; overflow: hidden; }
+#prog-fill { height: 100%; background: #22c55e; border-radius: 2px; transition: width 0.3s; width: 0%; }
+#prog-label { font-size: 10px; color: #64748b; margin-top: 4px; }
 
-    #diagram-img {
-      display: block;
-      max-width: 100%;
-      user-select: none;
-      -webkit-user-drag: none;
-      pointer-events: none;
-      border-radius: 4px;
-    }
+/* ── Canvas ───────────────────────────────────────────────────────────── */
+#canvas-area {
+  flex: 1; overflow: hidden; position: relative;
+  background: #0f172a;
+  background-image: radial-gradient(circle, #1e293b 1px, transparent 1px);
+  background-size: 20px 20px;
+  cursor: grab;
+}
+#canvas-area.armed   { cursor: crosshair; }
+#canvas-area.panning { cursor: grabbing; }
 
-    /* Dots */
-    .dot {
-      position: absolute;
-      width: 18px; height: 18px;
-      border-radius: 50%;
-      transform: translate(-50%, -50%);
-      cursor: grab;
-      border: 2.5px solid rgba(255,255,255,0.95);
-      box-shadow: 0 2px 8px rgba(0,0,0,0.4);
-      z-index: 10;
-      transition: transform 0.08s, box-shadow 0.08s;
-      touch-action: none;
-    }
-    .dot:hover { transform: translate(-50%,-50%) scale(1.35); box-shadow: 0 3px 12px rgba(0,0,0,0.5); }
-    .dot.dragging { cursor: grabbing !important; transform: translate(-50%,-50%) scale(1.5); z-index: 100; transition: none; }
-    .dot.sat      { background: #f97316; }
-    .dot.pressure { background: #3b82f6; }
-    .dot.armed-target { box-shadow: 0 0 0 3px #fff, 0 0 0 5px #f97316; animation: pulse 0.8s infinite; }
+#scene {
+  position: absolute;
+  transform-origin: 0 0;
+  top: 0; left: 0;
+}
 
-    @keyframes pulse {
-      0%, 100% { box-shadow: 0 0 0 3px #fff, 0 0 0 5px #f97316; }
-      50%       { box-shadow: 0 0 0 3px #fff, 0 0 0 8px rgba(249,115,22,0.4); }
-    }
+#diagram-img { display: block; }
 
-    /* Dot labels */
-    .dot-label {
-      position: absolute;
-      font-size: 9px;
-      font-weight: 700;
-      color: #1e293b;
-      white-space: nowrap;
-      pointer-events: none;
-      z-index: 11;
-      transform: translateX(-50%);
-      background: rgba(255,255,255,0.82);
-      padding: 1px 4px;
-      border-radius: 3px;
-      text-shadow: none;
-    }
+.dot {
+  position: absolute;
+  width: 22px; height: 22px;
+  border-radius: 50%;
+  transform: translate(-50%, -50%);
+  cursor: grab;
+  border: 3px solid rgba(255,255,255,0.9);
+  box-shadow: 0 2px 10px rgba(0,0,0,0.5);
+  z-index: 10;
+  transition: box-shadow 0.1s, transform 0.1s;
+}
+.dot:hover { transform: translate(-50%,-50%) scale(1.3); }
+.dot.dragging { cursor: grabbing !important; transform: translate(-50%,-50%) scale(1.4); z-index: 100; transition: none; }
+.dot.focused  { box-shadow: 0 0 0 4px #fff, 0 0 0 7px #3b82f6; transform: translate(-50%,-50%) scale(1.25); }
+.dot.sat      { background: #f97316; }
+.dot.pressure { background: #3b82f6; }
 
-    /* Armed banner */
-    #armed-banner {
-      display: none;
-      position: absolute;
-      top: 8px; left: 50%;
-      transform: translateX(-50%);
-      background: rgba(249,115,22,0.95);
-      color: #fff;
-      font-size: 12px; font-weight: 700;
-      padding: 6px 16px;
-      border-radius: 20px;
-      pointer-events: none;
-      z-index: 30;
-      white-space: nowrap;
-      box-shadow: 0 2px 10px rgba(0,0,0,0.25);
-    }
-    #editor-wrap.armed #armed-banner { display: block; }
+.dot-label {
+  position: absolute;
+  font-size: 9px; font-weight: 700;
+  white-space: nowrap;
+  pointer-events: none;
+  z-index: 11;
+  transform: translateX(-50%);
+  background: rgba(15,23,42,0.82);
+  color: #f1f5f9;
+  padding: 1px 4px;
+  border-radius: 3px;
+}
 
-    /* Progress bar */
-    #progress-bar {
-      height: 3px;
-      background: #e2e8f0;
-      flex-shrink: 0;
-    }
-    #progress-fill {
-      height: 100%;
-      background: #22c55e;
-      width: 0%;
-      transition: width 0.3s;
-    }
+#armed-banner {
+  display: none;
+  position: absolute;
+  top: 12px; left: 50%; transform: translateX(-50%);
+  background: #f97316; color: #fff;
+  font-size: 13px; font-weight: 700;
+  padding: 8px 20px; border-radius: 30px;
+  pointer-events: none; z-index: 50;
+  white-space: nowrap;
+  box-shadow: 0 4px 20px rgba(249,115,22,0.5);
+}
+#canvas-area.armed #armed-banner { display: block; }
 
-    /* Empty state */
-    #empty-state {
-      color: #94a3b8;
-      font-size: 14px;
-      text-align: center;
-      margin-top: 60px;
-    }
-  </style>
+#toast {
+  position: absolute; bottom: 20px; left: 50%; transform: translateX(-50%);
+  background: #22c55e; color: #fff; font-weight: 700; font-size: 13px;
+  padding: 8px 22px; border-radius: 30px;
+  pointer-events: none; z-index: 100;
+  opacity: 0; transition: opacity 0.3s;
+  box-shadow: 0 4px 16px rgba(34,197,94,0.4);
+}
+#toast.show { opacity: 1; }
+
+#hint {
+  position: absolute; bottom: 14px; right: 14px;
+  color: #334155; font-size: 11px; pointer-events: none;
+  line-height: 1.8; text-align: right;
+}
+</style>
 </head>
 <body>
 
-<!-- Top bar -->
 <div id="topbar">
   <h1>⚙️ Coord Editor</h1>
-  <select id="diag-select"><option value="">— select diagram —</option></select>
-  <button id="auto-btn" onclick="autoConfigureDiagram()" disabled>🤖 Auto</button>
-  <button id="save-btn" onclick="saveCoords()" disabled>💾 Save</button>
-  <button id="push-btn" onclick="pushToRender()" disabled>🚀 Push to Render</button>
-  <span id="status">No diagram</span>
+  <select id="diag-select"><option value="">— select a diagram —</option></select>
+  <button class="tb-btn" id="auto-btn" onclick="autoConfigureDiagram()" disabled>🤖 Auto-fill</button>
+  <button class="tb-btn" id="save-btn" onclick="saveCoords()" disabled>💾 Save</button>
+  <button class="tb-btn" id="push-btn" onclick="pushToRender()" disabled>🚀 Push to Render</button>
+  <div id="zoom-wrap">
+    <button class="zoom-btn" onclick="adjustZoom(-0.25)">−</button>
+    <span id="zoom-label">100%</span>
+    <button class="zoom-btn" onclick="adjustZoom(+0.25)">+</button>
+    <button class="zoom-btn" onclick="fitZoom()" title="Fit to screen">⊡</button>
+  </div>
+  <span id="status" class="idle">No diagram</span>
 </div>
 
-<!-- Progress bar -->
-<div id="progress-bar"><div id="progress-fill"></div></div>
-
-<!-- Main -->
-<div id="main">
-
-  <!-- Sidebar: location list -->
+<div id="layout">
   <div id="sidebar">
-    <div id="sidebar-header">Locations</div>
-    <div id="loc-list"><div id="empty-state">Select a diagram</div></div>
-  </div>
-
-  <!-- Canvas area -->
-  <div id="canvas-wrap">
-    <div id="editor-wrap">
-      <img id="diagram-img" alt="">
-      <div id="armed-banner">📍 Click to place</div>
+    <div id="sidebar-title">Locations</div>
+    <div id="loc-list"></div>
+    <div id="prog-wrap">
+      <div id="prog-bar"><div id="prog-fill"></div></div>
+      <div id="prog-label">0 / 0 placed</div>
     </div>
   </div>
 
+  <div id="canvas-area">
+    <div id="scene">
+      <img id="diagram-img" alt="">
+    </div>
+    <div id="armed-banner">📍 Click on the diagram to place</div>
+    <div id="toast">Saved ✓</div>
+    <div id="hint">Scroll to zoom · Drag background to pan<br>Click a location name → jumps to its dot</div>
+  </div>
 </div>
 
 <script>
 // ── State ──────────────────────────────────────────────────────────────────────
-let currentDiagram  = null;   // full diagram object from /api/diagrams
-let coordsData      = null;   // full coords JSON from /api/coords/{id}
-let isDirty         = false;
-let armedLoc        = null;   // location name being placed
-let armedStep       = null;   // "sat" or "pressure"
+let currentDiagram = null;
+let coordsData     = null;
+let isDirty        = false;
+let armedLoc       = null;
+let armedStep      = null;
+let focusedLoc     = null;
 
-// Drag state
-let isDragging  = false;
-let activeDot   = null;
-let activeLoc   = null;
-let activeStep  = null;
-let activeLbl   = null;
-let offsetX     = 0;
-let offsetY     = 0;
+// Pan/zoom
+let zoom = 1, panX = 0, panY = 0;
+let isPanning = false;
+let panStartX = 0, panStartY = 0, panOriginX = 0, panOriginY = 0;
+
+// Drag
+let isDragging = false;
+let activeDot = null, activeLoc = null, activeStep = null, activeLbl = null;
+let offsetX = 0, offsetY = 0;
 
 const diagSelect  = document.getElementById("diag-select");
 const saveBtn     = document.getElementById("save-btn");
 const autoBtn     = document.getElementById("auto-btn");
 const pushBtn     = document.getElementById("push-btn");
 const statusEl    = document.getElementById("status");
-const locList     = document.getElementById("loc-list");
-const editorWrap  = document.getElementById("editor-wrap");
+const locListEl   = document.getElementById("loc-list");
+const canvasArea  = document.getElementById("canvas-area");
+const scene       = document.getElementById("scene");
 const imgEl       = document.getElementById("diagram-img");
 const armedBanner = document.getElementById("armed-banner");
-const progressFill= document.getElementById("progress-fill");
+const toast       = document.getElementById("toast");
+const progFill    = document.getElementById("prog-fill");
+const progLabel   = document.getElementById("prog-label");
+const zoomLabel   = document.getElementById("zoom-label");
 
-// ── Boot: load diagram list ────────────────────────────────────────────────────
+// ── Diagram list ───────────────────────────────────────────────────────────────
 async function loadDiagramList() {
   try {
     const res  = await fetch("/api/diagrams");
     const data = await res.json();
-    diagSelect.innerHTML = '<option value="">— select diagram —</option>';
+    diagSelect.innerHTML = '<option value="">— select a diagram —</option>';
+    window._allDiagrams = [];
     for (const cat of data.categories || []) {
-      if (!cat.diagrams || cat.diagrams.length === 0) continue;
+      if (!cat.diagrams?.length) continue;
       const grp = document.createElement("optgroup");
       grp.label = cat.display_name || cat.id;
       for (const d of cat.diagrams) {
+        window._allDiagrams.push(d);
         const opt = document.createElement("option");
         opt.value = d.id;
         opt.textContent = (d.has_coords ? "✅ " : "⚠️ ") + d.display_name;
@@ -312,31 +285,22 @@ async function loadDiagramList() {
       }
       diagSelect.appendChild(grp);
     }
-    // Store all diagrams flat for lookup
-    window._allDiagrams = (data.categories || []).flatMap(c => c.diagrams || []);
-  } catch(e) {
-    setStatus("Failed to load diagrams", "error");
-  }
+  } catch(e) { setStatus("Failed to load diagrams", "error"); }
 }
 
 diagSelect.addEventListener("change", () => {
-  const id = diagSelect.value;
-  if (!id) return;
-  const diag = (window._allDiagrams || []).find(d => d.id === id);
-  if (diag) selectDiagram(diag);
+  const d = (window._allDiagrams || []).find(x => x.id === diagSelect.value);
+  if (d) selectDiagram(d);
 });
 
 // ── Select diagram ─────────────────────────────────────────────────────────────
 async function selectDiagram(diag) {
   currentDiagram = diag;
-  armedLoc = null; armedStep = null;
-  editorWrap.classList.remove("armed");
+  armedLoc = null; armedStep = null; focusedLoc = null;
+  canvasArea.classList.remove("armed");
   setStatus("Loading…", "saving");
-  saveBtn.disabled = true;
-  autoBtn.disabled = false;
-  pushBtn.disabled = false;
+  saveBtn.disabled = autoBtn.disabled = pushBtn.disabled = true;
 
-  // Load coords
   try {
     const res = await fetch(`/api/coords/${diag.id}`);
     coordsData = await res.json();
@@ -344,72 +308,115 @@ async function selectDiagram(diag) {
     coordsData = { diagram_id: diag.id, image_width: diag.image_width, image_height: diag.image_height, locations: {} };
   }
 
-  // Load image
   imgEl.onload = () => {
+    imgEl.width  = imgEl.naturalWidth;
+    imgEl.height = imgEl.naturalHeight;
+    fitZoom();
     buildDots();
     buildLocList();
     updateProgress();
-    setStatus("Ready", "saved");
-    saveBtn.disabled = false;
+    setStatus("Ready — drag dots to reposition", "saved");
+    saveBtn.disabled = autoBtn.disabled = pushBtn.disabled = false;
     isDirty = false;
   };
   imgEl.src = diag.thumbnail_url;
 }
 
-// ── Coordinate helpers ─────────────────────────────────────────────────────────
-function displayScale() {
-  return imgEl.clientWidth > 0 ? imgEl.clientWidth / (currentDiagram?.image_width || 800) : 1;
+// ── Pan / Zoom ─────────────────────────────────────────────────────────────────
+function applyTransform() {
+  scene.style.transform = `translate(${panX}px,${panY}px) scale(${zoom})`;
+  zoomLabel.textContent = Math.round(zoom * 100) + "%";
 }
 
-function clientToImage(cx, cy) {
-  const rect = editorWrap.getBoundingClientRect();
-  const s    = displayScale();
-  const w    = currentDiagram?.image_width  || 800;
-  const h    = currentDiagram?.image_height || 600;
-  return {
-    px: Math.round(Math.max(0, Math.min(w, (cx - rect.left)  / s))),
-    py: Math.round(Math.max(0, Math.min(h, (cy - rect.top)   / s))),
-  };
+function fitZoom() {
+  const cw = canvasArea.clientWidth;
+  const ch = canvasArea.clientHeight;
+  const iw = imgEl.naturalWidth  || 800;
+  const ih = imgEl.naturalHeight || 600;
+  zoom = Math.min((cw - 48) / iw, (ch - 48) / ih, 2);
+  panX = (cw - iw * zoom) / 2;
+  panY = (ch - ih * zoom) / 2;
+  applyTransform();
 }
+
+function adjustZoom(delta) {
+  const cx = canvasArea.clientWidth  / 2;
+  const cy = canvasArea.clientHeight / 2;
+  const nz = Math.max(0.2, Math.min(5, zoom + delta));
+  panX = cx - (cx - panX) * (nz / zoom);
+  panY = cy - (cy - panY) * (nz / zoom);
+  zoom = nz;
+  applyTransform();
+}
+
+canvasArea.addEventListener("wheel", e => {
+  e.preventDefault();
+  const rect = canvasArea.getBoundingClientRect();
+  const mx = e.clientX - rect.left;
+  const my = e.clientY - rect.top;
+  const delta = e.deltaY < 0 ? 0.18 : -0.18;
+  const nz = Math.max(0.2, Math.min(5, zoom + delta));
+  panX = mx - (mx - panX) * (nz / zoom);
+  panY = my - (my - panY) * (nz / zoom);
+  zoom = nz;
+  applyTransform();
+}, { passive: false });
+
+// Pan on background drag
+canvasArea.addEventListener("mousedown", e => {
+  if (armedLoc || e.target.classList.contains("dot")) return;
+  isPanning = true;
+  canvasArea.classList.add("panning");
+  panStartX = e.clientX; panStartY = e.clientY;
+  panOriginX = panX;     panOriginY = panY;
+});
+
+document.addEventListener("mousemove", e => {
+  if (isPanning && !isDragging) {
+    panX = panOriginX + (e.clientX - panStartX);
+    panY = panOriginY + (e.clientY - panStartY);
+    applyTransform(); return;
+  }
+  if (isDragging && activeDot) moveDot(e.clientX, e.clientY);
+});
+
+document.addEventListener("touchmove", e => {
+  if (isDragging && activeDot) { e.preventDefault(); moveDot(e.touches[0].clientX, e.touches[0].clientY); }
+}, { passive: false });
+
+document.addEventListener("mouseup",  () => { endPan(); if (isDragging) finishDrag(); });
+document.addEventListener("touchend", () => { if (isDragging) finishDrag(); });
+function endPan() { isPanning = false; canvasArea.classList.remove("panning"); }
 
 // ── Build dots ─────────────────────────────────────────────────────────────────
 function buildDots() {
-  editorWrap.querySelectorAll(".dot, .dot-label").forEach(e => e.remove());
+  scene.querySelectorAll(".dot,.dot-label").forEach(e => e.remove());
   if (!coordsData) return;
-
   Object.entries(coordsData.locations || {}).forEach(([loc, coord]) => {
     if (coord.skipped) return;
     const ann = coord.annotation_type || "saturation_and_pressure";
-
-    if (["saturation", "saturation_and_pressure"].includes(ann)) {
+    if (["saturation","saturation_and_pressure"].includes(ann)) {
       const sx = coord.sat_x ?? coord.x;
       const sy = coord.sat_y ?? coord.y;
-      if (sx != null && sy != null) addDot(loc, "sat", sx, sy);
+      if (sx != null) addDot(loc, "sat", sx, sy);
     }
-    if (["pressure_only", "saturation_and_pressure", "pcwp"].includes(ann)) {
-      if (coord.pressure_x != null && coord.pressure_y != null)
-        addDot(loc, "pressure", coord.pressure_x, coord.pressure_y);
+    if (["pressure_only","saturation_and_pressure","pcwp"].includes(ann)) {
+      if (coord.pressure_x != null) addDot(loc, "pressure", coord.pressure_x, coord.pressure_y);
     }
   });
 }
 
 function addDot(loc, step, ix, iy) {
-  const s  = displayScale();
-  const cx = ix * s;
-  const cy = iy * s;
-
   const dot = document.createElement("div");
-  dot.className = `dot ${step}`;
-  dot.style.left = cx + "px";
-  dot.style.top  = cy + "px";
-  dot.dataset.loc  = loc;
-  dot.dataset.step = step;
+  dot.className = `dot ${step}${loc === focusedLoc ? " focused" : ""}`;
+  dot.style.left = ix + "px";
+  dot.style.top  = iy + "px";
 
   const lbl = document.createElement("div");
   lbl.className = "dot-label";
-  lbl.textContent = loc.replace(/_/g,"") + (step === "pressure" ? " P" : "");
-  lbl.style.left = cx + "px";
-  lbl.style.top  = (cy - 15) + "px";
+  lbl.textContent = loc.replace(/_/g," ") + (step === "pressure" ? " ·P" : "");
+  lbl.style.left = ix + "px";
+  lbl.style.top  = (iy - 17) + "px";
 
   dot.addEventListener("mousedown", e => {
     if (armedLoc) return;
@@ -419,196 +426,189 @@ function addDot(loc, step, ix, iy) {
   dot.addEventListener("touchstart", e => {
     if (armedLoc) return;
     e.preventDefault(); e.stopPropagation();
-    const t = e.touches[0];
-    startDrag(t.clientX, t.clientY, dot, lbl, loc, step);
+    startDrag(e.touches[0].clientX, e.touches[0].clientY, dot, lbl, loc, step);
   }, { passive: false });
 
-  editorWrap.appendChild(dot);
-  editorWrap.appendChild(lbl);
+  scene.appendChild(dot);
+  scene.appendChild(lbl);
 }
 
 // ── Drag ───────────────────────────────────────────────────────────────────────
-function startDrag(clientX, clientY, dot, lbl, loc, step) {
-  isDragging = true;
-  activeDot = dot; activeLbl = lbl; activeLoc = loc; activeStep = step;
-  const rect  = editorWrap.getBoundingClientRect();
-  offsetX = (clientX - rect.left) - parseFloat(dot.style.left);
-  offsetY = (clientY - rect.top)  - parseFloat(dot.style.top);
+function startDrag(cx, cy, dot, lbl, loc, step) {
+  isDragging = true; activeDot = dot; activeLbl = lbl; activeLoc = loc; activeStep = step;
+  // Compute offset in image-pixel space
+  const rect = canvasArea.getBoundingClientRect();
+  const scx = (cx - rect.left - panX) / zoom;
+  const scy = (cy - rect.top  - panY) / zoom;
+  offsetX = scx - parseFloat(dot.style.left);
+  offsetY = scy - parseFloat(dot.style.top);
   dot.classList.add("dragging");
 }
 
-document.addEventListener("mousemove", e => {
-  if (!isDragging || !activeDot) return;
-  moveDot(e.clientX, e.clientY);
-});
-document.addEventListener("touchmove", e => {
-  if (!isDragging || !activeDot) return;
-  e.preventDefault();
-  moveDot(e.touches[0].clientX, e.touches[0].clientY);
-}, { passive: false });
-document.addEventListener("mouseup",  finishDrag);
-document.addEventListener("touchend", finishDrag);
-
-function moveDot(clientX, clientY) {
-  const rect = editorWrap.getBoundingClientRect();
-  const nx = Math.max(0, Math.min(rect.width,  (clientX - rect.left) - offsetX));
-  const ny = Math.max(0, Math.min(rect.height, (clientY - rect.top)  - offsetY));
+function moveDot(cx, cy) {
+  const rect = canvasArea.getBoundingClientRect();
+  const scx  = (cx - rect.left - panX) / zoom;
+  const scy  = (cy - rect.top  - panY) / zoom;
+  const iw   = currentDiagram?.image_width  || 9999;
+  const ih   = currentDiagram?.image_height || 9999;
+  const nx   = Math.max(0, Math.min(iw, scx - offsetX));
+  const ny   = Math.max(0, Math.min(ih, scy - offsetY));
   activeDot.style.left = nx + "px";
   activeDot.style.top  = ny + "px";
-  if (activeLbl) { activeLbl.style.left = nx + "px"; activeLbl.style.top = (ny - 15) + "px"; }
+  if (activeLbl) { activeLbl.style.left = nx + "px"; activeLbl.style.top = (ny - 17) + "px"; }
 }
 
 function finishDrag() {
-  if (!isDragging || !activeDot) return;
+  if (!activeDot) return;
   isDragging = false;
   activeDot.classList.remove("dragging");
-
-  const s  = displayScale();
-  const nx = Math.round(parseFloat(activeDot.style.left) / s);
-  const ny = Math.round(parseFloat(activeDot.style.top)  / s);
-
+  const nx = Math.round(parseFloat(activeDot.style.left));
+  const ny = Math.round(parseFloat(activeDot.style.top));
   const locs = coordsData.locations;
   if (!locs[activeLoc]) locs[activeLoc] = {};
   if (activeStep === "sat") {
     locs[activeLoc].sat_x = nx; locs[activeLoc].sat_y = ny;
-    delete locs[activeLoc].x; delete locs[activeLoc].y;
+    delete locs[activeLoc].x;  delete locs[activeLoc].y;
   } else {
     locs[activeLoc].pressure_x = nx; locs[activeLoc].pressure_y = ny;
   }
-
   activeDot = null; activeLbl = null; activeLoc = null; activeStep = null;
   markDirty();
   buildLocList();
+  autoSave();   // save automatically 800ms after drag ends
 }
 
 // ── Click-to-place (armed mode) ────────────────────────────────────────────────
-editorWrap.addEventListener("click", e => {
+canvasArea.addEventListener("click", e => {
   if (!armedLoc || !armedStep) return;
   if (e.target.classList.contains("dot")) return;
-  const { px, py } = clientToImage(e.clientX, e.clientY);
+  const rect = canvasArea.getBoundingClientRect();
+  const px = Math.round((e.clientX - rect.left - panX) / zoom);
+  const py = Math.round((e.clientY - rect.top  - panY) / zoom);
   const locs = coordsData.locations;
   if (!locs[armedLoc]) locs[armedLoc] = { annotation_type: "saturation_and_pressure" };
   if (armedStep === "sat") {
     locs[armedLoc].sat_x = px; locs[armedLoc].sat_y = py;
     delete locs[armedLoc].x; delete locs[armedLoc].y;
-    // auto-advance to pressure if needed
     const ann = locs[armedLoc].annotation_type || "saturation_and_pressure";
     if (ann === "saturation_and_pressure") {
       armedStep = "pressure";
-      armedBanner.textContent = `📍 Click to place  ${armedLoc.replace(/_/g," ")}  PRESSURE`;
-    } else {
-      disarm();
-    }
+      armedBanner.textContent = `📍 Now click PRESSURE position for ${armedLoc.replace(/_/g," ")}`;
+    } else { disarm(); }
   } else {
     locs[armedLoc].pressure_x = px; locs[armedLoc].pressure_y = py;
     disarm();
   }
-  buildDots();
-  buildLocList();
-  markDirty();
+  buildDots(); buildLocList(); markDirty(); autoSave();
 });
 
-function armLocation(loc, step) {
-  armedLoc = loc; armedStep = step;
-  editorWrap.classList.add("armed");
-  armedBanner.textContent = `📍 Click to place  ${loc.replace(/_/g," ")}  ${step === "sat" ? "SATURATION" : "PRESSURE"}`;
-  buildLocList(); // highlight
+function armLocation(loc) {
+  const locs = coordsData?.locations || {};
+  const coord = locs[loc] || {};
+  const ann = coord.annotation_type || "saturation_and_pressure";
+  const needsSat  = ["saturation","saturation_and_pressure"].includes(ann);
+  const needsPress= ["pressure_only","saturation_and_pressure","pcwp"].includes(ann);
+  const hasSat    = coord.sat_x != null || coord.x != null;
+  const hasPress  = coord.pressure_x != null;
+  // Jump to dot if it exists
+  const cx = coord.sat_x ?? coord.x ?? coord.pressure_x;
+  const cy = coord.sat_y ?? coord.y ?? coord.pressure_y;
+  if (cx != null) jumpTo(cx, cy);
+  armedLoc = loc;
+  armedStep = (needsSat && !hasSat) ? "sat" : (needsPress && !hasPress) ? "pressure" : "sat";
+  canvasArea.classList.add("armed");
+  armedBanner.textContent = `📍 Click to place  ${loc.replace(/_/g," ")}  —  ${armedStep === "sat" ? "SATURATION" : "PRESSURE"}`;
+  focusedLoc = loc;
+  buildDots(); buildLocList();
 }
 
 function disarm() {
   armedLoc = null; armedStep = null;
-  editorWrap.classList.remove("armed");
+  canvasArea.classList.remove("armed");
   armedBanner.textContent = "";
   buildLocList();
 }
 
-// ── Sidebar location list ──────────────────────────────────────────────────────
+function jumpTo(ix, iy) {
+  // Pan so that image point (ix,iy) is centered in the canvas
+  panX = canvasArea.clientWidth  / 2 - ix * zoom;
+  panY = canvasArea.clientHeight / 2 - iy * zoom;
+  applyTransform();
+}
+
+// ── Sidebar ────────────────────────────────────────────────────────────────────
 function buildLocList() {
-  if (!coordsData) { locList.innerHTML = '<div id="empty-state">Select a diagram</div>'; return; }
-  const locs = coordsData.locations || {};
-  const allLocs = Object.keys(locs);
-
-  // Also show any standard locations that don't have dots yet by checking annotation_type
-  locList.innerHTML = "";
-
-  // Merge placed + expected locations (use placed keys for now)
-  const names = [...new Set([...allLocs])].sort();
-  if (names.length === 0) {
-    locList.innerHTML = '<div style="padding:12px;color:#94a3b8;font-size:12px">No locations yet — click 🤖 Auto to generate positions, then drag to adjust.</div>';
+  if (!coordsData) {
+    locListEl.innerHTML = '<div style="padding:14px 12px;color:#475569;font-size:12px">Select a diagram above</div>';
     return;
   }
-
-  names.forEach(loc => {
+  const locs = coordsData.locations || {};
+  const keys = Object.keys(locs).filter(k => !locs[k].skipped).sort();
+  if (!keys.length) {
+    locListEl.innerHTML = '<div style="padding:14px 12px;color:#475569;font-size:12px">No locations — click 🤖 Auto-fill to generate starting positions.</div>';
+    return;
+  }
+  locListEl.innerHTML = "";
+  keys.forEach(loc => {
     const coord = locs[loc] || {};
-    if (coord.skipped) return;
     const ann = coord.annotation_type || "saturation_and_pressure";
-    const hasSat  = coord.sat_x != null || coord.x != null;
-    const hasPress= coord.pressure_x != null;
     const needsSat  = ["saturation","saturation_and_pressure"].includes(ann);
     const needsPress= ["pressure_only","saturation_and_pressure","pcwp"].includes(ann);
-
-    const complete = (!needsSat || hasSat) && (!needsPress || hasPress);
+    const hasSat    = coord.sat_x != null || coord.x != null;
+    const hasPress  = coord.pressure_x != null;
+    const complete  = (!needsSat || hasSat) && (!needsPress || hasPress);
 
     const row = document.createElement("div");
-    row.className = "loc-row" + (loc === armedLoc ? " active" : "");
+    row.className = "loc-row" + (loc === focusedLoc ? " focused" : "") + (loc === armedLoc ? " armed" : "");
 
-    const dotEl = document.createElement("div");
-    dotEl.className = "loc-dot " + (hasSat && hasPress ? "both" : hasSat ? "sat" : hasPress ? "pressure" : "missing");
+    const ind = document.createElement("div");
+    ind.className = "loc-indicator " + (hasSat && hasPress ? "ok-both" : hasSat ? "ok-sat" : hasPress ? "ok-press" : "missing");
 
-    const nameEl = document.createElement("span");
-    nameEl.className = "loc-name";
-    nameEl.textContent = loc.replace(/_/g," ");
+    const name = document.createElement("span");
+    name.className = "loc-name";
+    name.textContent = loc.replace(/_/g," ");
 
-    const checkEl = document.createElement("span");
-    checkEl.className = "loc-check";
-    checkEl.textContent = complete ? "✓" : "";
+    const stat = document.createElement("span");
+    stat.className = "loc-status " + (complete ? "complete" : hasSat || hasPress ? "partial" : "missing");
+    stat.textContent = complete ? "✓" : (hasSat || hasPress ? "~" : "!");
 
-    row.appendChild(dotEl);
-    row.appendChild(nameEl);
-    row.appendChild(checkEl);
-
-    // Click row: arm for placement
+    row.appendChild(ind); row.appendChild(name); row.appendChild(stat);
     row.addEventListener("click", () => {
-      if (armedLoc === loc) { disarm(); return; }
-      const step = needsSat && !hasSat ? "sat" : needsPress && !hasPress ? "pressure" : "sat";
-      armLocation(loc, step);
+      if (armedLoc === loc) { disarm(); focusedLoc = null; buildDots(); return; }
+      focusedLoc = loc;
+      armLocation(loc);
     });
-
-    locList.appendChild(row);
+    locListEl.appendChild(row);
   });
 }
 
 // ── Progress ───────────────────────────────────────────────────────────────────
 function updateProgress() {
-  if (!coordsData) { progressFill.style.width = "0%"; return; }
+  if (!coordsData) { progFill.style.width = "0%"; progLabel.textContent = "—"; return; }
   const locs = coordsData.locations || {};
   let total = 0, done = 0;
-  Object.entries(locs).forEach(([loc, coord]) => {
+  Object.entries(locs).forEach(([, coord]) => {
     if (coord.skipped) return;
     const ann = coord.annotation_type || "saturation_and_pressure";
-    if (["saturation","saturation_and_pressure"].includes(ann)) {
-      total++;
-      if (coord.sat_x != null || coord.x != null) done++;
-    }
-    if (["pressure_only","saturation_and_pressure","pcwp"].includes(ann)) {
-      total++;
-      if (coord.pressure_x != null) done++;
-    }
+    if (["saturation","saturation_and_pressure"].includes(ann)) { total++; if (coord.sat_x != null || coord.x != null) done++; }
+    if (["pressure_only","saturation_and_pressure","pcwp"].includes(ann)) { total++; if (coord.pressure_x != null) done++; }
   });
-  progressFill.style.width = total > 0 ? `${Math.round(100*done/total)}%` : "0%";
+  progFill.style.width = total > 0 ? `${Math.round(100*done/total)}%` : "0%";
+  progLabel.textContent = `${done} / ${total} placed`;
 }
 
-// ── Save ───────────────────────────────────────────────────────────────────────
-function markDirty() {
-  isDirty = true;
-  setStatus("Unsaved changes", "saving");
-  updateProgress();
+// ── Auto-save & manual save ────────────────────────────────────────────────────
+function markDirty() { isDirty = true; setStatus("Saving…", "saving"); updateProgress(); }
+
+let _saveTimer = null;
+function autoSave() {
+  clearTimeout(_saveTimer);
+  _saveTimer = setTimeout(saveCoords, 800);
 }
 
 async function saveCoords() {
   if (!currentDiagram || !coordsData) return;
-  setStatus("Saving…", "saving");
-  saveBtn.disabled = true;
+  clearTimeout(_saveTimer);
   try {
     const res = await fetch(`/api/coords/${currentDiagram.id}`, {
       method: "PUT",
@@ -618,78 +618,60 @@ async function saveCoords() {
     if (!res.ok) throw new Error(await res.text());
     isDirty = false;
     setStatus("Saved ✓", "saved");
-    // Refresh diagram list to update ✅/⚠️ badges
+    showToast("Saved ✓");
     await loadDiagramList();
     diagSelect.value = currentDiagram.id;
-  } catch(e) {
-    setStatus("Save failed", "error");
-  }
-  saveBtn.disabled = false;
+  } catch(e) { setStatus("Save failed", "error"); }
+}
+
+function showToast(msg) {
+  toast.textContent = msg;
+  toast.classList.add("show");
+  setTimeout(() => toast.classList.remove("show"), 1800);
 }
 
 // ── Auto-configure ─────────────────────────────────────────────────────────────
 async function autoConfigureDiagram() {
   if (!currentDiagram) return;
-  if (!confirm("Replace all current positions with auto-configured ones?")) return;
+  if (!confirm("Replace all positions with auto-generated ones?\nYou can drag them to the correct spots afterwards.")) return;
   setStatus("Auto-configuring…", "saving");
-  // Fetch fresh from server by temporarily clearing coords and re-requesting
-  // We call the existing auto-configure by GETting with ?auto=1
-  // Actually just call a dedicated endpoint — for now, re-fetch coords after clearing
-  // The simplest approach: PUT empty locations so server will auto-configure on next GET
+  autoBtn.disabled = true;
   try {
-    // We'll call a simple approach: send a POST to generate auto coords
     const res = await fetch(`/api/coords/${currentDiagram.id}/auto`, { method: "POST" });
     if (!res.ok) throw new Error(await res.text());
     coordsData = await res.json();
-    buildDots();
-    buildLocList();
-    updateProgress();
-    markDirty();
-    setStatus("Auto-configured — review & save", "saving");
-  } catch(e) {
-    setStatus("Auto-config failed", "error");
-  }
+    buildDots(); buildLocList(); updateProgress();
+    setStatus("Auto-filled — drag dots to correct positions", "saved");
+    showToast("Auto-filled ✓");
+  } catch(e) { setStatus("Auto-fill failed", "error"); }
+  autoBtn.disabled = false;
 }
 
 // ── Push to Render ─────────────────────────────────────────────────────────────
 async function pushToRender() {
-  if (isDirty) {
-    alert("Please save your changes first (💾 Save), then push.");
-    return;
-  }
+  if (isDirty) { alert("Finish saving first — wait for 'Saved ✓' then push."); return; }
+  if (!confirm("Push all saved positions to Render?\n(~1 minute to redeploy)")) return;
   setStatus("Pushing…", "saving");
   pushBtn.disabled = true;
   try {
     const res = await fetch("/api/push_coords", { method: "POST" });
     const data = await res.json();
-    if (data.ok) {
-      setStatus("Pushed ✓ (~1 min to deploy)", "saved");
-    } else {
-      setStatus(data.detail || "Push failed", "error");
-    }
-  } catch(e) {
-    setStatus("Push failed", "error");
-  }
+    setStatus(data.ok ? "Pushed ✓ — redeploying" : "Push failed", data.ok ? "saved" : "error");
+    if (data.ok) showToast("Pushed to Render ✓");
+  } catch(e) { setStatus("Push failed", "error"); }
   pushBtn.disabled = false;
 }
 
-// ── Status helper ──────────────────────────────────────────────────────────────
-function setStatus(msg, cls) {
-  statusEl.textContent = msg;
-  statusEl.className = cls || "";
-}
+// ── Helpers ────────────────────────────────────────────────────────────────────
+function setStatus(msg, cls) { statusEl.textContent = msg; statusEl.className = cls || "idle"; }
 
-// ── Resize: rebuild dots at new scale ─────────────────────────────────────────
-let _resizeTimer = null;
-window.addEventListener("resize", () => {
-  clearTimeout(_resizeTimer);
-  _resizeTimer = setTimeout(() => { if (!isDragging) buildDots(); }, 100);
-});
-
-// ── Keyboard: Escape to disarm ────────────────────────────────────────────────
+// ── Keyboard ───────────────────────────────────────────────────────────────────
 document.addEventListener("keydown", e => {
-  if (e.key === "Escape") disarm();
-  if ((e.metaKey || e.ctrlKey) && e.key === "s") { e.preventDefault(); saveCoords(); }
+  if (e.key === "Escape") { disarm(); focusedLoc = null; buildDots(); }
+  if ((e.metaKey||e.ctrlKey) && e.key === "s") { e.preventDefault(); saveCoords(); }
+  if ((e.metaKey||e.ctrlKey) && e.key === "=") { e.preventDefault(); adjustZoom(+0.25); }
+  if ((e.metaKey||e.ctrlKey) && e.key === "-") { e.preventDefault(); adjustZoom(-0.25); }
+  if ((e.metaKey||e.ctrlKey) && e.key === "0") { e.preventDefault(); fitZoom(); }
 });
 
 // ── Init ───────────────────────────────────────────────────────────────────────
