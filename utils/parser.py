@@ -86,8 +86,15 @@ LOCATION_ALIASES = {
                           "LEFT LOWER PULM VEIN", "LEFT LOWER PULMONARY VEIN"],
 }
 
-# Locations that DO NOT have oxygen saturations
-PRESSURE_ONLY = {"RPCWP", "LPCWP"}
+# Locations that DO NOT have oxygen saturations.
+# A lone number at these locations is interpreted as a mean pressure, not systolic.
+PRESSURE_ONLY = {
+    "RPCWP", "LPCWP",
+    # Glenn/Fontan circuit pressures — always reported as means
+    "Glenn_anastomosis", "Fontan_IVC_limb", "Fontan_conduit",
+    # Pulmonary veins — only mean pressure is clinically used on diagram
+    "RPV", "LPV", "RUPV", "LUPV", "RLPV", "LLPV", "PV_confluence",
+}
 
 # ---------------------------------------------------------------------------
 # Build reverse lookup: ALIAS_UPPER → canonical name

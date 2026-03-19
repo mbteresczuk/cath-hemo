@@ -420,8 +420,12 @@ def annotate_diagram(image_path: str, coords: dict, hemodynamics: dict,
         diastolic = hemo.get("diastolic")
         mean = hemo.get("mean")
 
-        # Suppress sys/dia for mean-only locations, and for PA on Glenn/Fontan anatomy
+        # For mean-only locations, a single entered value is often stored as
+        # systolic by the parser.  Promote it to mean before suppressing so
+        # the overline rendering path receives a value to display.
         if loc_name in _MEAN_ONLY_LOCS or (is_glenn_fontan and loc_name in _PA_LOCS):
+            if mean is None and systolic is not None:
+                mean = systolic   # treat lone value as mean
             systolic = None
             diastolic = None
 
