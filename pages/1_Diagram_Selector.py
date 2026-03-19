@@ -5,7 +5,7 @@ import streamlit as st
 from pathlib import Path
 from PIL import Image
 
-from utils.annotator import pil_to_bytes, safe_open_image
+from utils.annotator import safe_open_image
 from utils.diagram_library import (
     load_library,
     get_all_categories,
@@ -102,7 +102,8 @@ def _render_grid(diagrams: list):
                 try:
                     img = safe_open_image(img_path)
                     img.thumbnail(THUMB_SIZE, Image.LANCZOS)
-                    st.image(pil_to_bytes(img), use_container_width=True)
+                    # Pass PIL image directly — avoids bytes validation issues in Streamlit ≥1.35
+                    st.image(img.convert("RGB"), use_container_width=True)
                 except Exception as e:
                     st.caption(f"⚠️ {e}")
 

@@ -47,7 +47,7 @@ with left_col:
     img_path = BASE_DIR / diag["path"]
     try:
         img = safe_open_image(img_path)
-        st.image(pil_to_bytes(img), use_container_width=True)
+        st.image(img.convert("RGB"), use_container_width=True)
     except Exception as e:
         st.error(f"Could not load image: {e}")
 

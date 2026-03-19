@@ -101,7 +101,7 @@ with col_diag:
         try:
             thumb = safe_open_image(img_path)
             thumb.thumbnail((400, 340), Image.LANCZOS)
-            st.image(pil_to_bytes(thumb), caption=chosen_diag["display_name"],
+            st.image(thumb.convert("RGB"), caption=chosen_diag["display_name"],
                      use_container_width=True)
         except Exception:
             st.warning("Could not load diagram image.")
@@ -393,7 +393,7 @@ if st.session_state.annotated_image is not None:
 
     with out_img_col:
         st.markdown(f"**Annotated Diagram — {diag['display_name']}**")
-        st.image(pil_to_bytes(annotated_img), use_container_width=True)
+        st.image(annotated_img.convert("RGB"), use_container_width=True)
 
     with out_text_col:
         # Narrative — shown first

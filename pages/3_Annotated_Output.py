@@ -175,7 +175,7 @@ with diagram_col:
             "ℹ️ Annotation positions not configured for this diagram. "
             "The base image is shown; go to **Setup Coordinates** to add annotation positions."
         )
-    st.image(pil_to_bytes(annotated_img), use_container_width=True)
+    st.image(annotated_img.convert("RGB"), use_container_width=True)
 
 # Right: narrative + calculations
 with text_col:
