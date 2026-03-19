@@ -102,6 +102,24 @@
       "custom": true,
       "pressure_x": 240,
       "pressure_y": 239
+    },
+    "right_atrium": {
+      "side": "right",
+      "annotation_type": "saturation_and_pressure",
+      "custom": true,
+      "sat_x": 125,
+      "sat_y": 313,
+      "pressure_x": 159,
+      "pressure_y": 329
+    },
+    "Left_atrium": {
+      "side": "right",
+      "annotation_type": "saturation_and_pressure",
+      "custom": true,
+      "sat_x": 358,
+      "sat_y": 236,
+      "pressure_x": 356,
+      "pressure_y": 275
     }
   }
 }
