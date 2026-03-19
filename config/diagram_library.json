@@ -257,7 +257,7 @@
           "category_id": "Uploaded",
           "anatomy_type": "single_ventricle",
           "location_set": "single_ventricle_norwood",
-          "has_coords": false,
+          "has_coords": true,
           "coord_file": "config/annotation_coords/PA_IVS_ECF.json",
           "image_width": 746,
           "image_height": 508
@@ -283,7 +283,7 @@
           "category_id": "Uploaded",
           "anatomy_type": "biventricle",
           "location_set": "standard_biventricle",
-          "has_coords": false,
+          "has_coords": true,
           "coord_file": "config/annotation_coords/Supravalvar_AS.json",
           "image_width": 696,
           "image_height": 539
@@ -309,7 +309,7 @@
           "category_id": "Uploaded",
           "anatomy_type": "biventricle",
           "location_set": "standard_biventricle",
-          "has_coords": false,
+          "has_coords": true,
           "coord_file": "config/annotation_coords/TetralogyofFallot_sp_transannularpatch.json",
           "image_width": 614,
           "image_height": 503
@@ -387,7 +387,7 @@
           "category_id": "Uploaded",
           "anatomy_type": "single_ventricle",
           "location_set": "single_ventricle_norwood",
-          "has_coords": false,
+          "has_coords": true,
           "coord_file": "config/annotation_coords/_S_L_L__Pulm_atresia_Mitral_atresia_-_rmBTS.json",
           "image_width": 700,
           "image_height": 497
