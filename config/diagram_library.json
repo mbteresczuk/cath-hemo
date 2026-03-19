@@ -215,7 +215,7 @@
           "category_id": "PA_IVS_TGA",
           "anatomy_type": "single_ventricle",
           "location_set": "single_ventricle_norwood",
-          "has_coords": false,
+          "has_coords": true,
           "coord_file": "config/annotation_coords/PA_IVS_sp_PV_perforation_and_PDA_stent.json",
           "image_width": 699,
           "image_height": 561
@@ -228,7 +228,7 @@
           "category_id": "PA_IVS_TGA",
           "anatomy_type": "single_ventricle",
           "location_set": "single_ventricle_norwood",
-          "has_coords": false,
+          "has_coords": true,
           "coord_file": "config/annotation_coords/PA_IVS_with_PDA.json",
           "image_width": 690,
           "image_height": 508
@@ -254,7 +254,7 @@
           "category_id": "PA_IVS_TGA",
           "anatomy_type": "post_glenn",
           "location_set": "post_glenn",
-          "has_coords": false,
+          "has_coords": true,
           "coord_file": "config/annotation_coords/PA_IVS_Glenn.json",
           "image_width": 746,
           "image_height": 508
@@ -267,7 +267,7 @@
           "category_id": "PA_IVS_TGA",
           "anatomy_type": "post_fontan",
           "location_set": "post_fontan",
-          "has_coords": false,
+          "has_coords": true,
           "coord_file": "config/annotation_coords/PA_IVS_LTFF.json",
           "image_width": 800,
           "image_height": 508
@@ -280,7 +280,7 @@
           "category_id": "PA_IVS_TGA",
           "anatomy_type": "biventricle",
           "location_set": "standard_biventricle",
-          "has_coords": false,
+          "has_coords": true,
           "coord_file": "config/annotation_coords/UnicuspidPulmonaryValve.json",
           "image_width": 661,
           "image_height": 515
@@ -293,7 +293,7 @@
           "category_id": "PA_IVS_TGA",
           "anatomy_type": "biventricle",
           "location_set": "standard_biventricle",
-          "has_coords": false,
+          "has_coords": true,
           "coord_file": "config/annotation_coords/Valvar_PS_PDA.json",
           "image_width": 729,
           "image_height": 618
@@ -306,7 +306,7 @@
           "category_id": "PA_IVS_TGA",
           "anatomy_type": "biventricle",
           "location_set": "standard_biventricle",
-          "has_coords": false,
+          "has_coords": true,
           "coord_file": "config/annotation_coords/Valvar_PS__ASD.json",
           "image_width": 676,
           "image_height": 592
@@ -319,7 +319,7 @@
           "category_id": "PA_IVS_TGA",
           "anatomy_type": "biventricle",
           "location_set": "standard_biventricle",
-          "has_coords": false,
+          "has_coords": true,
           "coord_file": "config/annotation_coords/Valvar_and_subvalvar_PS__TV_hypoplasia_without_VSD.json",
           "image_width": 676,
           "image_height": 536
@@ -339,7 +339,7 @@
           "category_id": "Coarctation_IAA",
           "anatomy_type": "biventricle",
           "location_set": "standard_biventricle",
-          "has_coords": false,
+          "has_coords": true,
           "coord_file": "config/annotation_coords/CoarctationAorta_LAA_Bil_SVCs.json",
           "image_width": 629,
           "image_height": 501
@@ -352,7 +352,7 @@
           "category_id": "Coarctation_IAA",
           "anatomy_type": "biventricle",
           "location_set": "standard_biventricle",
-          "has_coords": false,
+          "has_coords": true,
           "coord_file": "config/annotation_coords/InterruptedAorticArch_TypeB.json",
           "image_width": 900,
           "image_height": 690
@@ -411,7 +411,7 @@
           "category_id": "HLHS_MA_AA",
           "anatomy_type": "single_ventricle",
           "location_set": "single_ventricle_norwood",
-          "has_coords": false,
+          "has_coords": true,
           "coord_file": "config/annotation_coords/HLHS__MA_AA__NORWOOD_BTS.json",
           "image_width": 662,
           "image_height": 518
@@ -424,7 +424,7 @@
           "category_id": "HLHS_MA_AA",
           "anatomy_type": "post_fontan",
           "location_set": "post_fontan",
-          "has_coords": false,
+          "has_coords": true,
           "coord_file": "config/annotation_coords/HLHS_MA_AA_ECC_FONTAN_TAKEDOWN.json",
           "image_width": 792,
           "image_height": 541
@@ -437,7 +437,7 @@
           "category_id": "HLHS_MA_AA",
           "anatomy_type": "post_fontan",
           "location_set": "post_fontan",
-          "has_coords": false,
+          "has_coords": true,
           "coord_file": "config/annotation_coords/HLHS_MA_AA_ECC_FONTAN.json",
           "image_width": 792,
           "image_height": 541
@@ -450,7 +450,7 @@
           "category_id": "HLHS_MA_AA",
           "anatomy_type": "biventricle",
           "location_set": "standard_biventricle",
-          "has_coords": false,
+          "has_coords": true,
           "coord_file": "config/annotation_coords/HLHS_MA_AA_HYBRID.json",
           "image_width": 672,
           "image_height": 506
@@ -463,7 +463,7 @@
           "category_id": "HLHS_MA_AA",
           "anatomy_type": "post_fontan",
           "location_set": "post_fontan",
-          "has_coords": false,
+          "has_coords": true,
           "coord_file": "config/annotation_coords/HLHS_MA_AA_LT_FONTAN.json",
           "image_width": 700,
           "image_height": 518
@@ -476,7 +476,7 @@
           "category_id": "HLHS_MA_AA",
           "anatomy_type": "post_fontan",
           "location_set": "post_fontan",
-          "has_coords": false,
+          "has_coords": true,
           "coord_file": "config/annotation_coords/HLHS_MA_AS_ECC_FONTAN.json",
           "image_width": 3192,
           "image_height": 3244
@@ -509,7 +509,7 @@
           "category_id": "TOF",
           "anatomy_type": "biventricle",
           "location_set": "standard_biventricle",
-          "has_coords": false,
+          "has_coords": true,
           "coord_file": "config/annotation_coords/TOF_PA__RV-PA_conduit__VSD_open.json",
           "image_width": 717,
           "image_height": 525
@@ -522,7 +522,7 @@
           "category_id": "TOF",
           "anatomy_type": "biventricle",
           "location_set": "standard_biventricle",
-          "has_coords": false,
+          "has_coords": true,
           "coord_file": "config/annotation_coords/TetralogyFallotPS_-_Repaired_-_LPA_Stent.json",
           "image_width": 698,
           "image_height": 525
@@ -535,7 +535,7 @@
           "category_id": "TOF",
           "anatomy_type": "biventricle",
           "location_set": "standard_biventricle",
-          "has_coords": false,
+          "has_coords": true,
           "coord_file": "config/annotation_coords/TetralogyFallotPS-RAA_-_Repaired.json",
           "image_width": 662,
           "image_height": 525
@@ -561,7 +561,7 @@
           "category_id": "TOF",
           "anatomy_type": "biventricle",
           "location_set": "standard_biventricle",
-          "has_coords": false,
+          "has_coords": true,
           "coord_file": "config/annotation_coords/ToF__Absent_PV.json",
           "image_width": 616,
           "image_height": 509
@@ -574,7 +574,7 @@
           "category_id": "TOF",
           "anatomy_type": "biventricle",
           "location_set": "standard_biventricle",
-          "has_coords": false,
+          "has_coords": true,
           "coord_file": "config/annotation_coords/ToF__PS.json",
           "image_width": 647,
           "image_height": 508
@@ -607,7 +607,7 @@
           "category_id": "DTGA",
           "anatomy_type": "biventricle",
           "location_set": "standard_biventricle",
-          "has_coords": false,
+          "has_coords": true,
           "coord_file": "config/annotation_coords/TGA_VSD__S_D_D__sp_rastelli.json",
           "image_width": 693,
           "image_height": 537
@@ -659,7 +659,7 @@
           "category_id": "HLHS_MS_AS",
           "anatomy_type": "single_ventricle",
           "location_set": "single_ventricle_norwood",
-          "has_coords": false,
+          "has_coords": true,
           "coord_file": "config/annotation_coords/HLHS_MS_AA_NORWOOD_RMBTS.json",
           "image_width": 706,
           "image_height": 623
@@ -672,7 +672,7 @@
           "category_id": "HLHS_MS_AS",
           "anatomy_type": "post_fontan",
           "location_set": "post_fontan",
-          "has_coords": false,
+          "has_coords": true,
           "coord_file": "config/annotation_coords/HLHS_MS_AS_NORWOOD_ECFF.json",
           "image_width": 676,
           "image_height": 524
@@ -685,7 +685,7 @@
           "category_id": "HLHS_MS_AS",
           "anatomy_type": "post_fontan",
           "location_set": "post_fontan",
-          "has_coords": false,
+          "has_coords": true,
           "coord_file": "config/annotation_coords/HLHS_MS_AS_NORWOOD_ECFF_LPA_stenosis.json",
           "image_width": 676,
           "image_height": 524
@@ -698,7 +698,7 @@
           "category_id": "HLHS_MS_AS",
           "anatomy_type": "post_fontan",
           "location_set": "post_fontan",
-          "has_coords": false,
+          "has_coords": true,
           "coord_file": "config/annotation_coords/HLHS_MS_AS_NORWOOD_LTFF_BilGlenn.json",
           "image_width": 676,
           "image_height": 524
@@ -718,7 +718,7 @@
           "category_id": "Tricuspid_Atresia",
           "anatomy_type": "biventricle",
           "location_set": "standard_biventricle",
-          "has_coords": false,
+          "has_coords": true,
           "coord_file": "config/annotation_coords/L-TGA__TA__PA.json",
           "image_width": 772,
           "image_height": 504
