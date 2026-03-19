@@ -45,16 +45,16 @@
       "annotation_type": "saturation_and_pressure",
       "sat_x": 142,
       "sat_y": 131,
-      "pressure_x": 43,
-      "pressure_y": 133
+      "pressure_x": 54,
+      "pressure_y": 126
     },
     "LPA": {
       "side": "right",
       "annotation_type": "saturation_and_pressure",
       "sat_x": 324,
       "sat_y": 141,
-      "pressure_x": 382,
-      "pressure_y": 143
+      "pressure_x": 384,
+      "pressure_y": 134
     },
     "RPCWP": {
       "side": "left",

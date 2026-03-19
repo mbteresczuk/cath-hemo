@@ -7,122 +7,138 @@
     "SVC": {
       "side": "right",
       "annotation_type": "saturation",
-      "sat_x": 77,
-      "sat_y": 61
+      "sat_x": 51,
+      "sat_y": 190
     },
     "IVC": {
       "side": "right",
       "annotation_type": "saturation",
-      "sat_x": 80,
-      "sat_y": 385
+      "sat_x": 50,
+      "sat_y": 423
     },
     "RA": {
       "side": "right",
       "annotation_type": "saturation_and_pressure",
-      "sat_x": 129,
-      "sat_y": 228,
-      "pressure_x": 119,
-      "pressure_y": 188
+      "sat_x": 80,
+      "sat_y": 277,
+      "pressure_x": 110,
+      "pressure_y": 312
     },
     "RV": {
       "side": "right",
       "annotation_type": "saturation_and_pressure",
-      "sat_x": 143,
+      "sat_x": 203,
       "sat_y": 341,
-      "pressure_x": 133,
-      "pressure_y": 301
+      "pressure_x": 248,
+      "pressure_y": 385
     },
     "MPA": {
       "side": "right",
       "annotation_type": "saturation_and_pressure",
-      "sat_x": 224,
-      "sat_y": 105,
-      "pressure_x": 214,
-      "pressure_y": 137
+      "sat_x": 182,
+      "sat_y": 223,
+      "pressure_x": 182,
+      "pressure_y": 254
     },
     "RPA": {
       "side": "right",
       "annotation_type": "saturation_and_pressure",
-      "sat_x": 132,
-      "sat_y": 63,
-      "pressure_x": 122,
-      "pressure_y": 95
+      "sat_x": 80,
+      "sat_y": 125,
+      "pressure_x": 12,
+      "pressure_y": 97
     },
     "LPA": {
       "side": "right",
       "annotation_type": "saturation_and_pressure",
-      "sat_x": 253,
-      "sat_y": 78,
-      "pressure_x": 243,
-      "pressure_y": 110
+      "sat_x": 260,
+      "sat_y": 135,
+      "pressure_x": 353,
+      "pressure_y": 138
     },
     "RPCWP": {
       "side": "left",
       "annotation_type": "pcwp",
-      "pressure_x": 5,
-      "pressure_y": 151
+      "pressure_x": 8,
+      "pressure_y": 189
     },
     "LPCWP": {
       "side": "left",
       "annotation_type": "pcwp",
-      "pressure_x": 406,
-      "pressure_y": 151
+      "pressure_x": 389,
+      "pressure_y": 190
     },
     "LA": {
       "side": "left",
       "annotation_type": "saturation_and_pressure",
-      "sat_x": 317,
-      "sat_y": 205,
-      "pressure_x": 312,
-      "pressure_y": 165
+      "sat_x": 229,
+      "sat_y": 199,
+      "pressure_x": 271,
+      "pressure_y": 237
     },
     "LV": {
       "side": "left",
       "annotation_type": "saturation_and_pressure",
-      "sat_x": 326,
-      "sat_y": 336,
-      "pressure_x": 321,
-      "pressure_y": 296
+      "sat_x": 289,
+      "sat_y": 318,
+      "pressure_x": 341,
+      "pressure_y": 348
     },
     "Descending_Aorta": {
       "side": "left",
       "annotation_type": "saturation_and_pressure",
-      "sat_x": 307,
-      "sat_y": 410,
-      "pressure_x": 302,
-      "pressure_y": 370
+      "sat_x": 243,
+      "sat_y": 453,
+      "pressure_x": 298,
+      "pressure_y": 459
     },
     "RUPV": {
       "side": "left",
       "annotation_type": "saturation_and_pressure",
-      "sat_x": 330,
-      "sat_y": 151,
-      "pressure_x": 325,
-      "pressure_y": 111
+      "sat_x": 81,
+      "sat_y": 184,
+      "pressure_x": 9,
+      "pressure_y": 160
     },
     "LUPV": {
       "side": "left",
       "annotation_type": "saturation_and_pressure",
-      "sat_x": 361,
-      "sat_y": 149,
-      "pressure_x": 356,
-      "pressure_y": 181
+      "sat_x": 307,
+      "sat_y": 191,
+      "pressure_x": 349,
+      "pressure_y": 177
     },
     "RLPV": {
       "side": "left",
       "annotation_type": "saturation_and_pressure",
-      "sat_x": 330,
-      "sat_y": 244,
-      "pressure_x": 325,
-      "pressure_y": 204
+      "sat_x": 82,
+      "sat_y": 216,
+      "pressure_x": 10,
+      "pressure_y": 220
     },
     "LLPV": {
       "side": "left",
       "annotation_type": "saturation_and_pressure",
-      "sat_x": 361,
-      "sat_y": 241,
-      "pressure_x": 356,
-      "pressure_y": 201
+      "sat_x": 326,
+      "sat_y": 227,
+      "pressure_x": 364,
+      "pressure_y": 216
+    },
+    "L-SVC": {
+      "side": "right",
+      "annotation_type": "saturation_and_pressure",
+      "custom": true,
+      "sat_x": 297,
+      "sat_y": 83,
+      "pressure_x": 337,
+      "pressure_y": 84
+    },
+    "Ascending_Aorta": {
+      "side": "right",
+      "annotation_type": "pressure_only",
+      "custom": true,
+      "pressure_x": 137,
+      "pressure_y": 178
     }
   }
 }

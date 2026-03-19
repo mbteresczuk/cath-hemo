@@ -19,10 +19,10 @@
     "RA": {
       "side": "right",
       "annotation_type": "saturation_and_pressure",
-      "sat_x": 172,
-      "sat_y": 306,
-      "pressure_x": 212,
-      "pressure_y": 346
+      "sat_x": 182,
+      "sat_y": 296,
+      "pressure_x": 223,
+      "pressure_y": 345
     },
     "Glenn_anastomosis": {
       "side": "right",
@@ -67,14 +67,6 @@
       "sat_y": 216,
       "pressure_x": 360,
       "pressure_y": 246
-    },
-    "LV_systemic": {
-      "side": "left",
-      "annotation_type": "saturation_and_pressure",
-      "sat_x": 316,
-      "sat_y": 349,
-      "pressure_x": 354,
-      "pressure_y": 390
     },
     "Descending_Aorta": {
       "side": "left",
@@ -122,6 +114,15 @@
       "custom": true,
       "pressure_x": 254,
       "pressure_y": 187
+    },
+    "RV": {
+      "side": "right",
+      "annotation_type": "saturation_and_pressure",
+      "custom": true,
+      "sat_x": 309,
+      "sat_y": 354,
+      "pressure_x": 363,
+      "pressure_y": 394
     }
   }
 }
