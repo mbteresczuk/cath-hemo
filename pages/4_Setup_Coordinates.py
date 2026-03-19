@@ -199,15 +199,18 @@ with left_col:
             save_coords(diag_id, coords)
             st.session_state.library = mark_coords_status(load_library())
 
-            # Only auto-advance arm state on click-to-place, not on drag
-            if action == "click" and active_loc and active_step:
-                ann_type = get_annotation_type(active_loc)
-                if active_step == "sat" and ann_type == "saturation_and_pressure":
-                    st.session_state[active_step_key] = "pressure"
-                else:
-                    st.session_state.pop(active_loc_key, None)
-                    st.session_state.pop(active_step_key, None)
-            st.rerun()
+            # For drags: save silently — no rerun so the component keeps its
+            # own dot positions without a disruptive round-trip to Python.
+            # For clicks: rerun to advance the armed state to the next step.
+            if action == "click":
+                if active_loc and active_step:
+                    ann_type = get_annotation_type(active_loc)
+                    if active_step == "sat" and ann_type == "saturation_and_pressure":
+                        st.session_state[active_step_key] = "pressure"
+                    else:
+                        st.session_state.pop(active_loc_key, None)
+                        st.session_state.pop(active_step_key, None)
+                st.rerun()
 
     except Exception as e:
         st.error(f"Drag component error: {e}")

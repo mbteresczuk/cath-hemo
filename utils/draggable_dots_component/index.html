@@ -115,7 +115,6 @@
 
   <script>
     // ─── Streamlit component API ────────────────────────────────────────────────
-    // NOTE: isStreamlitMessage: true is REQUIRED — Streamlit ignores messages without it
     function postMsg(type, extra) {
       window.parent.postMessage({ isStreamlitMessage: true, type, ...extra }, "*");
     }
@@ -124,35 +123,67 @@
     const sendHeight = (h) => postMsg("streamlit:setFrameHeight", { height: h });
 
     // ─── State ──────────────────────────────────────────────────────────────────
-    let state       = {};   // mirror of coords["locations"]
+    let state       = {};
     let origW       = 800;
     let origH       = 600;
     let armedLoc    = null;
     let armedStep   = null;
     let armedType   = null;
-    let isDragging  = false;
-    let pendingArgs = null;
     let lastB64     = null;
 
-    // Active drag tracking (global, single dot at a time)
-    let activeDot  = null;
-    let activeLoc  = null;
-    let activeStep = null;
-    let activeLbl  = null;
-    let mx0, my0, dx0, dy0;
+    // Active drag tracking
+    let isDragging  = false;
+    let activeDot   = null;
+    let activeLoc   = null;
+    let activeStep  = null;
+    let activeLbl   = null;
 
-    const wrap    = document.getElementById("wrap");
-    const imgEl   = document.getElementById("diagram-img");
-    const banner  = document.getElementById("armed-banner");
+    // Drag offset: cursor position relative to dot center at drag start
+    let offsetX = 0;
+    let offsetY = 0;
+
+    const wrap   = document.getElementById("wrap");
+    const imgEl  = document.getElementById("diagram-img");
+    const banner = document.getElementById("armed-banner");
+
+    // ─── Coordinate helpers ─────────────────────────────────────────────────────
+    function displayScale() {
+      // Always recalculate from live element width
+      return imgEl.clientWidth > 0 ? imgEl.clientWidth / origW : 1;
+    }
+
+    // Convert a client-space point to image-pixel coordinates
+    function clientToImage(cx, cy) {
+      const rect = wrap.getBoundingClientRect();
+      const s    = displayScale();
+      const px   = Math.round(Math.max(0, Math.min(origW, (cx - rect.left)  / s)));
+      const py   = Math.round(Math.max(0, Math.min(origH, (cy - rect.top)   / s)));
+      return { px, py };
+    }
+
+    // Convert image-pixel coordinates to CSS pixel position within #wrap
+    function imageToCss(ix, iy) {
+      const s = displayScale();
+      return { cx: ix * s, cy: iy * s };
+    }
+
+    function syncHeight() {
+      const h = imgEl.getBoundingClientRect().height || imgEl.clientHeight;
+      if (h > 0) sendHeight(Math.ceil(h) + 8);
+    }
 
     // ─── Apply args from Streamlit ──────────────────────────────────────────────
     function applyArgs(args) {
       origW     = args.image_width  || 800;
       origH     = args.image_height || 600;
-      state     = JSON.parse(JSON.stringify(args.coords_locations || {}));
       armedLoc  = args.armed_loc  || null;
       armedStep = args.armed_step || null;
       armedType = args.armed_type || null;
+
+      // Merge incoming locations into state but DON'T overwrite during drag
+      if (!isDragging) {
+        state = JSON.parse(JSON.stringify(args.coords_locations || {}));
+      }
 
       // Armed banner text
       if (armedLoc && armedStep) {
@@ -163,38 +194,27 @@
         banner.textContent = "";
       }
 
-      // Image
+      // Image — only reload if base64 changed
       const b64 = args.imageBase64 || "";
       if (b64 !== lastB64) {
         lastB64 = b64;
         imgEl.onload = () => { buildDots(); syncHeight(); };
         imgEl.src = "data:image/png;base64," + b64;
-        // Handle cached / already loaded
         if (imgEl.complete && imgEl.naturalWidth > 0) {
           imgEl.onload = null;
           buildDots();
           syncHeight();
         }
       } else {
-        buildDots();
+        if (!isDragging) buildDots();
         syncHeight();
       }
-    }
-
-    function syncHeight() {
-      const h = imgEl.getBoundingClientRect().height || imgEl.clientHeight;
-      if (h > 0) sendHeight(Math.ceil(h) + 8);
-    }
-
-    function displayScale() {
-      return imgEl.clientWidth / origW;
     }
 
     // ─── Build dots ─────────────────────────────────────────────────────────────
     function buildDots() {
       wrap.querySelectorAll(".dot, .dot-label").forEach(e => e.remove());
 
-      const s   = displayScale();
       let nDots = 0;
 
       Object.entries(state).forEach(([loc, coord]) => {
@@ -204,55 +224,71 @@
         if (["saturation", "saturation_and_pressure"].includes(ann)) {
           const sx = coord.sat_x != null ? coord.sat_x : coord.x;
           const sy = coord.sat_y != null ? coord.sat_y : coord.y;
-          if (sx != null && sy != null) { addDot(loc, "sat", sx, sy, s); nDots++; }
+          if (sx != null && sy != null) { addDot(loc, "sat", sx, sy); nDots++; }
         }
 
         if (["pressure_only", "saturation_and_pressure", "pcwp"].includes(ann)) {
           const px = coord.pressure_x;
           const py = coord.pressure_y;
-          if (px != null && py != null) { addDot(loc, "pressure", px, py, s); nDots++; }
+          if (px != null && py != null) { addDot(loc, "pressure", px, py); nDots++; }
         }
       });
 
       nDots > 0 ? wrap.classList.add("has-dots") : wrap.classList.remove("has-dots");
     }
 
-    function addDot(loc, step, ix, iy, s) {
-      // Dot element
+    function addDot(loc, step, ix, iy) {
+      const { cx, cy } = imageToCss(ix, iy);
+
       const dot = document.createElement("div");
       dot.className = `dot ${step}`;
-      dot.style.left = (ix * s) + "px";
-      dot.style.top  = (iy * s) + "px";
+      dot.style.left = cx + "px";
+      dot.style.top  = cy + "px";
+      dot.dataset.loc  = loc;
+      dot.dataset.step = step;
 
-      // Label element
       const lbl = document.createElement("div");
       lbl.className = "dot-label";
       lbl.textContent = loc.replace(/_/g, " ") + (step === "pressure" ? " ·P" : "");
-      lbl.style.left = (ix * s) + "px";
-      lbl.style.top  = ((iy * s) - 14) + "px";
+      lbl.style.left = cx + "px";
+      lbl.style.top  = (cy - 14) + "px";
 
-      // Drag start
+      // ── Drag start (mouse) ──
       dot.addEventListener("mousedown", e => {
-        e.stopPropagation(); e.preventDefault();
-        isDragging = true;
-        activeDot = dot; activeLoc = loc; activeStep = step; activeLbl = lbl;
-        mx0 = e.clientX; my0 = e.clientY;
-        dx0 = parseFloat(dot.style.left);
-        dy0 = parseFloat(dot.style.top);
-        dot.classList.add("dragging");
+        if (armedLoc) return;   // armed mode: ignore dot clicks
+        e.stopPropagation();
+        e.preventDefault();
+        startDrag(e.clientX, e.clientY, dot, lbl, loc, step);
       });
+
+      // ── Drag start (touch) ──
       dot.addEventListener("touchstart", e => {
-        e.stopPropagation(); e.preventDefault();
-        isDragging = true;
-        activeDot = dot; activeLoc = loc; activeStep = step; activeLbl = lbl;
-        mx0 = e.touches[0].clientX; my0 = e.touches[0].clientY;
-        dx0 = parseFloat(dot.style.left);
-        dy0 = parseFloat(dot.style.top);
-        dot.classList.add("dragging");
+        if (armedLoc) return;
+        e.stopPropagation();
+        e.preventDefault();
+        const t = e.touches[0];
+        startDrag(t.clientX, t.clientY, dot, lbl, loc, step);
       }, { passive: false });
 
       wrap.appendChild(dot);
       wrap.appendChild(lbl);
+    }
+
+    function startDrag(clientX, clientY, dot, lbl, loc, step) {
+      isDragging  = true;
+      activeDot   = dot;
+      activeLbl   = lbl;
+      activeLoc   = loc;
+      activeStep  = step;
+
+      // Record cursor offset relative to dot center (in CSS pixels)
+      const dotLeft = parseFloat(dot.style.left);
+      const dotTop  = parseFloat(dot.style.top);
+      const rect    = wrap.getBoundingClientRect();
+      offsetX = (clientX - rect.left) - dotLeft;
+      offsetY = (clientY - rect.top)  - dotTop;
+
+      dot.classList.add("dragging");
     }
 
     // ─── Global drag move / end ─────────────────────────────────────────────────
@@ -260,6 +296,7 @@
       if (!isDragging || !activeDot) return;
       moveDot(e.clientX, e.clientY);
     });
+
     document.addEventListener("touchmove", e => {
       if (!isDragging || !activeDot) return;
       e.preventDefault();
@@ -269,10 +306,11 @@
     document.addEventListener("mouseup",  finishDrag);
     document.addEventListener("touchend", finishDrag);
 
-    function moveDot(cx, cy) {
+    function moveDot(clientX, clientY) {
       const rect = wrap.getBoundingClientRect();
-      const nx = Math.max(0, Math.min(rect.width,  dx0 + cx - mx0));
-      const ny = Math.max(0, Math.min(rect.height, dy0 + cy - my0));
+      // New dot center = cursor position within wrap, minus the grab offset
+      const nx = Math.max(0, Math.min(rect.width,  (clientX - rect.left) - offsetX));
+      const ny = Math.max(0, Math.min(rect.height, (clientY - rect.top)  - offsetY));
       activeDot.style.left = nx + "px";
       activeDot.style.top  = ny + "px";
       if (activeLbl) {
@@ -286,9 +324,10 @@
       isDragging = false;
       activeDot.classList.remove("dragging");
 
+      // Convert final CSS position back to image pixel coordinates
       const s  = displayScale();
-      const nx = Math.round(parseFloat(activeDot.style.left) / s);
-      const ny = Math.round(parseFloat(activeDot.style.top)  / s);
+      const nx = Math.round(parseFloat(activeDot.style.left)  / s);
+      const ny = Math.round(parseFloat(activeDot.style.top)   / s);
 
       if (!state[activeLoc]) state[activeLoc] = {};
       if (activeStep === "sat") {
@@ -302,46 +341,39 @@
       }
 
       activeDot = null; activeLoc = null; activeStep = null; activeLbl = null;
-      sendValue({ locations: state, type: "drag" });
 
-      // Apply any deferred Streamlit render
-      if (pendingArgs) { const a = pendingArgs; pendingArgs = null; applyArgs(a); }
+      // Send to Python (save silently — no rerun triggered for drags)
+      sendValue({ locations: state, type: "drag" });
     }
 
     // ─── Click-to-place (when armed) ────────────────────────────────────────────
     wrap.addEventListener("click", e => {
       if (!armedLoc || !armedStep) return;
-      if (e.target.classList.contains("dot")) return; // ignore dot clicks
+      if (e.target.classList.contains("dot")) return;
 
-      const rect = wrap.getBoundingClientRect();
-      const s    = displayScale();
-      const ix   = Math.round((e.clientX - rect.left) / s);
-      const iy   = Math.round((e.clientY - rect.top)  / s);
+      const { px, py } = clientToImage(e.clientX, e.clientY);
 
       if (!state[armedLoc]) {
         state[armedLoc] = { annotation_type: armedType || "saturation_and_pressure" };
       }
       if (armedStep === "sat") {
-        state[armedLoc].sat_x = ix;
-        state[armedLoc].sat_y = iy;
+        state[armedLoc].sat_x = px;
+        state[armedLoc].sat_y = py;
         delete state[armedLoc].x;
         delete state[armedLoc].y;
       } else {
-        state[armedLoc].pressure_x = ix;
-        state[armedLoc].pressure_y = iy;
+        state[armedLoc].pressure_x = px;
+        state[armedLoc].pressure_y = py;
       }
 
+      buildDots();
       sendValue({ locations: state, type: "click" });
     });
 
     // ─── Listen for Streamlit messages ──────────────────────────────────────────
-    // React Strict Mode double-mounts components (mount → cleanup → remount).
-    // One iframe becomes "active" (gets a streamlit:render reply); the other
-    // ("ghost") never does.  We cap retries at 25 (~8 s) so the ghost iframe
-    // stops spamming "unregistered ComponentInstance" warnings in the console.
     let _registered  = false;
     let _retryCount  = 0;
-    const _MAX_RETRY = 25;          // 500ms + 25×300ms ≈ 8 s then give up
+    const _MAX_RETRY = 25;
 
     function _bootReady() {
       if (_registered || _retryCount >= _MAX_RETRY) return;
@@ -352,22 +384,16 @@
 
     window.addEventListener("message", ev => {
       if (ev.data.type !== "streamlit:render") return;
-      _registered = true;          // stop retrying
-      if (isDragging) {
-        pendingArgs = ev.data.args; // buffer until drag ends
-      } else {
-        applyArgs(ev.data.args);
-      }
+      _registered = true;
+      applyArgs(ev.data.args);
     });
 
-    // Recompute dot positions on resize (keeps dots aligned with image)
+    // Recompute dot positions on resize
     window.addEventListener("resize", () => {
       if (!isDragging) buildDots();
       syncHeight();
     });
 
-    // Delay first attempt by 500ms — gives React's useEffect time to register
-    // the ComponentInstance before our first message arrives.
     setTimeout(_bootReady, 500);
   </script>
 </body>
