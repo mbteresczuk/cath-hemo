@@ -184,7 +184,8 @@ def draw_pressure_annotation(draw, x, y, systolic, diastolic, mean, side, fonts,
     color = COLORS["right_pressure"] if side == "right" else COLORS["left_pressure"]
     font = fonts["regular"]
 
-    if systolic is None and diastolic is None:
+    # Nothing to draw
+    if systolic is None and diastolic is None and mean is None:
         return
 
     if ventricular:
@@ -192,13 +193,31 @@ def draw_pressure_annotation(draw, x, y, systolic, diastolic, mean, side, fonts,
             line1 = f"{int(systolic)}/{int(mean)}"
         elif systolic is not None:
             line1 = str(int(systolic))
-        else:
+        elif mean is not None:
             line1 = str(int(mean))
+        else:
+            return
         tw, th = _text_size(draw, line1, font)
         text_x = x - tw if anchor == "right" else x
         pad = 2
         draw.rectangle([text_x - pad, y - pad, text_x + tw + pad, y + th + pad], fill="white")
         _draw_text(draw, text_x, y, line1, font, color)
+        return
+
+    # Mean-only case (e.g. Glenn/Fontan PA pressures, wedge, PV):
+    # draw the mean with an overline above it to indicate it is a mean value
+    if systolic is None and diastolic is None:
+        mean_text = str(int(mean))
+        mw, mh = _text_size(draw, mean_text, font)
+        text_x = x - mw if anchor == "right" else x
+        pad = 2
+        total_h = 1 + 3 + mh         # overline + gap + text
+        draw.rectangle(
+            [text_x - pad, y - pad, text_x + mw + pad, y + total_h + pad],
+            fill="white"
+        )
+        draw.line([(text_x, y), (text_x + mw, y)], fill=color, width=1)
+        _draw_text(draw, text_x, y + 3, mean_text, font, color)
         return
 
     # Standard format: sys/dia on top, mean below overline
@@ -579,10 +598,12 @@ def build_share_image(
     canvas_h = max(diag_h, text_content_h)
     canvas_w = diag_w + TEXT_WIDTH
 
-    canvas = Image.new("RGBA", (canvas_w, canvas_h), "white")
-    # Paste diagram centred vertically
+    # Work in RGB so the diagram (which may be RGBA) composites correctly
+    canvas = Image.new("RGB", (canvas_w, canvas_h), "white")
+    # Flatten diagram to RGB before pasting to avoid alpha-compositing issues
+    diag_rgb = annotated_img.convert("RGB")
     paste_y = (canvas_h - diag_h) // 2
-    canvas.paste(annotated_img, (0, paste_y))
+    canvas.paste(diag_rgb, (0, paste_y))
 
     draw = ImageDraw.Draw(canvas)
 
@@ -601,4 +622,4 @@ def build_share_image(
             _draw_text(draw, tx, ty, line_text, font, "#222222")
         ty += LINE_H
 
-    return canvas.convert("RGB")
+    return canvas
