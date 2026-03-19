@@ -79,7 +79,7 @@ def _load_fonts():
     }
 
     fonts = {}
-    sizes = {"bold_large": 13, "regular": 13, "bold_small": 13}
+    sizes = {"bold_large": 16, "regular": 16, "bold_small": 16}
 
     for key, paths in font_paths.items():
         font = None
