@@ -1,0 +1,100 @@
+{
+  "diagram_id": "dTGA_s_p_Mustard",
+  "image_width": 610,
+  "image_height": 567,
+  "auto_configured": true,
+  "locations": {
+    "SVC": {
+      "side": "right",
+      "annotation_type": "saturation",
+      "sat_x": 130,
+      "sat_y": 99
+    },
+    "IVC": {
+      "side": "right",
+      "annotation_type": "saturation",
+      "sat_x": 124,
+      "sat_y": 410
+    },
+    "Venous_atrium": {
+      "side": "right",
+      "annotation_type": "saturation_and_pressure",
+      "sat_x": 187,
+      "sat_y": 275,
+      "pressure_x": 177,
+      "pressure_y": 235
+    },
+    "RV_systemic": {
+      "side": "left",
+      "annotation_type": "saturation_and_pressure",
+      "sat_x": 383,
+      "sat_y": 365,
+      "pressure_x": 378,
+      "pressure_y": 325
+    },
+    "Descending_Aorta": {
+      "side": "left",
+      "annotation_type": "saturation_and_pressure",
+      "sat_x": 296,
+      "sat_y": 449,
+      "pressure_x": 291,
+      "pressure_y": 409
+    },
+    "MPA": {
+      "side": "right",
+      "annotation_type": "saturation_and_pressure",
+      "sat_x": 224,
+      "sat_y": 140,
+      "pressure_x": 214,
+      "pressure_y": 172
+    },
+    "Arterial_atrium": {
+      "side": "left",
+      "annotation_type": "saturation_and_pressure",
+      "sat_x": 370,
+      "sat_y": 221,
+      "pressure_x": 365,
+      "pressure_y": 181
+    },
+    "LV_pulmonary": {
+      "side": "right",
+      "annotation_type": "saturation_and_pressure",
+      "sat_x": 245,
+      "sat_y": 381,
+      "pressure_x": 235,
+      "pressure_y": 341
+    },
+    "RUPV": {
+      "side": "left",
+      "annotation_type": "saturation_and_pressure",
+      "sat_x": 406,
+      "sat_y": 144,
+      "pressure_x": 401,
+      "pressure_y": 176
+    },
+    "LUPV": {
+      "side": "left",
+      "annotation_type": "saturation_and_pressure",
+      "sat_x": 436,
+      "sat_y": 141,
+      "pressure_x": 431,
+      "pressure_y": 173
+    },
+    "RLPV": {
+      "side": "left",
+      "annotation_type": "saturation_and_pressure",
+      "sat_x": 406,
+      "sat_y": 237,
+      "pressure_x": 401,
+      "pressure_y": 197
+    },
+    "LLPV": {
+      "side": "left",
+      "annotation_type": "saturation_and_pressure",
+      "sat_x": 436,
+      "sat_y": 234,
+      "pressure_x": 431,
+      "pressure_y": 194
+    }
+  }
+}
