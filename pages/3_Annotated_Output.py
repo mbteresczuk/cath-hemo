@@ -6,7 +6,7 @@ import streamlit as st
 from pathlib import Path
 from PIL import Image
 
-from utils.annotator import annotate_diagram, image_to_bytes, pil_to_bytes
+from utils.annotator import annotate_diagram, image_to_bytes, pil_to_bytes, build_share_image
 from utils.coordinator import load_coords
 from utils.clipboard import copy_image_to_clipboard, get_clipboard_help
 from utils.report_writer import populate_template
@@ -49,7 +49,8 @@ if st.session_state.get("annotated_image") is None:
     annotated = annotate_diagram(str(img_path), coords, hemodynamics,
                                  anatomy_type=patient_data.get("anatomy_type", "biventricle"))
     st.session_state.annotated_image = annotated
-    st.session_state.docx_bytes = None   # reset so report regenerates below
+    st.session_state.docx_bytes = None       # reset so report regenerates below
+    st.session_state.share_img_bytes = None  # reset share image too
 
 annotated_img = st.session_state.annotated_image
 img_bytes = image_to_bytes(annotated_img, fmt="PNG")
@@ -67,23 +68,45 @@ if st.session_state.get("docx_bytes") is None:
     except Exception:
         st.session_state.docx_bytes = None
 
+# Build combined share image (diagram + narrative side-by-side)
+if st.session_state.get("share_img_bytes") is None:
+    try:
+        share_img = build_share_image(annotated_img, narrative, patient_data)
+        st.session_state.share_img_bytes = image_to_bytes(share_img, fmt="PNG")
+    except Exception:
+        st.session_state.share_img_bytes = None
+
 # ── Action buttons row ──────────────────────────────────────────────────────
 st.subheader("Export")
 btn_col1, btn_col2, btn_col3, btn_col4 = st.columns(4)
 
 with btn_col1:
-    # Combined report: diagram + narrative in one Word document
-    if st.session_state.get("docx_bytes"):
+    # Primary share: combined diagram + narrative as a single image
+    if st.session_state.get("share_img_bytes"):
         st.download_button(
-            "📤 Send Report (Diagram + Narrative)",
-            data=st.session_state["docx_bytes"],
-            file_name=f"cath_report_{diag['id']}.docx",
-            mime="application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+            "📤 Share (Diagram + Narrative)",
+            data=st.session_state["share_img_bytes"],
+            file_name=f"cath_report_{diag['id']}.png",
+            mime="image/png",
             use_container_width=True,
             type="primary",
         )
     else:
-        if st.button("📤 Generate & Send Report", use_container_width=True, type="primary"):
+        st.button("📤 Share (Diagram + Narrative)", disabled=True,
+                  use_container_width=True, type="primary")
+
+with btn_col2:
+    # Word doc (also contains both diagram + narrative)
+    if st.session_state.get("docx_bytes"):
+        st.download_button(
+            "📄 Download Word Report",
+            data=st.session_state["docx_bytes"],
+            file_name=f"cath_report_{diag['id']}.docx",
+            mime="application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+            use_container_width=True,
+        )
+    else:
+        if st.button("📄 Generate Word Report", use_container_width=True):
             with st.spinner("Building report..."):
                 try:
                     st.session_state.docx_bytes = populate_template(
@@ -97,7 +120,7 @@ with btn_col1:
                 except Exception as e:
                     st.error(f"Could not generate report: {e}")
 
-with btn_col2:
+with btn_col3:
     st.download_button(
         "⬇️ Download Diagram (PNG)",
         data=img_bytes,
@@ -105,15 +128,6 @@ with btn_col2:
         mime="image/png",
         use_container_width=True,
     )
-
-with btn_col3:
-    if st.button("📋 Copy Diagram to Clipboard", use_container_width=True):
-        success, msg = copy_image_to_clipboard(annotated_img)
-        if success:
-            st.success(msg)
-        else:
-            st.warning(msg)
-            st.info(get_clipboard_help())
 
 with btn_col4:
     if st.button("← Edit Hemodynamics", use_container_width=True):

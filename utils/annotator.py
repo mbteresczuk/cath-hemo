@@ -511,3 +511,94 @@ def add_patient_sidebar(img: Image.Image, patient_data: dict) -> Image.Image:
     field("PVRi:", patient_data.get("pvri_manual", ""))
 
     return canvas
+
+
+def build_share_image(
+    annotated_img: Image.Image,
+    narrative: str,
+    patient_data: dict,
+) -> Image.Image:
+    """
+    Combine the annotated diagram and narrative text into a single shareable PNG.
+
+    Layout:
+        ┌──────────────────────┬───────────────────────────┐
+        │   Annotated diagram  │  Patient header           │
+        │                      │  ─────────────────────    │
+        │                      │  Narrative paragraphs     │
+        └──────────────────────┴───────────────────────────┘
+    """
+    font = get_fonts()["regular"]
+    PADDING = 20
+    TEXT_WIDTH = 420          # pixels wide for the narrative column
+    LINE_H = 20               # line height in pixels
+    WRAP_W = TEXT_WIDTH - PADDING * 2
+
+    # ── Measure wrapped narrative lines ──────────────────────────────────────
+    def wrap_text(text, max_w):
+        """Word-wrap a single paragraph into lines fitting max_w pixels."""
+        words = text.split()
+        lines, current = [], ""
+        dummy_draw = ImageDraw.Draw(Image.new("RGBA", (1, 1)))
+        for word in words:
+            test = (current + " " + word).strip()
+            w, _ = _text_size(dummy_draw, test, font)
+            if w <= max_w:
+                current = test
+            else:
+                if current:
+                    lines.append(current)
+                current = word
+        if current:
+            lines.append(current)
+        return lines
+
+    # Build all display lines (patient header + narrative paragraphs)
+    display_lines: list[tuple[str, bool]] = []  # (text, is_header)
+
+    name = patient_data.get("name", "")
+    mrn  = patient_data.get("mrn", "")
+    doc  = patient_data.get("doc", "")
+    header_parts = [p for p in [name, f"MRN: {mrn}" if mrn else "", doc] if p]
+    if header_parts:
+        display_lines.append((" | ".join(header_parts), True))
+        display_lines.append(("", False))   # spacer
+
+    for para in (narrative or "").split("\n\n"):
+        para = para.strip()
+        if not para:
+            continue
+        for line in wrap_text(para, WRAP_W):
+            display_lines.append((line, False))
+        display_lines.append(("", False))   # paragraph gap
+
+    text_content_h = len(display_lines) * LINE_H + PADDING * 2
+
+    # ── Canvas dimensions ─────────────────────────────────────────────────────
+    diag_w, diag_h = annotated_img.size
+    canvas_h = max(diag_h, text_content_h)
+    canvas_w = diag_w + TEXT_WIDTH
+
+    canvas = Image.new("RGBA", (canvas_w, canvas_h), "white")
+    # Paste diagram centred vertically
+    paste_y = (canvas_h - diag_h) // 2
+    canvas.paste(annotated_img, (0, paste_y))
+
+    draw = ImageDraw.Draw(canvas)
+
+    # Vertical divider
+    draw.line([(diag_w, 0), (diag_w, canvas_h)], fill="#cccccc", width=1)
+
+    # Render text
+    tx = diag_w + PADDING
+    ty = PADDING
+    for line_text, is_header in display_lines:
+        if is_header:
+            # Draw a slightly heavier weight by drawing twice offset by 1px
+            _draw_text(draw, tx, ty, line_text, font, "#000000")
+            _draw_text(draw, tx + 1, ty, line_text, font, "#000000")
+        else:
+            _draw_text(draw, tx, ty, line_text, font, "#222222")
+        ty += LINE_H
+
+    return canvas.convert("RGB")
