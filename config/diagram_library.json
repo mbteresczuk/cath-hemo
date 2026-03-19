@@ -297,6 +297,32 @@
           "coord_file": "config/annotation_coords/Valvar_PS_PDA.json",
           "image_width": 729,
           "image_height": 618
+        },
+        {
+          "id": "Valvar_PS__ASD",
+          "filename": "Valvar PS, ASD.bmp",
+          "display_name": "Valvar PS, ASD",
+          "path": "diagrams/PA_IVS_TGA/Valvar PS, ASD.bmp",
+          "category_id": "PA_IVS_TGA",
+          "anatomy_type": "biventricle",
+          "location_set": "standard_biventricle",
+          "has_coords": false,
+          "coord_file": "config/annotation_coords/Valvar_PS__ASD.json",
+          "image_width": 676,
+          "image_height": 592
+        },
+        {
+          "id": "Valvar_and_subvalvar_PS__TV_hypoplasia_without_VSD",
+          "filename": "Valvar and subvalvar PS, TV hypoplasia without VSD.bmp",
+          "display_name": "Valvar and subvalvar PS, TV hypoplasia without VSD",
+          "path": "diagrams/PA_IVS_TGA/Valvar and subvalvar PS, TV hypoplasia without VSD.bmp",
+          "category_id": "PA_IVS_TGA",
+          "anatomy_type": "biventricle",
+          "location_set": "standard_biventricle",
+          "has_coords": false,
+          "coord_file": "config/annotation_coords/Valvar_and_subvalvar_PS__TV_hypoplasia_without_VSD.json",
+          "image_width": 676,
+          "image_height": 536
         }
       ]
     },
@@ -317,6 +343,19 @@
           "coord_file": "config/annotation_coords/CoarctationAorta_LAA_Bil_SVCs.json",
           "image_width": 629,
           "image_height": 501
+        },
+        {
+          "id": "InterruptedAorticArch_TypeB",
+          "filename": "InterruptedAorticArch_TypeB.bmp",
+          "display_name": "InterruptedAorticArch TypeB",
+          "path": "diagrams/Coarctation_IAA/InterruptedAorticArch_TypeB.bmp",
+          "category_id": "Coarctation_IAA",
+          "anatomy_type": "biventricle",
+          "location_set": "standard_biventricle",
+          "has_coords": false,
+          "coord_file": "config/annotation_coords/InterruptedAorticArch_TypeB.json",
+          "image_width": 900,
+          "image_height": 690
         },
         {
           "id": "VSD_CoA_arch_repair_PA_band",
@@ -378,6 +417,32 @@
           "image_height": 518
         },
         {
+          "id": "HLHS_MA_AA_ECC_FONTAN_TAKEDOWN",
+          "filename": "HLHS_MA_AA_ECC_FONTAN TAKEDOWN.bmp",
+          "display_name": "HLHS MA AA ECC FONTAN TAKEDOWN",
+          "path": "diagrams/HLHS_MA_AA/HLHS_MA_AA_ECC_FONTAN TAKEDOWN.bmp",
+          "category_id": "HLHS_MA_AA",
+          "anatomy_type": "post_fontan",
+          "location_set": "post_fontan",
+          "has_coords": false,
+          "coord_file": "config/annotation_coords/HLHS_MA_AA_ECC_FONTAN_TAKEDOWN.json",
+          "image_width": 792,
+          "image_height": 541
+        },
+        {
+          "id": "HLHS_MA_AA_ECC_FONTAN",
+          "filename": "HLHS_MA_AA_ECC_FONTAN.bmp",
+          "display_name": "HLHS MA AA ECC FONTAN",
+          "path": "diagrams/HLHS_MA_AA/HLHS_MA_AA_ECC_FONTAN.bmp",
+          "category_id": "HLHS_MA_AA",
+          "anatomy_type": "post_fontan",
+          "location_set": "post_fontan",
+          "has_coords": false,
+          "coord_file": "config/annotation_coords/HLHS_MA_AA_ECC_FONTAN.json",
+          "image_width": 792,
+          "image_height": 541
+        },
+        {
           "id": "HLHS_MA_AA_HYBRID",
           "filename": "HLHS_MA_AA_HYBRID.bmp",
           "display_name": "HLHS MA AA HYBRID",
@@ -389,6 +454,32 @@
           "coord_file": "config/annotation_coords/HLHS_MA_AA_HYBRID.json",
           "image_width": 672,
           "image_height": 506
+        },
+        {
+          "id": "HLHS_MA_AA_LT_FONTAN",
+          "filename": "HLHS_MA_AA_LT_FONTAN.bmp",
+          "display_name": "HLHS MA AA LT FONTAN",
+          "path": "diagrams/HLHS_MA_AA/HLHS_MA_AA_LT_FONTAN.bmp",
+          "category_id": "HLHS_MA_AA",
+          "anatomy_type": "post_fontan",
+          "location_set": "post_fontan",
+          "has_coords": false,
+          "coord_file": "config/annotation_coords/HLHS_MA_AA_LT_FONTAN.json",
+          "image_width": 700,
+          "image_height": 518
+        },
+        {
+          "id": "HLHS_MA_AS_ECC_FONTAN",
+          "filename": "HLHS_MA_AS_ECC_FONTAN.bmp",
+          "display_name": "HLHS MA AS ECC FONTAN",
+          "path": "diagrams/HLHS_MA_AA/HLHS_MA_AS_ECC_FONTAN.bmp",
+          "category_id": "HLHS_MA_AA",
+          "anatomy_type": "post_fontan",
+          "location_set": "post_fontan",
+          "has_coords": false,
+          "coord_file": "config/annotation_coords/HLHS_MA_AS_ECC_FONTAN.json",
+          "image_width": 3192,
+          "image_height": 3244
         },
         {
           "id": "_S_L_L__Pulm_atresia_Mitral_atresia_-_rmBTS",
@@ -411,6 +502,45 @@
       "folder": "diagrams/TOF",
       "diagrams": [
         {
+          "id": "TOF_PA__RV-PA_conduit__VSD_open",
+          "filename": "TOF_PA, RV-PA conduit, VSD open.bmp",
+          "display_name": "TOF PA, RV-PA conduit, VSD open",
+          "path": "diagrams/TOF/TOF_PA, RV-PA conduit, VSD open.bmp",
+          "category_id": "TOF",
+          "anatomy_type": "biventricle",
+          "location_set": "standard_biventricle",
+          "has_coords": false,
+          "coord_file": "config/annotation_coords/TOF_PA__RV-PA_conduit__VSD_open.json",
+          "image_width": 717,
+          "image_height": 525
+        },
+        {
+          "id": "TetralogyFallotPS_-_Repaired_-_LPA_Stent",
+          "filename": "TetralogyFallotPS - Repaired - LPA Stent.bmp",
+          "display_name": "TetralogyFallotPS - Repaired - LPA Stent",
+          "path": "diagrams/TOF/TetralogyFallotPS - Repaired - LPA Stent.bmp",
+          "category_id": "TOF",
+          "anatomy_type": "biventricle",
+          "location_set": "standard_biventricle",
+          "has_coords": false,
+          "coord_file": "config/annotation_coords/TetralogyFallotPS_-_Repaired_-_LPA_Stent.json",
+          "image_width": 698,
+          "image_height": 525
+        },
+        {
+          "id": "TetralogyFallotPS-RAA_-_Repaired",
+          "filename": "TetralogyFallotPS-RAA - Repaired.bmp",
+          "display_name": "TetralogyFallotPS-RAA - Repaired",
+          "path": "diagrams/TOF/TetralogyFallotPS-RAA - Repaired.bmp",
+          "category_id": "TOF",
+          "anatomy_type": "biventricle",
+          "location_set": "standard_biventricle",
+          "has_coords": false,
+          "coord_file": "config/annotation_coords/TetralogyFallotPS-RAA_-_Repaired.json",
+          "image_width": 662,
+          "image_height": 525
+        },
+        {
           "id": "TetralogyofFallot_sp_transannularpatch",
           "filename": "TetralogyofFallot_sp_transannularpatch.bmp",
           "display_name": "TetralogyofFallot s/p transannularpatch",
@@ -422,6 +552,32 @@
           "coord_file": "config/annotation_coords/TetralogyofFallot_sp_transannularpatch.json",
           "image_width": 614,
           "image_height": 503
+        },
+        {
+          "id": "ToF__Absent_PV",
+          "filename": "ToF, Absent PV.bmp",
+          "display_name": "ToF, Absent PV",
+          "path": "diagrams/TOF/ToF, Absent PV.bmp",
+          "category_id": "TOF",
+          "anatomy_type": "biventricle",
+          "location_set": "standard_biventricle",
+          "has_coords": false,
+          "coord_file": "config/annotation_coords/ToF__Absent_PV.json",
+          "image_width": 616,
+          "image_height": 509
+        },
+        {
+          "id": "ToF__PS",
+          "filename": "ToF, PS.bmp",
+          "display_name": "ToF, PS",
+          "path": "diagrams/TOF/ToF, PS.bmp",
+          "category_id": "TOF",
+          "anatomy_type": "biventricle",
+          "location_set": "standard_biventricle",
+          "has_coords": false,
+          "coord_file": "config/annotation_coords/ToF__PS.json",
+          "image_width": 647,
+          "image_height": 508
         }
       ]
     },
@@ -442,6 +598,19 @@
           "coord_file": "config/annotation_coords/TGA__IVS___S_D_D_.json",
           "image_width": 683,
           "image_height": 577
+        },
+        {
+          "id": "TGA_VSD__S_D_D__sp_rastelli",
+          "filename": "TGA_VSD_{S,D,D}_sp_rastelli.bmp",
+          "display_name": "TGA VSD {S,D,D} s/p rastelli",
+          "path": "diagrams/DTGA/TGA_VSD_{S,D,D}_sp_rastelli.bmp",
+          "category_id": "DTGA",
+          "anatomy_type": "biventricle",
+          "location_set": "standard_biventricle",
+          "has_coords": false,
+          "coord_file": "config/annotation_coords/TGA_VSD__S_D_D__sp_rastelli.json",
+          "image_width": 693,
+          "image_height": 537
         },
         {
           "id": "d-TGA_s_p_ASO",
@@ -481,13 +650,79 @@
       "id": "HLHS_MS_AS",
       "display_name": "HLHS (Mitral Stenosis / Aortic Stenosis)",
       "folder": "diagrams/HLHS_MS_AS",
-      "diagrams": []
+      "diagrams": [
+        {
+          "id": "HLHS_MS_AA_NORWOOD_RMBTS",
+          "filename": "HLHS_MS_AA_NORWOOD_RMBTS.bmp",
+          "display_name": "HLHS MS AA NORWOOD RMBTS",
+          "path": "diagrams/HLHS_MS_AS/HLHS_MS_AA_NORWOOD_RMBTS.bmp",
+          "category_id": "HLHS_MS_AS",
+          "anatomy_type": "single_ventricle",
+          "location_set": "single_ventricle_norwood",
+          "has_coords": false,
+          "coord_file": "config/annotation_coords/HLHS_MS_AA_NORWOOD_RMBTS.json",
+          "image_width": 706,
+          "image_height": 623
+        },
+        {
+          "id": "HLHS_MS_AS_NORWOOD_ECFF",
+          "filename": "HLHS_MS_AS_NORWOOD_ECFF.bmp",
+          "display_name": "HLHS MS AS NORWOOD ECFF",
+          "path": "diagrams/HLHS_MS_AS/HLHS_MS_AS_NORWOOD_ECFF.bmp",
+          "category_id": "HLHS_MS_AS",
+          "anatomy_type": "post_fontan",
+          "location_set": "post_fontan",
+          "has_coords": false,
+          "coord_file": "config/annotation_coords/HLHS_MS_AS_NORWOOD_ECFF.json",
+          "image_width": 676,
+          "image_height": 524
+        },
+        {
+          "id": "HLHS_MS_AS_NORWOOD_ECFF_LPA_stenosis",
+          "filename": "HLHS_MS_AS_NORWOOD_ECFF_LPA stenosis.bmp",
+          "display_name": "HLHS MS AS NORWOOD ECFF LPA stenosis",
+          "path": "diagrams/HLHS_MS_AS/HLHS_MS_AS_NORWOOD_ECFF_LPA stenosis.bmp",
+          "category_id": "HLHS_MS_AS",
+          "anatomy_type": "post_fontan",
+          "location_set": "post_fontan",
+          "has_coords": false,
+          "coord_file": "config/annotation_coords/HLHS_MS_AS_NORWOOD_ECFF_LPA_stenosis.json",
+          "image_width": 676,
+          "image_height": 524
+        },
+        {
+          "id": "HLHS_MS_AS_NORWOOD_LTFF_BilGlenn",
+          "filename": "HLHS_MS_AS_NORWOOD_LTFF_BilGlenn.bmp",
+          "display_name": "HLHS MS AS NORWOOD LTFF BilGlenn",
+          "path": "diagrams/HLHS_MS_AS/HLHS_MS_AS_NORWOOD_LTFF_BilGlenn.bmp",
+          "category_id": "HLHS_MS_AS",
+          "anatomy_type": "post_fontan",
+          "location_set": "post_fontan",
+          "has_coords": false,
+          "coord_file": "config/annotation_coords/HLHS_MS_AS_NORWOOD_LTFF_BilGlenn.json",
+          "image_width": 676,
+          "image_height": 524
+        }
+      ]
     },
     {
       "id": "Tricuspid_Atresia",
       "display_name": "Tricuspid Atresia",
       "folder": "diagrams/Tricuspid_Atresia",
       "diagrams": [
+        {
+          "id": "L-TGA__TA__PA",
+          "filename": "L-TGA, TA, PA.bmp",
+          "display_name": "L-TGA, TA, PA",
+          "path": "diagrams/Tricuspid_Atresia/L-TGA, TA, PA.bmp",
+          "category_id": "Tricuspid_Atresia",
+          "anatomy_type": "biventricle",
+          "location_set": "standard_biventricle",
+          "has_coords": false,
+          "coord_file": "config/annotation_coords/L-TGA__TA__PA.json",
+          "image_width": 772,
+          "image_height": 504
+        },
         {
           "id": "tric_atresia__tga_Glenn",
           "filename": "tric atresia, tga Glenn.bmp",

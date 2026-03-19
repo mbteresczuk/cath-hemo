@@ -1,0 +1,114 @@
+{
+  "diagram_id": "PA_IVS_LTFF",
+  "image_width": 800,
+  "image_height": 508,
+  "auto_configured": true,
+  "locations": {
+    "Fontan_IVC_limb": {
+      "side": "right",
+      "annotation_type": "saturation_and_pressure",
+      "sat_x": 168,
+      "sat_y": 343,
+      "pressure_x": 158,
+      "pressure_y": 303
+    },
+    "SVC": {
+      "side": "right",
+      "annotation_type": "saturation",
+      "sat_x": 170,
+      "sat_y": 102
+    },
+    "RA": {
+      "side": "right",
+      "annotation_type": "saturation_and_pressure",
+      "sat_x": 211,
+      "sat_y": 232,
+      "pressure_x": 201,
+      "pressure_y": 192
+    },
+    "RPA": {
+      "side": "right",
+      "annotation_type": "saturation_and_pressure",
+      "sat_x": 241,
+      "sat_y": 59,
+      "pressure_x": 231,
+      "pressure_y": 91
+    },
+    "LPA": {
+      "side": "right",
+      "annotation_type": "saturation_and_pressure",
+      "sat_x": 307,
+      "sat_y": 59,
+      "pressure_x": 297,
+      "pressure_y": 91
+    },
+    "RPCWP": {
+      "side": "left",
+      "annotation_type": "pcwp",
+      "pressure_x": 109,
+      "pressure_y": 155
+    },
+    "LPCWP": {
+      "side": "left",
+      "annotation_type": "pcwp",
+      "pressure_x": 549,
+      "pressure_y": 155
+    },
+    "LA": {
+      "side": "left",
+      "annotation_type": "saturation_and_pressure",
+      "sat_x": 415,
+      "sat_y": 180,
+      "pressure_x": 410,
+      "pressure_y": 140
+    },
+    "LV_systemic": {
+      "side": "left",
+      "annotation_type": "saturation_and_pressure",
+      "sat_x": 398,
+      "sat_y": 343,
+      "pressure_x": 393,
+      "pressure_y": 303
+    },
+    "Descending_Aorta": {
+      "side": "left",
+      "annotation_type": "saturation_and_pressure",
+      "sat_x": 344,
+      "sat_y": 427,
+      "pressure_x": 339,
+      "pressure_y": 387
+    },
+    "RUPV": {
+      "side": "left",
+      "annotation_type": "saturation_and_pressure",
+      "sat_x": 457,
+      "sat_y": 108,
+      "pressure_x": 452,
+      "pressure_y": 140
+    },
+    "LUPV": {
+      "side": "left",
+      "annotation_type": "saturation_and_pressure",
+      "sat_x": 488,
+      "sat_y": 106,
+      "pressure_x": 483,
+      "pressure_y": 138
+    },
+    "RLPV": {
+      "side": "left",
+      "annotation_type": "saturation_and_pressure",
+      "sat_x": 457,
+      "sat_y": 195,
+      "pressure_x": 452,
+      "pressure_y": 155
+    },
+    "LLPV": {
+      "side": "left",
+      "annotation_type": "saturation_and_pressure",
+      "sat_x": 488,
+      "sat_y": 192,
+      "pressure_x": 483,
+      "pressure_y": 152
+    }
+  }
+}

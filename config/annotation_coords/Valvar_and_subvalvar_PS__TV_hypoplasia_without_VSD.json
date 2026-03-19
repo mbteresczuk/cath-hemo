@@ -1,0 +1,128 @@
+{
+  "diagram_id": "Valvar_and_subvalvar_PS__TV_hypoplasia_without_VSD",
+  "image_width": 676,
+  "image_height": 536,
+  "auto_configured": true,
+  "locations": {
+    "SVC": {
+      "side": "right",
+      "annotation_type": "saturation",
+      "sat_x": 119,
+      "sat_y": 73
+    },
+    "IVC": {
+      "side": "right",
+      "annotation_type": "saturation",
+      "sat_x": 127,
+      "sat_y": 402
+    },
+    "RA": {
+      "side": "right",
+      "annotation_type": "saturation_and_pressure",
+      "sat_x": 173,
+      "sat_y": 247,
+      "pressure_x": 163,
+      "pressure_y": 207
+    },
+    "RV": {
+      "side": "right",
+      "annotation_type": "saturation_and_pressure",
+      "sat_x": 181,
+      "sat_y": 367,
+      "pressure_x": 171,
+      "pressure_y": 327
+    },
+    "MPA": {
+      "side": "right",
+      "annotation_type": "saturation_and_pressure",
+      "sat_x": 245,
+      "sat_y": 111,
+      "pressure_x": 235,
+      "pressure_y": 143
+    },
+    "RPA": {
+      "side": "right",
+      "annotation_type": "saturation_and_pressure",
+      "sat_x": 179,
+      "sat_y": 66,
+      "pressure_x": 169,
+      "pressure_y": 98
+    },
+    "LPA": {
+      "side": "right",
+      "annotation_type": "saturation_and_pressure",
+      "sat_x": 292,
+      "sat_y": 65,
+      "pressure_x": 282,
+      "pressure_y": 97
+    },
+    "RPCWP": {
+      "side": "left",
+      "annotation_type": "pcwp",
+      "pressure_x": 49,
+      "pressure_y": 152
+    },
+    "LPCWP": {
+      "side": "left",
+      "annotation_type": "pcwp",
+      "pressure_x": 490,
+      "pressure_y": 152
+    },
+    "LA": {
+      "side": "left",
+      "annotation_type": "saturation_and_pressure",
+      "sat_x": 371,
+      "sat_y": 220,
+      "pressure_x": 366,
+      "pressure_y": 180
+    },
+    "LV": {
+      "side": "left",
+      "annotation_type": "saturation_and_pressure",
+      "sat_x": 386,
+      "sat_y": 354,
+      "pressure_x": 381,
+      "pressure_y": 314
+    },
+    "Descending_Aorta": {
+      "side": "left",
+      "annotation_type": "saturation_and_pressure",
+      "sat_x": 358,
+      "sat_y": 433,
+      "pressure_x": 353,
+      "pressure_y": 393
+    },
+    "RUPV": {
+      "side": "left",
+      "annotation_type": "saturation_and_pressure",
+      "sat_x": 413,
+      "sat_y": 152,
+      "pressure_x": 408,
+      "pressure_y": 184
+    },
+    "LUPV": {
+      "side": "left",
+      "annotation_type": "saturation_and_pressure",
+      "sat_x": 444,
+      "sat_y": 150,
+      "pressure_x": 439,
+      "pressure_y": 182
+    },
+    "RLPV": {
+      "side": "left",
+      "annotation_type": "saturation_and_pressure",
+      "sat_x": 413,
+      "sat_y": 246,
+      "pressure_x": 408,
+      "pressure_y": 206
+    },
+    "LLPV": {
+      "side": "left",
+      "annotation_type": "saturation_and_pressure",
+      "sat_x": 444,
+      "sat_y": 244,
+      "pressure_x": 439,
+      "pressure_y": 204
+    }
+  }
+}
