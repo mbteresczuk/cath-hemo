@@ -42,22 +42,62 @@ step_ups = st.session_state.step_ups
 narrative = st.session_state.narrative
 patient_data = st.session_state.patient_data
 
-# Generate annotated image
+# Generate annotated image + Word report together on first load
 if st.session_state.get("annotated_image") is None:
     img_path = BASE_DIR / diag["path"]
     coords = load_coords(diag["id"])
     annotated = annotate_diagram(str(img_path), coords, hemodynamics,
                                  anatomy_type=patient_data.get("anatomy_type", "biventricle"))
     st.session_state.annotated_image = annotated
+    st.session_state.docx_bytes = None   # reset so report regenerates below
 
 annotated_img = st.session_state.annotated_image
 img_bytes = image_to_bytes(annotated_img, fmt="PNG")
+
+# Build Word report (once per session / whenever annotated_image is fresh)
+if st.session_state.get("docx_bytes") is None:
+    try:
+        st.session_state.docx_bytes = populate_template(
+            template_name=patient_data.get("case_type", "standard"),
+            narrative=narrative,
+            patient_data=patient_data,
+            calculations=calculations,
+            annotated_image=annotated_img,
+        )
+    except Exception:
+        st.session_state.docx_bytes = None
 
 # ── Action buttons row ──────────────────────────────────────────────────────
 st.subheader("Export")
 btn_col1, btn_col2, btn_col3, btn_col4 = st.columns(4)
 
 with btn_col1:
+    # Combined report: diagram + narrative in one Word document
+    if st.session_state.get("docx_bytes"):
+        st.download_button(
+            "📤 Send Report (Diagram + Narrative)",
+            data=st.session_state["docx_bytes"],
+            file_name=f"cath_report_{diag['id']}.docx",
+            mime="application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+            use_container_width=True,
+            type="primary",
+        )
+    else:
+        if st.button("📤 Generate & Send Report", use_container_width=True, type="primary"):
+            with st.spinner("Building report..."):
+                try:
+                    st.session_state.docx_bytes = populate_template(
+                        template_name=patient_data.get("case_type", "standard"),
+                        narrative=narrative,
+                        patient_data=patient_data,
+                        calculations=calculations,
+                        annotated_image=annotated_img,
+                    )
+                    st.rerun()
+                except Exception as e:
+                    st.error(f"Could not generate report: {e}")
+
+with btn_col2:
     st.download_button(
         "⬇️ Download Diagram (PNG)",
         data=img_bytes,
@@ -66,7 +106,7 @@ with btn_col1:
         use_container_width=True,
     )
 
-with btn_col2:
+with btn_col3:
     if st.button("📋 Copy Diagram to Clipboard", use_container_width=True):
         success, msg = copy_image_to_clipboard(annotated_img)
         if success:
@@ -74,31 +114,6 @@ with btn_col2:
         else:
             st.warning(msg)
             st.info(get_clipboard_help())
-
-with btn_col3:
-    if st.button("📄 Generate Word Report", use_container_width=True):
-        with st.spinner("Building Word document..."):
-            try:
-                docx_bytes = populate_template(
-                    template_name=patient_data.get("case_type", "standard"),
-                    narrative=narrative,
-                    patient_data=patient_data,
-                    calculations=calculations,
-                    annotated_image=annotated_img,
-                )
-                st.session_state["docx_bytes"] = docx_bytes
-                st.success("Report generated!")
-            except Exception as e:
-                st.error(f"Could not generate report: {e}")
-
-    if st.session_state.get("docx_bytes"):
-        st.download_button(
-            "⬇️ Download Word Report",
-            data=st.session_state["docx_bytes"],
-            file_name=f"cath_report_{diag['id']}.docx",
-            mime="application/vnd.openxmlformats-officedocument.wordprocessingml.document",
-            use_container_width=True,
-        )
 
 with btn_col4:
     if st.button("← Edit Hemodynamics", use_container_width=True):
