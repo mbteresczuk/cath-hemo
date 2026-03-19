@@ -3,7 +3,7 @@ services:
     name: cath-hemo
     env: python
     buildCommand: "pip install -r requirements.txt"
-    startCommand: "streamlit run app.py --server.port $PORT --server.address 0.0.0.0 --server.headless true"
+    startCommand: "uvicorn api.main:app --host 0.0.0.0 --port $PORT"
     envVars:
       - key: ANTHROPIC_API_KEY
         sync: false
