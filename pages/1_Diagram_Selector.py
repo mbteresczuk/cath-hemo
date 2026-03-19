@@ -10,7 +10,6 @@ from utils.diagram_library import (
     load_library,
     get_all_categories,
     get_diagrams_for_category,
-    get_all_diagrams,
     search_diagrams,
     mark_coords_status,
     add_uploaded_diagram,
@@ -35,10 +34,9 @@ st.title("Step 1: Select Anatomy Diagram")
 
 # ── Sidebar ───────────────────────────────────────────────────────────────────
 with st.sidebar:
-    st.header("Filter")
-    cat_options = ["All"] + [c["display_name"] for c in categories]
-    selected_cat_name = st.selectbox("Diagnosis Category", cat_options)
-    search_query = st.text_input("Search", placeholder="e.g. ASD, Glenn, Norwood...")
+    st.header("Search")
+    search_query = st.text_input("", placeholder="e.g. ASD, Glenn, Norwood...",
+                                  label_visibility="collapsed")
     st.markdown("---")
     if st.button("⚙️ Setup Coordinates", use_container_width=True):
         st.switch_page("pages/4_Setup_Coordinates.py")
@@ -76,77 +74,93 @@ with st.sidebar:
                 except Exception as exc:
                     st.error(f"Upload failed: {exc}")
 
-# ── Get diagrams to show ───────────────────────────────────────────────────────
-if selected_cat_name == "All":
-    diagrams = get_all_diagrams(library)
-else:
-    cat_id = next(
-        (c["id"] for c in categories if c["display_name"] == selected_cat_name),
-        None,
-    )
-    diagrams = get_diagrams_for_category(library, cat_id) if cat_id else []
-
-if search_query:
-    diagrams = [d for d in diagrams if search_query.lower() in (
-        d["display_name"] + d["filename"] + d.get("anatomy_type", "")
-    ).lower()]
-
 # Currently selected
 current = st.session_state.get("selected_diagram")
 if current:
     st.success(f"Currently selected: **{current.get('display_name', current['id'])}**")
 
-st.markdown(f"**{len(diagrams)} diagrams** found")
-
-# ── Display in 3-column grid ──────────────────────────────────────────────────
-cols_per_row = 3
+# ── Helper: render a grid of diagram cards ────────────────────────────────────
 THUMB_SIZE = (220, 180)
+COLS_PER_ROW = 3
 
-for i in range(0, len(diagrams), cols_per_row):
-    cols = st.columns(cols_per_row)
-    for j, col in enumerate(cols):
-        idx = i + j
-        if idx >= len(diagrams):
-            break
-        diag = diagrams[idx]
-        img_path = BASE_DIR / diag["path"]
 
-        with col:
-            # Thumbnail
-            try:
-                img = safe_open_image(img_path)
-                img.thumbnail(THUMB_SIZE, Image.LANCZOS)
-                st.image(pil_to_bytes(img), use_container_width=True)
-            except Exception as e:
-                st.caption(f"⚠️ {e}")
+def _render_grid(diagrams: list):
+    if not diagrams:
+        st.caption("No diagrams in this category yet.")
+        return
+    for i in range(0, len(diagrams), COLS_PER_ROW):
+        cols = st.columns(COLS_PER_ROW)
+        for j, col in enumerate(cols):
+            idx = i + j
+            if idx >= len(diagrams):
+                break
+            diag = diagrams[idx]
+            img_path = BASE_DIR / diag["path"]
 
-            # Name and badges
-            is_selected = current and current["id"] == diag["id"]
-            badge = "✅ " if diag.get("has_coords") else "⚠️ "
-            label = "Selected ✓" if is_selected else "Select"
-            btn_type = "primary" if is_selected else "secondary"
+            with col:
+                # Thumbnail
+                try:
+                    img = safe_open_image(img_path)
+                    img.thumbnail(THUMB_SIZE, Image.LANCZOS)
+                    st.image(pil_to_bytes(img), use_container_width=True)
+                except Exception as e:
+                    st.caption(f"⚠️ {e}")
 
-            st.caption(f"{badge}{diag['display_name']}")
-            st.caption(f"*{diag['anatomy_type'].replace('_', ' ')}*")
+                # Name and badges
+                is_selected = current and current["id"] == diag["id"]
+                badge = "✅ " if diag.get("has_coords") else "⚠️ "
+                label = "Selected ✓" if is_selected else "Select"
+                btn_type = "primary" if is_selected else "secondary"
 
-            if st.button(label, key=f"select_{diag['id']}", use_container_width=True, type=btn_type):
-                st.session_state.selected_diagram = diag
-                # Reset downstream session state
-                st.session_state.hemodynamics = {}
-                st.session_state.calculations = {}
-                st.session_state.narrative = ""
-                st.session_state.annotated_image = None
-                st.rerun()
+                st.caption(f"{badge}{diag['display_name']}")
+                st.caption(f"*{diag['anatomy_type'].replace('_', ' ')}*")
 
-            # Delete button for uploaded diagrams
-            if diag.get("category_id") == "Uploaded":
-                if st.button("🗑 Delete", key=f"del_{diag['id']}", use_container_width=True):
-                    st.session_state.library = delete_uploaded_diagram(
-                        diag["id"], library
-                    )
-                    if current and current["id"] == diag["id"]:
-                        st.session_state.selected_diagram = None
+                if st.button(label, key=f"select_{diag['id']}",
+                             use_container_width=True, type=btn_type):
+                    st.session_state.selected_diagram = diag
+                    # Reset downstream session state
+                    st.session_state.hemodynamics = {}
+                    st.session_state.calculations = {}
+                    st.session_state.narrative = ""
+                    st.session_state.annotated_image = None
                     st.rerun()
+
+                # Delete button for uploaded diagrams
+                if diag.get("category_id") == "Uploaded":
+                    if st.button("🗑 Delete", key=f"del_{diag['id']}",
+                                 use_container_width=True):
+                        st.session_state.library = delete_uploaded_diagram(
+                            diag["id"], library
+                        )
+                        if current and current["id"] == diag["id"]:
+                            st.session_state.selected_diagram = None
+                        st.rerun()
+
+
+# ── Main content: search results (flat) or folder view ───────────────────────
+if search_query:
+    # ── Search mode: flat grid across all categories ──────────────────────────
+    results = search_diagrams(library, search_query)
+    st.markdown(f"**{len(results)} diagrams** matching \"{search_query}\"")
+    _render_grid(results)
+
+else:
+    # ── Folder mode: one expander per category ────────────────────────────────
+    total = sum(len(cat.get("diagrams", [])) for cat in categories)
+    st.markdown(f"**{total} diagrams** in {sum(1 for c in categories if c.get('diagrams'))} categories")
+
+    for cat in categories:
+        cat_diagrams = get_diagrams_for_category(library, cat["id"])
+        if not cat_diagrams:
+            continue
+
+        # Auto-expand the category that contains the currently selected diagram
+        has_selected = current and any(d["id"] == current["id"] for d in cat_diagrams)
+        with st.expander(
+            f"📁 **{cat['display_name']}** — {len(cat_diagrams)} diagram{'s' if len(cat_diagrams) != 1 else ''}",
+            expanded=bool(has_selected),
+        ):
+            _render_grid(cat_diagrams)
 
 st.markdown("---")
 st.caption("✅ = annotation coordinates configured | ⚠️ = coordinates not yet set up (use Setup Coordinates page)")

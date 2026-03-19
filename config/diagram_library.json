@@ -110,6 +110,71 @@
           "image_height": 522
         },
         {
+          "id": "CAVC_balanced",
+          "filename": "CAVC balanced.bmp",
+          "display_name": "CAVC balanced",
+          "path": "diagrams/ASD_VSD_CCAVC/CAVC balanced.bmp",
+          "category_id": "ASD_VSD_CCAVC",
+          "anatomy_type": "biventricle",
+          "location_set": "standard_biventricle",
+          "has_coords": true,
+          "coord_file": "config/annotation_coords/CAVC_balanced.json",
+          "image_width": 878,
+          "image_height": 522
+        },
+        {
+          "id": "CAVC_s_p_PA_bands",
+          "filename": "CAVC s_p PA bands.bmp",
+          "display_name": "CAVC s p PA bands",
+          "path": "diagrams/ASD_VSD_CCAVC/CAVC s_p PA bands.bmp",
+          "category_id": "ASD_VSD_CCAVC",
+          "anatomy_type": "biventricle",
+          "location_set": "standard_biventricle",
+          "has_coords": true,
+          "coord_file": "config/annotation_coords/CAVC_s_p_PA_bands.json",
+          "image_width": 706,
+          "image_height": 522
+        },
+        {
+          "id": "CAVC_s_p_repair",
+          "filename": "CAVC s_p repair.bmp",
+          "display_name": "CAVC s p repair",
+          "path": "diagrams/ASD_VSD_CCAVC/CAVC s_p repair.bmp",
+          "category_id": "ASD_VSD_CCAVC",
+          "anatomy_type": "biventricle",
+          "location_set": "standard_biventricle",
+          "has_coords": true,
+          "coord_file": "config/annotation_coords/CAVC_s_p_repair.json",
+          "image_width": 652,
+          "image_height": 522
+        },
+        {
+          "id": "Scimitar_Syndrome",
+          "filename": "Scimitar Syndrome.bmp",
+          "display_name": "Scimitar Syndrome",
+          "path": "diagrams/ASD_VSD_CCAVC/Scimitar Syndrome.bmp",
+          "category_id": "ASD_VSD_CCAVC",
+          "anatomy_type": "biventricle",
+          "location_set": "standard_biventricle",
+          "has_coords": true,
+          "coord_file": "config/annotation_coords/Scimitar_Syndrome.json",
+          "image_width": 646,
+          "image_height": 511
+        },
+        {
+          "id": "Supravalvar_AS",
+          "filename": "Supravalvar AS.bmp",
+          "display_name": "Supravalvar AS",
+          "path": "diagrams/ASD_VSD_CCAVC/Supravalvar AS.bmp",
+          "category_id": "ASD_VSD_CCAVC",
+          "anatomy_type": "biventricle",
+          "location_set": "standard_biventricle",
+          "has_coords": true,
+          "coord_file": "config/annotation_coords/Supravalvar_AS.json",
+          "image_width": 696,
+          "image_height": 539
+        },
+        {
           "id": "VSD_CoA_bicuspid_AoV_s_p_repair",
           "filename": "VSD CoA bicuspid AoV s_p repair.bmp",
           "display_name": "VSD CoA bicuspid AoV s p repair",
@@ -141,31 +206,270 @@
       "id": "PA_IVS_TGA",
       "display_name": "PA-IVS / TGA + VSD",
       "folder": "diagrams/PA_IVS_TGA",
-      "diagrams": []
+      "diagrams": [
+        {
+          "id": "PA_IVS_sp_PV_perforation_and_PDA_stent",
+          "filename": "PA_IVS sp PV perforation and PDA stent.bmp",
+          "display_name": "PA IVS s/p PV perforation and PDA stent",
+          "path": "diagrams/PA_IVS_TGA/PA_IVS sp PV perforation and PDA stent.bmp",
+          "category_id": "PA_IVS_TGA",
+          "anatomy_type": "single_ventricle",
+          "location_set": "single_ventricle_norwood",
+          "has_coords": false,
+          "coord_file": "config/annotation_coords/PA_IVS_sp_PV_perforation_and_PDA_stent.json",
+          "image_width": 699,
+          "image_height": 561
+        },
+        {
+          "id": "PA_IVS_with_PDA",
+          "filename": "PA_IVS with PDA.bmp",
+          "display_name": "PA IVS with PDA",
+          "path": "diagrams/PA_IVS_TGA/PA_IVS with PDA.bmp",
+          "category_id": "PA_IVS_TGA",
+          "anatomy_type": "single_ventricle",
+          "location_set": "single_ventricle_norwood",
+          "has_coords": false,
+          "coord_file": "config/annotation_coords/PA_IVS_with_PDA.json",
+          "image_width": 690,
+          "image_height": 508
+        },
+        {
+          "id": "PA_IVS_ECF",
+          "filename": "PA_IVS_ECF.bmp",
+          "display_name": "PA IVS ECF",
+          "path": "diagrams/PA_IVS_TGA/PA_IVS_ECF.bmp",
+          "category_id": "PA_IVS_TGA",
+          "anatomy_type": "single_ventricle",
+          "location_set": "single_ventricle_norwood",
+          "has_coords": true,
+          "coord_file": "config/annotation_coords/PA_IVS_ECF.json",
+          "image_width": 746,
+          "image_height": 508
+        },
+        {
+          "id": "PA_IVS_Glenn",
+          "filename": "PA_IVS_Glenn.bmp",
+          "display_name": "PA IVS Glenn",
+          "path": "diagrams/PA_IVS_TGA/PA_IVS_Glenn.bmp",
+          "category_id": "PA_IVS_TGA",
+          "anatomy_type": "post_glenn",
+          "location_set": "post_glenn",
+          "has_coords": false,
+          "coord_file": "config/annotation_coords/PA_IVS_Glenn.json",
+          "image_width": 746,
+          "image_height": 508
+        },
+        {
+          "id": "PA_IVS_LTFF",
+          "filename": "PA_IVS_LTFF.bmp",
+          "display_name": "PA IVS LTFF",
+          "path": "diagrams/PA_IVS_TGA/PA_IVS_LTFF.bmp",
+          "category_id": "PA_IVS_TGA",
+          "anatomy_type": "post_fontan",
+          "location_set": "post_fontan",
+          "has_coords": false,
+          "coord_file": "config/annotation_coords/PA_IVS_LTFF.json",
+          "image_width": 800,
+          "image_height": 508
+        },
+        {
+          "id": "UnicuspidPulmonaryValve",
+          "filename": "UnicuspidPulmonaryValve.bmp",
+          "display_name": "UnicuspidPulmonaryValve",
+          "path": "diagrams/PA_IVS_TGA/UnicuspidPulmonaryValve.bmp",
+          "category_id": "PA_IVS_TGA",
+          "anatomy_type": "biventricle",
+          "location_set": "standard_biventricle",
+          "has_coords": false,
+          "coord_file": "config/annotation_coords/UnicuspidPulmonaryValve.json",
+          "image_width": 661,
+          "image_height": 515
+        },
+        {
+          "id": "Valvar_PS_PDA",
+          "filename": "Valvar PS PDA.bmp",
+          "display_name": "Valvar PS PDA",
+          "path": "diagrams/PA_IVS_TGA/Valvar PS PDA.bmp",
+          "category_id": "PA_IVS_TGA",
+          "anatomy_type": "biventricle",
+          "location_set": "standard_biventricle",
+          "has_coords": false,
+          "coord_file": "config/annotation_coords/Valvar_PS_PDA.json",
+          "image_width": 729,
+          "image_height": 618
+        }
+      ]
     },
     {
       "id": "Coarctation_IAA",
       "display_name": "Coarctation / Interrupted Aortic Arch",
       "folder": "diagrams/Coarctation_IAA",
-      "diagrams": []
+      "diagrams": [
+        {
+          "id": "CoarctationAorta_LAA_Bil_SVCs",
+          "filename": "CoarctationAorta_LAA_Bil SVCs.bmp",
+          "display_name": "CoarctationAorta LAA Bil SVCs",
+          "path": "diagrams/Coarctation_IAA/CoarctationAorta_LAA_Bil SVCs.bmp",
+          "category_id": "Coarctation_IAA",
+          "anatomy_type": "biventricle",
+          "location_set": "standard_biventricle",
+          "has_coords": false,
+          "coord_file": "config/annotation_coords/CoarctationAorta_LAA_Bil_SVCs.json",
+          "image_width": 629,
+          "image_height": 501
+        },
+        {
+          "id": "VSD_CoA_arch_repair_PA_band",
+          "filename": "VSD CoA arch repair PA band.bmp",
+          "display_name": "VSD CoA arch repair PA band",
+          "path": "diagrams/Coarctation_IAA/VSD CoA arch repair PA band.bmp",
+          "category_id": "Coarctation_IAA",
+          "anatomy_type": "biventricle",
+          "location_set": "standard_biventricle",
+          "has_coords": true,
+          "coord_file": "config/annotation_coords/VSD_CoA_arch_repair_PA_band.json",
+          "image_width": 662,
+          "image_height": 518
+        },
+        {
+          "id": "VSD_CoA_s_p_repair",
+          "filename": "VSD CoA s_p repair.bmp",
+          "display_name": "VSD CoA s p repair",
+          "path": "diagrams/Coarctation_IAA/VSD CoA s_p repair.bmp",
+          "category_id": "Coarctation_IAA",
+          "anatomy_type": "biventricle",
+          "location_set": "standard_biventricle",
+          "has_coords": true,
+          "coord_file": "config/annotation_coords/VSD_CoA_s_p_repair.json",
+          "image_width": 662,
+          "image_height": 518
+        }
+      ]
     },
     {
       "id": "HLHS_MA_AA",
       "display_name": "HLHS (Mitral Atresia / Aortic Atresia)",
       "folder": "diagrams/HLHS_MA_AA",
-      "diagrams": []
+      "diagrams": [
+        {
+          "id": "HLHS__MA_AA__BDG",
+          "filename": "HLHS (MA AA) BDG.bmp",
+          "display_name": "HLHS (MA AA) BDG",
+          "path": "diagrams/HLHS_MA_AA/HLHS (MA AA) BDG.bmp",
+          "category_id": "HLHS_MA_AA",
+          "anatomy_type": "post_glenn",
+          "location_set": "post_glenn",
+          "has_coords": true,
+          "coord_file": "config/annotation_coords/HLHS__MA_AA__BDG.json",
+          "image_width": 662,
+          "image_height": 518
+        },
+        {
+          "id": "HLHS__MA_AA__NORWOOD_BTS",
+          "filename": "HLHS (MA_AA)_NORWOOD_BTS.bmp",
+          "display_name": "HLHS (MA AA) NORWOOD BTS",
+          "path": "diagrams/HLHS_MA_AA/HLHS (MA_AA)_NORWOOD_BTS.bmp",
+          "category_id": "HLHS_MA_AA",
+          "anatomy_type": "single_ventricle",
+          "location_set": "single_ventricle_norwood",
+          "has_coords": false,
+          "coord_file": "config/annotation_coords/HLHS__MA_AA__NORWOOD_BTS.json",
+          "image_width": 662,
+          "image_height": 518
+        },
+        {
+          "id": "HLHS_MA_AA_HYBRID",
+          "filename": "HLHS_MA_AA_HYBRID.bmp",
+          "display_name": "HLHS MA AA HYBRID",
+          "path": "diagrams/HLHS_MA_AA/HLHS_MA_AA_HYBRID.bmp",
+          "category_id": "HLHS_MA_AA",
+          "anatomy_type": "biventricle",
+          "location_set": "standard_biventricle",
+          "has_coords": false,
+          "coord_file": "config/annotation_coords/HLHS_MA_AA_HYBRID.json",
+          "image_width": 672,
+          "image_height": 506
+        },
+        {
+          "id": "_S_L_L__Pulm_atresia_Mitral_atresia_-_rmBTS",
+          "filename": "{S,L,L} Pulm atresia Mitral atresia - rmBTS.bmp",
+          "display_name": "{S,L,L} Pulm atresia Mitral atresia - rmBTS",
+          "path": "diagrams/HLHS_MA_AA/{S,L,L} Pulm atresia Mitral atresia - rmBTS.bmp",
+          "category_id": "HLHS_MA_AA",
+          "anatomy_type": "single_ventricle",
+          "location_set": "single_ventricle_norwood",
+          "has_coords": true,
+          "coord_file": "config/annotation_coords/_S_L_L__Pulm_atresia_Mitral_atresia_-_rmBTS.json",
+          "image_width": 700,
+          "image_height": 497
+        }
+      ]
     },
     {
       "id": "TOF",
       "display_name": "Tetralogy of Fallot",
       "folder": "diagrams/TOF",
-      "diagrams": []
+      "diagrams": [
+        {
+          "id": "TetralogyofFallot_sp_transannularpatch",
+          "filename": "TetralogyofFallot_sp_transannularpatch.bmp",
+          "display_name": "TetralogyofFallot s/p transannularpatch",
+          "path": "diagrams/TOF/TetralogyofFallot_sp_transannularpatch.bmp",
+          "category_id": "TOF",
+          "anatomy_type": "biventricle",
+          "location_set": "standard_biventricle",
+          "has_coords": true,
+          "coord_file": "config/annotation_coords/TetralogyofFallot_sp_transannularpatch.json",
+          "image_width": 614,
+          "image_height": 503
+        }
+      ]
     },
     {
       "id": "DTGA",
       "display_name": "D-TGA Variants",
       "folder": "diagrams/DTGA",
-      "diagrams": []
+      "diagrams": [
+        {
+          "id": "TGA__IVS___S_D_D_",
+          "filename": "TGA (IVS) {S,D,D}.bmp",
+          "display_name": "TGA (IVS) {S,D,D}",
+          "path": "diagrams/DTGA/TGA (IVS) {S,D,D}.bmp",
+          "category_id": "DTGA",
+          "anatomy_type": "biventricle",
+          "location_set": "standard_biventricle",
+          "has_coords": true,
+          "coord_file": "config/annotation_coords/TGA__IVS___S_D_D_.json",
+          "image_width": 683,
+          "image_height": 577
+        },
+        {
+          "id": "d-TGA_s_p_ASO",
+          "filename": "d-TGA s_p ASO.bmp",
+          "display_name": "d-TGA s p ASO",
+          "path": "diagrams/DTGA/d-TGA s_p ASO.bmp",
+          "category_id": "DTGA",
+          "anatomy_type": "biventricle",
+          "location_set": "standard_biventricle",
+          "has_coords": true,
+          "coord_file": "config/annotation_coords/d-TGA_s_p_ASO.json",
+          "image_width": 684,
+          "image_height": 623
+        },
+        {
+          "id": "dTGA_s_p_Mustard",
+          "filename": "dTGA s_p Mustard.bmp",
+          "display_name": "dTGA s p Mustard",
+          "path": "diagrams/DTGA/dTGA s_p Mustard.bmp",
+          "category_id": "DTGA",
+          "anatomy_type": "post_mustard",
+          "location_set": "post_mustard_senning",
+          "has_coords": true,
+          "coord_file": "config/annotation_coords/dTGA_s_p_Mustard.json",
+          "image_width": 610,
+          "image_height": 567
+        }
+      ]
     },
     {
       "id": "DORV",
@@ -180,258 +484,30 @@
       "diagrams": []
     },
     {
-      "id": "Uploaded",
-      "display_name": "Uploaded Diagrams",
-      "folder": "diagrams/Uploaded",
+      "id": "Tricuspid_Atresia",
+      "display_name": "Tricuspid Atresia",
+      "folder": "diagrams/Tricuspid_Atresia",
       "diagrams": [
-        {
-          "id": "CAVC_balanced",
-          "filename": "CAVC balanced.bmp",
-          "display_name": "CAVC balanced",
-          "path": "diagrams/Uploaded/CAVC balanced.bmp",
-          "category_id": "Uploaded",
-          "anatomy_type": "biventricle",
-          "location_set": "standard_biventricle",
-          "has_coords": true,
-          "coord_file": "config/annotation_coords/CAVC_balanced.json",
-          "image_width": 878,
-          "image_height": 522
-        },
-        {
-          "id": "CAVC_s_p_PA_bands",
-          "filename": "CAVC s_p PA bands.bmp",
-          "display_name": "CAVC s p PA bands",
-          "path": "diagrams/Uploaded/CAVC s_p PA bands.bmp",
-          "category_id": "Uploaded",
-          "anatomy_type": "biventricle",
-          "location_set": "standard_biventricle",
-          "has_coords": true,
-          "coord_file": "config/annotation_coords/CAVC_s_p_PA_bands.json",
-          "image_width": 706,
-          "image_height": 522
-        },
-        {
-          "id": "CAVC_s_p_repair",
-          "filename": "CAVC s_p repair.bmp",
-          "display_name": "CAVC s p repair",
-          "path": "diagrams/Uploaded/CAVC s_p repair.bmp",
-          "category_id": "Uploaded",
-          "anatomy_type": "biventricle",
-          "location_set": "standard_biventricle",
-          "has_coords": true,
-          "coord_file": "config/annotation_coords/CAVC_s_p_repair.json",
-          "image_width": 652,
-          "image_height": 522
-        },
-        {
-          "id": "CoarctationAorta_LAA_Bil_SVCs",
-          "filename": "CoarctationAorta_LAA_Bil SVCs.bmp",
-          "display_name": "CoarctationAorta LAA Bil SVCs",
-          "path": "diagrams/Uploaded/CoarctationAorta_LAA_Bil SVCs.bmp",
-          "category_id": "Uploaded",
-          "anatomy_type": "biventricle",
-          "location_set": "standard_biventricle",
-          "has_coords": false,
-          "coord_file": "config/annotation_coords/CoarctationAorta_LAA_Bil_SVCs.json",
-          "image_width": 629,
-          "image_height": 501
-        },
-        {
-          "id": "HLHS__MA_AA__BDG",
-          "filename": "HLHS (MA AA) BDG.bmp",
-          "display_name": "HLHS (MA AA) BDG",
-          "path": "diagrams/Uploaded/HLHS (MA AA) BDG.bmp",
-          "category_id": "Uploaded",
-          "anatomy_type": "post_glenn",
-          "location_set": "post_glenn",
-          "has_coords": true,
-          "coord_file": "config/annotation_coords/HLHS__MA_AA__BDG.json",
-          "image_width": 662,
-          "image_height": 518
-        },
-        {
-          "id": "PA_IVS_sp_PV_perforation_and_PDA_stent",
-          "filename": "PA_IVS sp PV perforation and PDA stent.bmp",
-          "display_name": "PA IVS s/p PV perforation and PDA stent",
-          "path": "diagrams/Uploaded/PA_IVS sp PV perforation and PDA stent.bmp",
-          "category_id": "Uploaded",
-          "anatomy_type": "single_ventricle",
-          "location_set": "single_ventricle_norwood",
-          "has_coords": false,
-          "coord_file": "config/annotation_coords/PA_IVS_sp_PV_perforation_and_PDA_stent.json",
-          "image_width": 699,
-          "image_height": 561
-        },
-        {
-          "id": "PA_IVS_with_PDA",
-          "filename": "PA_IVS with PDA.bmp",
-          "display_name": "PA IVS with PDA",
-          "path": "diagrams/Uploaded/PA_IVS with PDA.bmp",
-          "category_id": "Uploaded",
-          "anatomy_type": "single_ventricle",
-          "location_set": "single_ventricle_norwood",
-          "has_coords": false,
-          "coord_file": "config/annotation_coords/PA_IVS_with_PDA.json",
-          "image_width": 690,
-          "image_height": 508
-        },
-        {
-          "id": "PA_IVS_ECF",
-          "filename": "PA_IVS_ECF.bmp",
-          "display_name": "PA IVS ECF",
-          "path": "diagrams/Uploaded/PA_IVS_ECF.bmp",
-          "category_id": "Uploaded",
-          "anatomy_type": "single_ventricle",
-          "location_set": "single_ventricle_norwood",
-          "has_coords": true,
-          "coord_file": "config/annotation_coords/PA_IVS_ECF.json",
-          "image_width": 746,
-          "image_height": 508
-        },
-        {
-          "id": "PA_IVS_Glenn",
-          "filename": "PA_IVS_Glenn.bmp",
-          "display_name": "PA IVS Glenn",
-          "path": "diagrams/Uploaded/PA_IVS_Glenn.bmp",
-          "category_id": "Uploaded",
-          "anatomy_type": "post_glenn",
-          "location_set": "post_glenn",
-          "has_coords": false,
-          "coord_file": "config/annotation_coords/PA_IVS_Glenn.json",
-          "image_width": 746,
-          "image_height": 508
-        },
-        {
-          "id": "Scimitar_Syndrome",
-          "filename": "Scimitar Syndrome.bmp",
-          "display_name": "Scimitar Syndrome",
-          "path": "diagrams/Uploaded/Scimitar Syndrome.bmp",
-          "category_id": "Uploaded",
-          "anatomy_type": "biventricle",
-          "location_set": "standard_biventricle",
-          "has_coords": true,
-          "coord_file": "config/annotation_coords/Scimitar_Syndrome.json",
-          "image_width": 646,
-          "image_height": 511
-        },
-        {
-          "id": "Supravalvar_AS",
-          "filename": "Supravalvar AS.bmp",
-          "display_name": "Supravalvar AS",
-          "path": "diagrams/Uploaded/Supravalvar AS.bmp",
-          "category_id": "Uploaded",
-          "anatomy_type": "biventricle",
-          "location_set": "standard_biventricle",
-          "has_coords": true,
-          "coord_file": "config/annotation_coords/Supravalvar_AS.json",
-          "image_width": 696,
-          "image_height": 539
-        },
-        {
-          "id": "TGA__IVS___S_D_D_",
-          "filename": "TGA (IVS) {S,D,D}.bmp",
-          "display_name": "TGA (IVS) {S,D,D}",
-          "path": "diagrams/Uploaded/TGA (IVS) {S,D,D}.bmp",
-          "category_id": "Uploaded",
-          "anatomy_type": "biventricle",
-          "location_set": "standard_biventricle",
-          "has_coords": true,
-          "coord_file": "config/annotation_coords/TGA__IVS___S_D_D_.json",
-          "image_width": 683,
-          "image_height": 577
-        },
-        {
-          "id": "TetralogyofFallot_sp_transannularpatch",
-          "filename": "TetralogyofFallot_sp_transannularpatch.bmp",
-          "display_name": "TetralogyofFallot s/p transannularpatch",
-          "path": "diagrams/Uploaded/TetralogyofFallot_sp_transannularpatch.bmp",
-          "category_id": "Uploaded",
-          "anatomy_type": "biventricle",
-          "location_set": "standard_biventricle",
-          "has_coords": true,
-          "coord_file": "config/annotation_coords/TetralogyofFallot_sp_transannularpatch.json",
-          "image_width": 614,
-          "image_height": 503
-        },
-        {
-          "id": "VSD_CoA_arch_repair_PA_band",
-          "filename": "VSD CoA arch repair PA band.bmp",
-          "display_name": "VSD CoA arch repair PA band",
-          "path": "diagrams/Uploaded/VSD CoA arch repair PA band.bmp",
-          "category_id": "Uploaded",
-          "anatomy_type": "biventricle",
-          "location_set": "standard_biventricle",
-          "has_coords": true,
-          "coord_file": "config/annotation_coords/VSD_CoA_arch_repair_PA_band.json",
-          "image_width": 662,
-          "image_height": 518
-        },
-        {
-          "id": "VSD_CoA_s_p_repair",
-          "filename": "VSD CoA s_p repair.bmp",
-          "display_name": "VSD CoA s p repair",
-          "path": "diagrams/Uploaded/VSD CoA s_p repair.bmp",
-          "category_id": "Uploaded",
-          "anatomy_type": "biventricle",
-          "location_set": "standard_biventricle",
-          "has_coords": true,
-          "coord_file": "config/annotation_coords/VSD_CoA_s_p_repair.json",
-          "image_width": 662,
-          "image_height": 518
-        },
-        {
-          "id": "d-TGA_s_p_ASO",
-          "filename": "d-TGA s_p ASO.bmp",
-          "display_name": "d-TGA s p ASO",
-          "path": "diagrams/Uploaded/d-TGA s_p ASO.bmp",
-          "category_id": "Uploaded",
-          "anatomy_type": "biventricle",
-          "location_set": "standard_biventricle",
-          "has_coords": true,
-          "coord_file": "config/annotation_coords/d-TGA_s_p_ASO.json",
-          "image_width": 684,
-          "image_height": 623
-        },
-        {
-          "id": "dTGA_s_p_Mustard",
-          "filename": "dTGA s_p Mustard.bmp",
-          "display_name": "dTGA s p Mustard",
-          "path": "diagrams/Uploaded/dTGA s_p Mustard.bmp",
-          "category_id": "Uploaded",
-          "anatomy_type": "post_mustard",
-          "location_set": "post_mustard_senning",
-          "has_coords": true,
-          "coord_file": "config/annotation_coords/dTGA_s_p_Mustard.json",
-          "image_width": 610,
-          "image_height": 567
-        },
         {
           "id": "tric_atresia__tga_Glenn",
           "filename": "tric atresia, tga Glenn.bmp",
           "display_name": "tric atresia, tga Glenn",
-          "path": "diagrams/Uploaded/tric atresia, tga Glenn.bmp",
-          "category_id": "Uploaded",
+          "path": "diagrams/Tricuspid_Atresia/tric atresia, tga Glenn.bmp",
+          "category_id": "Tricuspid_Atresia",
           "anatomy_type": "post_glenn",
           "location_set": "post_glenn",
           "has_coords": true,
           "coord_file": "config/annotation_coords/tric_atresia__tga_Glenn.json",
           "image_width": 845,
           "image_height": 525
-        },
-        {
-          "id": "_S_L_L__Pulm_atresia_Mitral_atresia_-_rmBTS",
-          "filename": "{S,L,L} Pulm atresia Mitral atresia - rmBTS.bmp",
-          "display_name": "{S,L,L} Pulm atresia Mitral atresia - rmBTS",
-          "path": "diagrams/Uploaded/{S,L,L} Pulm atresia Mitral atresia - rmBTS.bmp",
-          "category_id": "Uploaded",
-          "anatomy_type": "single_ventricle",
-          "location_set": "single_ventricle_norwood",
-          "has_coords": true,
-          "coord_file": "config/annotation_coords/_S_L_L__Pulm_atresia_Mitral_atresia_-_rmBTS.json",
-          "image_width": 700,
-          "image_height": 497
         }
       ]
+    },
+    {
+      "id": "Uploaded",
+      "display_name": "Uploaded Diagrams",
+      "folder": "diagrams/Uploaded",
+      "diagrams": []
     }
   ]
 }

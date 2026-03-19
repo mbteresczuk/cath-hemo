@@ -50,6 +50,11 @@ CATEGORY_CONFIG = [
         "folder": "diagrams/HLHS_MS_AS",
     },
     {
+        "id": "Tricuspid_Atresia",
+        "display_name": "Tricuspid Atresia",
+        "folder": "diagrams/Tricuspid_Atresia",
+    },
+    {
         "id": "Uploaded",
         "display_name": "Uploaded Diagrams",
         "folder": "diagrams/Uploaded",
