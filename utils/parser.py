@@ -197,6 +197,67 @@ def _find_custom_location(token_list, start, extra_locations):
     return None, 0
 
 
+def _collect_entries(text: str, extra_locations: list = None) -> dict:
+    """
+    Parse hemodynamic text and return ALL entries per location as a list.
+
+    Returns: {loc: [parsed_dict, parsed_dict, ...]}
+    Multiple entries for the same location are preserved (not merged).
+    """
+    all_entries = {}
+
+    normalized = re.sub(r'[,:;]', ' ', text)
+    lines = normalized.splitlines()
+
+    for raw_line in lines:
+        line = raw_line.strip()
+        if not line or line.startswith('#'):
+            continue
+
+        tokens = line.split()
+        if not tokens:
+            continue
+
+        pos = 0
+        while pos < len(tokens):
+            loc, consumed = _find_location(tokens, pos)
+
+            if loc is None and extra_locations:
+                loc, consumed = _find_custom_location(tokens, pos, extra_locations)
+
+            if loc is None:
+                pos += 1
+                continue
+
+            pos += consumed
+
+            value_tokens = []
+            while pos < len(tokens):
+                next_loc, _ = _find_location(tokens, pos)
+                if next_loc is not None:
+                    break
+                value_tokens.append(tokens[pos])
+                pos += 1
+
+            parsed = _parse_numbers(value_tokens)
+
+            # Pressure-only location fixups
+            if loc in PRESSURE_ONLY:
+                if "sat" in parsed:
+                    v = parsed.pop("sat")
+                    if "systolic" not in parsed:
+                        parsed["systolic"] = v
+                if ("systolic" in parsed
+                        and "diastolic" not in parsed
+                        and "mean" not in parsed):
+                    parsed["mean"] = parsed.pop("systolic")
+
+            if parsed:
+                all_entries.setdefault(loc, []).append(parsed)
+
+    return all_entries
+
+
 def parse_hemodynamics(text: str, extra_locations: list = None) -> dict:
     """
     Parse a block of hemodynamic text into a dict keyed by canonical location.
@@ -219,71 +280,55 @@ def parse_hemodynamics(text: str, extra_locations: list = None) -> dict:
       'RPCWP': {'systolic': 17, 'diastolic': 12, 'mean': 14},
       ...
     }
+    When a location appears multiple times, later values overwrite earlier ones.
+    Use parse_hemodynamics_with_conflicts() to detect and surface conflicts.
     """
+    all_entries = _collect_entries(text, extra_locations)
     result = {}
-
-    # Normalize: replace commas/colons/semicolons with spaces, strip
-    normalized = re.sub(r'[,:;]', ' ', text)
-    lines = normalized.splitlines()
-
-    for raw_line in lines:
-        line = raw_line.strip()
-        if not line or line.startswith('#'):
-            continue
-
-        # Tokenize
-        tokens = line.split()
-        if not tokens:
-            continue
-
-        # Multiple location entries might be on one line — keep scanning
-        pos = 0
-        while pos < len(tokens):
-            loc, consumed = _find_location(tokens, pos)
-
-            # Fallback: try truly custom location names not in LOCATION_ALIASES
-            if loc is None and extra_locations:
-                loc, consumed = _find_custom_location(tokens, pos, extra_locations)
-
-            if loc is None:
-                pos += 1
-                continue
-
-            pos += consumed
-
-            # Collect numeric tokens until the next location name
-            value_tokens = []
-            while pos < len(tokens):
-                # Peek: is the next token(s) a location?
-                next_loc, _ = _find_location(tokens, pos)
-                if next_loc is not None:
-                    break
-                value_tokens.append(tokens[pos])
-                pos += 1
-
-            parsed = _parse_numbers(value_tokens)
-
-            # For pressure-only locations (RPCWP, LPCWP), fix number interpretation
-            if loc in PRESSURE_ONLY:
-                if "sat" in parsed:
-                    # Re-interpret: sat was probably systolic
-                    v = parsed.pop("sat")
-                    if "systolic" not in parsed:
-                        parsed["systolic"] = v
-                # A lone systolic with no diastolic/mean is a mean wedge pressure
-                # e.g. "RPCWP 12" → mean=12, not systolic=12
-                if ("systolic" in parsed
-                        and "diastolic" not in parsed
-                        and "mean" not in parsed):
-                    parsed["mean"] = parsed.pop("systolic")
-
-            if parsed:
-                # Merge (in case location appears twice)
-                existing = result.get(loc, {})
-                existing.update(parsed)
-                result[loc] = existing
-
+    for loc, entries in all_entries.items():
+        merged = {}
+        for entry in entries:
+            merged.update(entry)
+        result[loc] = merged
     return result
+
+
+def parse_hemodynamics_with_conflicts(text: str, extra_locations: list = None) -> tuple:
+    """
+    Like parse_hemodynamics but also detects conflicting values.
+
+    Returns (result, conflicts) where:
+      result    — {loc: {field: value}}  first-occurrence value wins per field
+      conflicts — {loc: {field: [val1, val2, ...]}}  only fields with >1 distinct value
+
+    Example:
+      Input: "RPA 75 50/30 38\\nRPA 80 45/25 35"
+      result    → {'RPA': {'sat': 75, 'systolic': 50, 'diastolic': 30, 'mean': 38}}
+      conflicts → {'RPA': {'sat': [75, 80], 'systolic': [50, 45],
+                            'diastolic': [30, 25], 'mean': [38, 35]}}
+    """
+    all_entries = _collect_entries(text, extra_locations)
+    result = {}
+    conflicts = {}
+
+    for loc, entries in all_entries.items():
+        # Accumulate all seen values per field, in order
+        field_vals: dict = {}
+        for entry in entries:
+            for field, value in entry.items():
+                field_vals.setdefault(field, [])
+                if value not in field_vals[field]:
+                    field_vals[field].append(value)
+
+        # Result: first value per field
+        result[loc] = {f: vals[0] for f, vals in field_vals.items()}
+
+        # Conflicts: fields with more than one distinct value
+        loc_conflicts = {f: vals for f, vals in field_vals.items() if len(vals) > 1}
+        if loc_conflicts:
+            conflicts[loc] = loc_conflicts
+
+    return result, conflicts
 
 
 def format_parsed_for_display(parsed: dict) -> str:

@@ -8,7 +8,7 @@ from PIL import Image
 
 from utils.diagram_library import load_library, mark_coords_status, get_location_set, delete_diagram
 from utils.matcher import match_diagrams
-from utils.parser import parse_hemodynamics
+from utils.parser import parse_hemodynamics, parse_hemodynamics_with_conflicts
 from utils.coordinator import load_coords
 from utils.annotator import (
     annotate_diagram,
@@ -184,9 +184,9 @@ with col_hemo:
         label_visibility="collapsed",
     )
 
-    # Live parse preview
+    # Live parse preview + conflict detection
     if hemo_text.strip():
-        parsed_preview = parse_hemodynamics(
+        parsed_preview, preview_conflicts = parse_hemodynamics_with_conflicts(
             hemo_text,
             extra_locations=_diagram_custom_locs or None,
         )
@@ -202,9 +202,31 @@ with col_hemo:
                             parts[-1] += f"  mean {int(vals['mean'])}"
                     elif "mean" in vals:
                         parts.append(f"mean {int(vals['mean'])}")
-                    st.caption(f"**{loc}**: {' | '.join(parts)}")
+                    conflict_flag = " ⚠️" if loc in preview_conflicts else ""
+                    st.caption(f"**{loc}**{conflict_flag}: {' | '.join(parts)}")
         else:
             st.caption("⚠️ No locations recognized yet.")
+
+        # ── Conflict resolution UI ──────────────────────────────────────────
+        if preview_conflicts:
+            st.warning(
+                f"⚠️ **Conflicting values found for {len(preview_conflicts)} location(s).** "
+                "Please select which value to use for each conflict below before generating."
+            )
+            for loc, field_conflicts in preview_conflicts.items():
+                st.markdown(f"**{loc.replace('_', ' ')}** — multiple values detected:")
+                for field, values in field_conflicts.items():
+                    unit = "%" if field == "sat" else " mmHg"
+                    label = {"sat": "Saturation", "systolic": "Systolic",
+                             "diastolic": "Diastolic", "mean": "Mean"}.get(field, field.title())
+                    options = [f"{int(v)}{unit}" for v in values]
+                    st.radio(
+                        f"{label}",
+                        options=options,
+                        key=f"conflict_{loc}_{field}",
+                        horizontal=True,
+                    )
+                st.markdown("---")
 
 # ═══════════════════════════════════════════════════════════════════════════
 # GENERATE BUTTON
@@ -225,11 +247,23 @@ with hint_col:
         st.caption("← Type a diagnosis and select an anatomy to generate the report.")
 
 if generate_clicked and can_generate:
-    # ── Collect hemodynamic data from text area ───────────────────────────────
-    new_hemo = parse_hemodynamics(
+    # ── Collect hemodynamic data, applying any conflict resolutions ───────────
+    new_hemo, gen_conflicts = parse_hemodynamics_with_conflicts(
         st.session_state.get("hemo_text_input", ""),
         extra_locations=_diagram_custom_locs or None,
     )
+    # Apply user's conflict resolution choices from radio buttons
+    for loc, field_conflicts in gen_conflicts.items():
+        for field, values in field_conflicts.items():
+            choice_key = f"conflict_{loc}_{field}"
+            chosen_str = st.session_state.get(choice_key)
+            if chosen_str is not None:
+                try:
+                    # Strip unit suffix (% or mmHg) and convert to float
+                    chosen_val = float(chosen_str.replace("%", "").replace("mmHg", "").strip())
+                    new_hemo.setdefault(loc, {})[field] = chosen_val
+                except ValueError:
+                    pass
 
     # ── Save patient data (including sidebar values) ─────────────────────────
     patient_data = {
