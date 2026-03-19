@@ -56,7 +56,7 @@ _VENTRICULAR_LOCS = {
 
 
 def _load_fonts():
-    """Load Calibri 11 fonts; fall back to Arial then PIL default."""
+    """Load Calibri regular 16pt; fall back to Arial then PIL default."""
     _here = Path(__file__).parent.parent / "assets" / "fonts"
 
     calibri_regular = [
@@ -65,36 +65,20 @@ def _load_fonts():
         "/System/Library/Fonts/Supplemental/Arial.ttf",
         "/Library/Fonts/Arial.ttf",
     ]
-    calibri_bold = [
-        str(_here / "Calibrib.ttf"),
-        "/Applications/Microsoft Word.app/Contents/Resources/DFonts/Calibrib.ttf",
-        "/System/Library/Fonts/Supplemental/Arial Bold.ttf",
-        "/Library/Fonts/Arial Bold.ttf",
-    ]
 
-    font_paths = {
-        "bold_large": calibri_bold,
-        "regular":    calibri_regular,
-        "bold_small": calibri_bold,
-    }
+    font = None
+    for path in calibri_regular:
+        if os.path.exists(path):
+            try:
+                font = ImageFont.truetype(path, 16)
+                break
+            except Exception:
+                pass
+    if font is None:
+        font = ImageFont.load_default()
 
-    fonts = {}
-    sizes = {"bold_large": 16, "regular": 16, "bold_small": 16}
-
-    for key, paths in font_paths.items():
-        font = None
-        for path in paths:
-            if os.path.exists(path):
-                try:
-                    font = ImageFont.truetype(path, sizes[key])
-                    break
-                except Exception:
-                    pass
-        if font is None:
-            font = ImageFont.load_default()
-        fonts[key] = font
-
-    return fonts
+    # All keys point to the same regular font — no bold anywhere
+    return {"bold_large": font, "regular": font, "bold_small": font}
 
 
 _FONTS = None
@@ -116,7 +100,7 @@ def load_image_as_rgba(image_path: str) -> Image.Image:
 
 
 def _text_size(draw, text, font):
-    """Get text (width, height) compatibly across Pillow versions."""
+    """Get (width, height) of rendered text."""
     try:
         bbox = font.getbbox(text)
         return bbox[2] - bbox[0], bbox[3] - bbox[1]
@@ -124,14 +108,33 @@ def _text_size(draw, text, font):
         return draw.textsize(text, font=font)
 
 
+def _text_top_offset(font, text):
+    """Return the vertical offset from draw-y to the visual top of glyphs.
+
+    Pillow's draw.text(xy) places text so the ascender starts at xy[1].
+    font.getbbox returns (left, top, right, bottom) where top is often
+    a negative number (e.g. -14 for a 16pt font), meaning the visual top
+    of the glyph is at y + top_offset pixels above the draw point.
+    We use this to compensate so text renders exactly at the intended y.
+    """
+    try:
+        return font.getbbox(text)[1]
+    except Exception:
+        return 0
+
+
+def _draw_text(draw, x, y, text, font, fill):
+    """Draw text with its visual top-left corner exactly at (x, y)."""
+    offset = _text_top_offset(font, text)
+    draw.text((x, y - offset), text, fill=fill, font=font)
+
+
 def draw_saturation_circle(draw, cx, cy, saturation, side, fonts, radius=CIRCLE_RADIUS):
     """
-    Draw a circle with saturation value inside.
-    side='right' -> blue circle/text
-    side='left'  -> red circle/text
+    Draw a circle with saturation value inside, centered on (cx, cy).
     """
     color = COLORS["right_circle"] if side == "right" else COLORS["left_circle"]
-    font = fonts["bold_large"]
+    font = fonts["regular"]
 
     # White fill so diagram lines don't show through
     draw.ellipse(
@@ -144,57 +147,15 @@ def draw_saturation_circle(draw, cx, cy, saturation, side, fonts, radius=CIRCLE_
     if saturation is not None:
         text = str(int(saturation))
         tw, th = _text_size(draw, text, font)
-        draw.text((cx - tw // 2, cy - th // 2), text, fill=color, font=font)
-
-
-def _calc_pressure_bbox(draw, x, y, systolic, diastolic, mean, fonts, anchor="left",
-                        ventricular=False):
-    """Calculate the bounding box for a pressure annotation block."""
-    font_bold = fonts["bold_small"]
-    font_reg = fonts["regular"]
-
-    if systolic is None and diastolic is None:
-        return None
-
-    if ventricular:
-        # Show sys/mean on one line (e.g. 34/10); ignore diastolic on diagram
-        if systolic is not None and mean is not None:
-            line1 = f"{int(systolic)}/{int(mean)}"
-        elif systolic is not None:
-            line1 = str(int(systolic))
-        else:
-            line1 = str(int(mean))
-        tw, th = _text_size(draw, line1, font_bold)
-        text_x = x - tw if anchor == "right" else x
-        pad = 2
-        return (text_x - pad, y - pad, text_x + tw + pad, y + th + pad)
-
-    if systolic is not None and diastolic is not None:
-        line1 = f"{int(systolic)}/{int(diastolic)}"
-    elif systolic is not None:
-        line1 = str(int(systolic))
-    else:
-        line1 = str(int(diastolic))
-
-    tw, th = _text_size(draw, line1, font_bold)
-    text_x = x - tw if anchor == "right" else x
-
-    total_h = th + 3  # text + gap to overline
-    max_w = tw
-    if mean is not None:
-        mean_text = str(int(mean))
-        mw, _ = _text_size(draw, mean_text, font_reg)
-        total_h += 2 + 12  # overline + gap + mean text height
-        max_w = max(max_w, mw)
-
-    pad = 2
-    return (text_x - pad, y - pad, text_x + max_w + pad, y + total_h + pad)
+        # Center text in circle, compensating for glyph top offset
+        offset = _text_top_offset(font, text)
+        draw.text((cx - tw // 2, cy - th // 2 - offset), text, fill=color, font=font)
 
 
 def draw_pressure_annotation(draw, x, y, systolic, diastolic, mean, side, fonts,
                              anchor="left", ventricular=False):
     """
-    Draw pressure annotation.
+    Draw pressure annotation with its top-left corner exactly at (x, y).
 
     Standard format (atria, great vessels):
         systolic/diastolic
@@ -208,27 +169,23 @@ def draw_pressure_annotation(draw, x, y, systolic, diastolic, mean, side, fonts,
     White background ensures readability over anatomy lines.
     """
     color = COLORS["right_pressure"] if side == "right" else COLORS["left_pressure"]
-    font_bold = fonts["bold_small"]
-    font_reg = fonts["regular"]
+    font = fonts["regular"]
 
     if systolic is None and diastolic is None:
         return
 
     if ventricular:
-        # Single line: sys/mean (e.g. 34/10)
         if systolic is not None and mean is not None:
             line1 = f"{int(systolic)}/{int(mean)}"
         elif systolic is not None:
             line1 = str(int(systolic))
         else:
             line1 = str(int(mean))
-        tw, th = _text_size(draw, line1, font_bold)
+        tw, th = _text_size(draw, line1, font)
         text_x = x - tw if anchor == "right" else x
-        bbox = _calc_pressure_bbox(draw, x, y, systolic, diastolic, mean, fonts, anchor,
-                                   ventricular=True)
-        if bbox:
-            draw.rectangle(bbox, fill="white")
-        draw.text((text_x, y), line1, fill=color, font=font_bold)
+        pad = 2
+        draw.rectangle([text_x - pad, y - pad, text_x + tw + pad, y + th + pad], fill="white")
+        _draw_text(draw, text_x, y, line1, font, color)
         return
 
     # Standard format: sys/dia on top, mean below overline
@@ -239,31 +196,38 @@ def draw_pressure_annotation(draw, x, y, systolic, diastolic, mean, side, fonts,
     else:
         line1 = str(int(diastolic))
 
-    tw, th = _text_size(draw, line1, font_bold)
-
-    # Adjust x for right-anchor
+    tw, th = _text_size(draw, line1, font)
     text_x = x - tw if anchor == "right" else x
 
-    # Draw white background behind the pressure text block
-    bbox = _calc_pressure_bbox(draw, x, y, systolic, diastolic, mean, fonts, anchor)
-    if bbox:
-        draw.rectangle(bbox, fill="white")
-
-    draw.text((text_x, y), line1, fill=color, font=font_bold)
-
+    # Pre-calculate total block height for white background
+    total_h = th
+    max_w = tw
+    mean_text = None
+    mw = 0
     if mean is not None:
-        # Draw overline 3px below text bottom — width matches mean text, not sys/dia text
-        line_y = y + th + 3
         mean_text = str(int(mean))
-        mw, mh = _text_size(draw, mean_text, font_reg)
+        mw, mh = _text_size(draw, mean_text, font)
+        total_h += 3 + 1 + 3 + mh   # gap + overline + gap + mean text
+        max_w = max(max_w, mw)
+
+    pad = 2
+    draw.rectangle(
+        [text_x - pad, y - pad, text_x + max_w + pad, y + total_h + pad],
+        fill="white"
+    )
+
+    _draw_text(draw, text_x, y, line1, font, color)
+
+    if mean_text is not None:
+        line_y = y + th + 3
         mean_x = (x - mw) if anchor == "right" else text_x
         draw.line([(mean_x, line_y), (mean_x + mw, line_y)], fill=color, width=1)
-        draw.text((mean_x, line_y + 2), mean_text, fill=color, font=font_reg)
+        _draw_text(draw, mean_x, line_y + 3, mean_text, font, color)
 
 
 def draw_pcwp_annotation(draw, x, y, label, systolic, diastolic, mean, fonts):
     """
-    Draw PCWP label + pressure:
+    Draw PCWP label + pressure with top-left corner exactly at (x, y):
         RPCW
         17/12
         ─────
@@ -271,54 +235,50 @@ def draw_pcwp_annotation(draw, x, y, label, systolic, diastolic, mean, fonts):
     White background ensures readability over anatomy lines.
     """
     color = COLORS["pcwp"]
-    font_bold = fonts["bold_small"]
-    font_reg = fonts["regular"]
+    font = fonts["regular"]
 
-    # Calculate total height for white background
-    lw, lh = _text_size(draw, label, font_bold)
+    lw, lh = _text_size(draw, label, font)
     total_h = lh + 2
     max_w = lw
 
     if systolic is not None and diastolic is not None:
         pressure_str = f"{int(systolic)}/{int(diastolic)}"
-        pw, ph = _text_size(draw, pressure_str, font_bold)
+        pw, ph = _text_size(draw, pressure_str, font)
         total_h += ph + 2
         max_w = max(max_w, pw)
         if mean is not None:
             mean_text = str(int(mean))
-            mw, _ = _text_size(draw, mean_text, font_reg)
-            total_h += 3 + 12
+            mw, mh = _text_size(draw, mean_text, font)
+            total_h += 3 + 1 + 3 + mh
             max_w = max(max_w, mw)
     elif mean is not None:
         mean_text = str(int(mean))
-        mw, mh = _text_size(draw, mean_text, font_reg)
+        mw, mh = _text_size(draw, mean_text, font)
         total_h += mh
         max_w = max(max_w, mw)
         pressure_str = None
     else:
         return
 
-    # Draw white background
     pad = 2
     draw.rectangle([x - pad, y - pad, x + max_w + pad, y + total_h + pad], fill="white")
 
-    # Draw label
-    draw.text((x, y), label, fill=color, font=font_bold)
+    _draw_text(draw, x, y, label, font, color)
     y_cur = y + lh + 2
 
     if systolic is not None and diastolic is not None:
         pressure_str = f"{int(systolic)}/{int(diastolic)}"
-        pw, ph = _text_size(draw, pressure_str, font_bold)
-        draw.text((x, y_cur), pressure_str, fill=color, font=font_bold)
+        pw, ph = _text_size(draw, pressure_str, font)
+        _draw_text(draw, x, y_cur, pressure_str, font, color)
         y_cur += ph + 2
         if mean is not None:
             mean_text = str(int(mean))
-            mw_mean, _ = _text_size(draw, mean_text, font_reg)
+            mw_mean, _ = _text_size(draw, mean_text, font)
             draw.line([(x, y_cur), (x + mw_mean, y_cur)], fill=color, width=1)
             y_cur += 3
-            draw.text((x, y_cur), mean_text, fill=color, font=font_reg)
+            _draw_text(draw, x, y_cur, mean_text, font, color)
     elif mean is not None:
-        draw.text((x, y_cur), str(int(mean)), fill=color, font=font_reg)
+        _draw_text(draw, x, y_cur, str(int(mean)), font, color)
 
 
 def draw_placement_dots(img: Image.Image, placed_coords: dict) -> Image.Image:

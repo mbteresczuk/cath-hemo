@@ -37,13 +37,17 @@ def _p(loc, field, hemo):
 
 
 def _grad_str(from_val, to_val):
-    """Return 'no gradient' or 'X mmHg gradient' based on systolic difference."""
+    """Return the computed gradient as a readable string.
+
+    Always reports the actual number so clinicians can see the value.
+    Negative or zero → 'no gradient'; positive → 'a X mmHg gradient'.
+    """
     if from_val is None or to_val is None:
         return None
-    diff = from_val - to_val
-    if diff <= 5:
+    diff = int(round(from_val - to_val))
+    if diff <= 0:
         return "no gradient"
-    return f"{int(round(diff))} mmHg gradient"
+    return f"a {diff} mmHg gradient"
 
 
 def _ra_level(mean):
@@ -179,7 +183,9 @@ def generate_hemodynamic_narrative(hemodynamics, calculations, patient_data, ste
     ra_sys  = _p("RA", "systolic", hemodynamics)
     ra_dia  = _p("RA", "diastolic", hemodynamics)
     ra_mean = _p("RA", "mean", hemodynamics)
-    rvedp   = _p("RV", "diastolic", hemodynamics)
+    # RVEDP is the third number in the RV pressure entry (e.g. 34/3/10 → RVEDP = 10)
+    # stored as "mean" by the parser for ventricular locations
+    rvedp   = _p("RV", "mean", hemodynamics)
 
     # --- Right-sided filling pressures ---
     # "Right sided filling pressures were (normal/elevated) with RA pressure X/X mean X mmHg
