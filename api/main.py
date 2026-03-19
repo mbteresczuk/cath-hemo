@@ -36,9 +36,11 @@ from utils.annotator import annotate_diagram, image_to_base64
 from utils.auto_coords import auto_configure
 from utils.coordinator import load_coords, save_coords
 from utils.diagram_library import (
+    build_library_from_source,
     get_all_diagrams,
     get_diagram_by_id,
     load_library,
+    mark_coords_status,
 )
 from utils.hemodynamics import calculate_all, detect_step_ups
 from utils.matcher import match_diagrams
@@ -108,8 +110,19 @@ _library_cache: Optional[dict] = None
 def _get_library() -> dict:
     global _library_cache
     if _library_cache is None:
-        _library_cache = load_library()
+        # Always rebuild from the actual files on disk so the library
+        # stays consistent with whatever is deployed (never stale JSON).
+        _library_cache = mark_coords_status(build_library_from_source())
     return _library_cache
+
+
+@app.on_event("startup")
+def _startup():
+    """Pre-load the library at startup and log the diagram count."""
+    lib = _get_library()
+    all_diags = get_all_diagrams(lib)
+    print(f"[startup] Library loaded: {len(all_diags)} diagrams across "
+          f"{sum(1 for c in lib['categories'] if c['diagrams'])} categories")
 
 
 # ── Endpoints ─────────────────────────────────────────────────────────────────
