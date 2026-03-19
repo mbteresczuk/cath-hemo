@@ -26,7 +26,7 @@ if _env_file.exists():
             _k, _v = _line.split("=", 1)
             os.environ.setdefault(_k.strip(), _v.strip())
 
-from fastapi import FastAPI, File, HTTPException, Query, UploadFile
+from fastapi import Body, FastAPI, File, HTTPException, Query, UploadFile
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse
 from fastapi.staticfiles import StaticFiles
@@ -255,3 +255,78 @@ def generate_report(req: ReportRequest):
         "step_ups": step_ups,
         "parsed": hemodynamics,
     }
+
+
+@app.get("/api/coords/{diagram_id}")
+def get_coords(diagram_id: str):
+    """Return annotation coords for a diagram (or empty locations if not configured)."""
+    coords = load_coords(diagram_id)
+    if coords is None:
+        library = _get_library()
+        diagram = get_diagram_by_id(library, diagram_id)
+        if diagram is None:
+            raise HTTPException(status_code=404, detail=f"Diagram '{diagram_id}' not found.")
+        coords = {
+            "diagram_id": diagram_id,
+            "image_width": diagram["image_width"],
+            "image_height": diagram["image_height"],
+            "locations": {},
+        }
+    return coords
+
+
+@app.put("/api/coords/{diagram_id}")
+def put_coords(diagram_id: str, payload: dict = Body(...)):
+    """Save annotation coords for a diagram."""
+    library = _get_library()
+    diagram = get_diagram_by_id(library, diagram_id)
+    if diagram is None:
+        raise HTTPException(status_code=404, detail=f"Diagram '{diagram_id}' not found.")
+    save_coords(diagram_id, payload)
+    global _library_cache
+    _library_cache = None
+    return {"ok": True}
+
+
+@app.get("/editor")
+def serve_coord_editor():
+    """Serve the standalone coordinate editor."""
+    return FileResponse(str(BASE_DIR / "coord_editor.html"), media_type="text/html")
+
+
+@app.post("/api/coords/{diagram_id}/auto")
+def auto_configure_coords(diagram_id: str):
+    """Auto-configure annotation coords for a diagram and return them."""
+    library = _get_library()
+    diagram = get_diagram_by_id(library, diagram_id)
+    if diagram is None:
+        raise HTTPException(status_code=404, detail=f"Diagram '{diagram_id}' not found.")
+    img_path = BASE_DIR / diagram["path"]
+    coords = auto_configure(
+        diagram["id"],
+        diagram["image_width"],
+        diagram["image_height"],
+        diagram["anatomy_type"],
+        diagram["location_set"],
+        image_path=str(img_path),
+    )
+    save_coords(diagram_id, coords)
+    global _library_cache
+    _library_cache = None
+    return coords
+
+
+@app.post("/api/push_coords")
+def push_coords_to_git():
+    """Commit and push changed coord files to GitHub so Render redeploys."""
+    import subprocess
+    script = BASE_DIR / "push_coords.sh"
+    result = subprocess.run(
+        ["bash", str(script)],
+        capture_output=True, text=True, cwd=str(BASE_DIR)
+    )
+    output = (result.stdout + result.stderr).strip()
+    if result.returncode == 0:
+        return {"ok": True, "detail": output}
+    from fastapi import HTTPException
+    raise HTTPException(status_code=500, detail=output)

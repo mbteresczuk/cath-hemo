@@ -38,6 +38,7 @@ if "library" not in st.session_state or st.session_state.library is None:
 library = st.session_state.library
 
 st.title("⚙️ Setup Annotation Coordinates")
+st.info("💡 **Tip:** For faster drag-and-drop editing, use the **🖱️ Open Drag Editor** button in the sidebar — it opens a standalone editor with no lag.")
 
 all_diagrams = get_all_diagrams(library)
 default_diag_id = st.session_state.get("setup_target_diagram")
@@ -69,6 +70,7 @@ with st.sidebar:
 
     if st.button("← Back to Dashboard", use_container_width=True):
         st.switch_page("app.py")
+    st.link_button("🖱️ Open Drag Editor", url="http://localhost:8000/editor", use_container_width=True, help="Opens the fast standalone drag-and-drop editor in a new tab")
 
 # ── Load / init coords ────────────────────────────────────────────────────────
 diag_id           = selected_diag["id"]

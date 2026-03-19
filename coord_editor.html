@@ -1,0 +1,699 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Coord Editor</title>
+  <style>
+    /* ── Reset & base ─────────────────────────────────── */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      font-size: 14px;
+      background: #f0f2f5;
+      height: 100vh;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+
+    /* ── Top bar ──────────────────────────────────────── */
+    #topbar {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 8px 14px;
+      background: #1e293b;
+      color: #fff;
+      flex-shrink: 0;
+      flex-wrap: wrap;
+    }
+    #topbar h1 { font-size: 15px; font-weight: 700; letter-spacing: 0.3px; white-space: nowrap; }
+    #diag-select {
+      flex: 1; min-width: 180px; max-width: 340px;
+      padding: 5px 8px; border-radius: 6px; border: none;
+      font-size: 13px; background: #334155; color: #fff;
+    }
+    #diag-select option { background: #1e293b; }
+
+    #save-btn {
+      padding: 6px 18px; border-radius: 6px; border: none;
+      background: #22c55e; color: #fff; font-weight: 700;
+      font-size: 13px; cursor: pointer; white-space: nowrap;
+      transition: background 0.15s;
+    }
+    #save-btn:hover { background: #16a34a; }
+    #save-btn:disabled { background: #475569; cursor: default; }
+
+    #auto-btn {
+      padding: 6px 14px; border-radius: 6px; border: none;
+      background: #6366f1; color: #fff; font-weight: 600;
+      font-size: 13px; cursor: pointer; white-space: nowrap;
+    }
+    #auto-btn:hover { background: #4f46e5; }
+
+    #push-btn {
+      padding: 6px 14px; border-radius: 6px; border: none;
+      background: #f97316; color: #fff; font-weight: 600;
+      font-size: 13px; cursor: pointer; white-space: nowrap;
+    }
+    #push-btn:hover { background: #ea580c; }
+
+    #status {
+      font-size: 12px; color: #94a3b8; white-space: nowrap;
+      min-width: 80px; text-align: right;
+      margin-left: auto;
+    }
+    #status.saved  { color: #4ade80; }
+    #status.saving { color: #fbbf24; }
+    #status.error  { color: #f87171; }
+
+    /* ── Main layout ──────────────────────────────────── */
+    #main {
+      display: flex;
+      flex: 1;
+      overflow: hidden;
+    }
+
+    /* ── Sidebar ──────────────────────────────────────── */
+    #sidebar {
+      width: 200px;
+      flex-shrink: 0;
+      background: #fff;
+      border-right: 1px solid #e2e8f0;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+    #sidebar-header {
+      padding: 10px 12px 6px;
+      font-weight: 700;
+      font-size: 12px;
+      color: #475569;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      border-bottom: 1px solid #e2e8f0;
+      flex-shrink: 0;
+    }
+    #loc-list {
+      overflow-y: auto;
+      flex: 1;
+      padding: 6px 0;
+    }
+    .loc-row {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      padding: 5px 10px;
+      cursor: pointer;
+      border-left: 3px solid transparent;
+      transition: background 0.1s;
+      font-size: 12px;
+    }
+    .loc-row:hover { background: #f1f5f9; }
+    .loc-row.active { background: #eff6ff; border-left-color: #3b82f6; }
+    .loc-dot {
+      width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0;
+    }
+    .loc-dot.sat      { background: #f97316; }
+    .loc-dot.pressure { background: #3b82f6; }
+    .loc-dot.both { background: linear-gradient(90deg, #f97316 50%, #3b82f6 50%); }
+    .loc-dot.missing { background: #e2e8f0; border: 1.5px dashed #94a3b8; }
+    .loc-name { flex: 1; color: #1e293b; }
+    .loc-check { color: #22c55e; font-size: 11px; }
+
+    /* ── Canvas area ──────────────────────────────────── */
+    #canvas-wrap {
+      flex: 1;
+      overflow: auto;
+      display: flex;
+      align-items: flex-start;
+      justify-content: center;
+      padding: 16px;
+      background: #e2e8f0;
+    }
+    #editor-wrap {
+      position: relative;
+      display: inline-block;
+      box-shadow: 0 4px 24px rgba(0,0,0,0.18);
+      border-radius: 4px;
+      overflow: visible;
+      background: #fff;
+      cursor: default;
+    }
+    #editor-wrap.armed { cursor: crosshair !important; }
+
+    #diagram-img {
+      display: block;
+      max-width: 100%;
+      user-select: none;
+      -webkit-user-drag: none;
+      pointer-events: none;
+      border-radius: 4px;
+    }
+
+    /* Dots */
+    .dot {
+      position: absolute;
+      width: 18px; height: 18px;
+      border-radius: 50%;
+      transform: translate(-50%, -50%);
+      cursor: grab;
+      border: 2.5px solid rgba(255,255,255,0.95);
+      box-shadow: 0 2px 8px rgba(0,0,0,0.4);
+      z-index: 10;
+      transition: transform 0.08s, box-shadow 0.08s;
+      touch-action: none;
+    }
+    .dot:hover { transform: translate(-50%,-50%) scale(1.35); box-shadow: 0 3px 12px rgba(0,0,0,0.5); }
+    .dot.dragging { cursor: grabbing !important; transform: translate(-50%,-50%) scale(1.5); z-index: 100; transition: none; }
+    .dot.sat      { background: #f97316; }
+    .dot.pressure { background: #3b82f6; }
+    .dot.armed-target { box-shadow: 0 0 0 3px #fff, 0 0 0 5px #f97316; animation: pulse 0.8s infinite; }
+
+    @keyframes pulse {
+      0%, 100% { box-shadow: 0 0 0 3px #fff, 0 0 0 5px #f97316; }
+      50%       { box-shadow: 0 0 0 3px #fff, 0 0 0 8px rgba(249,115,22,0.4); }
+    }
+
+    /* Dot labels */
+    .dot-label {
+      position: absolute;
+      font-size: 9px;
+      font-weight: 700;
+      color: #1e293b;
+      white-space: nowrap;
+      pointer-events: none;
+      z-index: 11;
+      transform: translateX(-50%);
+      background: rgba(255,255,255,0.82);
+      padding: 1px 4px;
+      border-radius: 3px;
+      text-shadow: none;
+    }
+
+    /* Armed banner */
+    #armed-banner {
+      display: none;
+      position: absolute;
+      top: 8px; left: 50%;
+      transform: translateX(-50%);
+      background: rgba(249,115,22,0.95);
+      color: #fff;
+      font-size: 12px; font-weight: 700;
+      padding: 6px 16px;
+      border-radius: 20px;
+      pointer-events: none;
+      z-index: 30;
+      white-space: nowrap;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.25);
+    }
+    #editor-wrap.armed #armed-banner { display: block; }
+
+    /* Progress bar */
+    #progress-bar {
+      height: 3px;
+      background: #e2e8f0;
+      flex-shrink: 0;
+    }
+    #progress-fill {
+      height: 100%;
+      background: #22c55e;
+      width: 0%;
+      transition: width 0.3s;
+    }
+
+    /* Empty state */
+    #empty-state {
+      color: #94a3b8;
+      font-size: 14px;
+      text-align: center;
+      margin-top: 60px;
+    }
+  </style>
+</head>
+<body>
+
+<!-- Top bar -->
+<div id="topbar">
+  <h1>⚙️ Coord Editor</h1>
+  <select id="diag-select"><option value="">— select diagram —</option></select>
+  <button id="auto-btn" onclick="autoConfigureDiagram()" disabled>🤖 Auto</button>
+  <button id="save-btn" onclick="saveCoords()" disabled>💾 Save</button>
+  <button id="push-btn" onclick="pushToRender()" disabled>🚀 Push to Render</button>
+  <span id="status">No diagram</span>
+</div>
+
+<!-- Progress bar -->
+<div id="progress-bar"><div id="progress-fill"></div></div>
+
+<!-- Main -->
+<div id="main">
+
+  <!-- Sidebar: location list -->
+  <div id="sidebar">
+    <div id="sidebar-header">Locations</div>
+    <div id="loc-list"><div id="empty-state">Select a diagram</div></div>
+  </div>
+
+  <!-- Canvas area -->
+  <div id="canvas-wrap">
+    <div id="editor-wrap">
+      <img id="diagram-img" alt="">
+      <div id="armed-banner">📍 Click to place</div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+// ── State ──────────────────────────────────────────────────────────────────────
+let currentDiagram  = null;   // full diagram object from /api/diagrams
+let coordsData      = null;   // full coords JSON from /api/coords/{id}
+let isDirty         = false;
+let armedLoc        = null;   // location name being placed
+let armedStep       = null;   // "sat" or "pressure"
+
+// Drag state
+let isDragging  = false;
+let activeDot   = null;
+let activeLoc   = null;
+let activeStep  = null;
+let activeLbl   = null;
+let offsetX     = 0;
+let offsetY     = 0;
+
+const diagSelect  = document.getElementById("diag-select");
+const saveBtn     = document.getElementById("save-btn");
+const autoBtn     = document.getElementById("auto-btn");
+const pushBtn     = document.getElementById("push-btn");
+const statusEl    = document.getElementById("status");
+const locList     = document.getElementById("loc-list");
+const editorWrap  = document.getElementById("editor-wrap");
+const imgEl       = document.getElementById("diagram-img");
+const armedBanner = document.getElementById("armed-banner");
+const progressFill= document.getElementById("progress-fill");
+
+// ── Boot: load diagram list ────────────────────────────────────────────────────
+async function loadDiagramList() {
+  try {
+    const res  = await fetch("/api/diagrams");
+    const data = await res.json();
+    diagSelect.innerHTML = '<option value="">— select diagram —</option>';
+    for (const cat of data.categories || []) {
+      if (!cat.diagrams || cat.diagrams.length === 0) continue;
+      const grp = document.createElement("optgroup");
+      grp.label = cat.display_name || cat.id;
+      for (const d of cat.diagrams) {
+        const opt = document.createElement("option");
+        opt.value = d.id;
+        opt.textContent = (d.has_coords ? "✅ " : "⚠️ ") + d.display_name;
+        grp.appendChild(opt);
+      }
+      diagSelect.appendChild(grp);
+    }
+    // Store all diagrams flat for lookup
+    window._allDiagrams = (data.categories || []).flatMap(c => c.diagrams || []);
+  } catch(e) {
+    setStatus("Failed to load diagrams", "error");
+  }
+}
+
+diagSelect.addEventListener("change", () => {
+  const id = diagSelect.value;
+  if (!id) return;
+  const diag = (window._allDiagrams || []).find(d => d.id === id);
+  if (diag) selectDiagram(diag);
+});
+
+// ── Select diagram ─────────────────────────────────────────────────────────────
+async function selectDiagram(diag) {
+  currentDiagram = diag;
+  armedLoc = null; armedStep = null;
+  editorWrap.classList.remove("armed");
+  setStatus("Loading…", "saving");
+  saveBtn.disabled = true;
+  autoBtn.disabled = false;
+  pushBtn.disabled = false;
+
+  // Load coords
+  try {
+    const res = await fetch(`/api/coords/${diag.id}`);
+    coordsData = await res.json();
+  } catch(e) {
+    coordsData = { diagram_id: diag.id, image_width: diag.image_width, image_height: diag.image_height, locations: {} };
+  }
+
+  // Load image
+  imgEl.onload = () => {
+    buildDots();
+    buildLocList();
+    updateProgress();
+    setStatus("Ready", "saved");
+    saveBtn.disabled = false;
+    isDirty = false;
+  };
+  imgEl.src = diag.thumbnail_url;
+}
+
+// ── Coordinate helpers ─────────────────────────────────────────────────────────
+function displayScale() {
+  return imgEl.clientWidth > 0 ? imgEl.clientWidth / (currentDiagram?.image_width || 800) : 1;
+}
+
+function clientToImage(cx, cy) {
+  const rect = editorWrap.getBoundingClientRect();
+  const s    = displayScale();
+  const w    = currentDiagram?.image_width  || 800;
+  const h    = currentDiagram?.image_height || 600;
+  return {
+    px: Math.round(Math.max(0, Math.min(w, (cx - rect.left)  / s))),
+    py: Math.round(Math.max(0, Math.min(h, (cy - rect.top)   / s))),
+  };
+}
+
+// ── Build dots ─────────────────────────────────────────────────────────────────
+function buildDots() {
+  editorWrap.querySelectorAll(".dot, .dot-label").forEach(e => e.remove());
+  if (!coordsData) return;
+
+  Object.entries(coordsData.locations || {}).forEach(([loc, coord]) => {
+    if (coord.skipped) return;
+    const ann = coord.annotation_type || "saturation_and_pressure";
+
+    if (["saturation", "saturation_and_pressure"].includes(ann)) {
+      const sx = coord.sat_x ?? coord.x;
+      const sy = coord.sat_y ?? coord.y;
+      if (sx != null && sy != null) addDot(loc, "sat", sx, sy);
+    }
+    if (["pressure_only", "saturation_and_pressure", "pcwp"].includes(ann)) {
+      if (coord.pressure_x != null && coord.pressure_y != null)
+        addDot(loc, "pressure", coord.pressure_x, coord.pressure_y);
+    }
+  });
+}
+
+function addDot(loc, step, ix, iy) {
+  const s  = displayScale();
+  const cx = ix * s;
+  const cy = iy * s;
+
+  const dot = document.createElement("div");
+  dot.className = `dot ${step}`;
+  dot.style.left = cx + "px";
+  dot.style.top  = cy + "px";
+  dot.dataset.loc  = loc;
+  dot.dataset.step = step;
+
+  const lbl = document.createElement("div");
+  lbl.className = "dot-label";
+  lbl.textContent = loc.replace(/_/g,"") + (step === "pressure" ? " P" : "");
+  lbl.style.left = cx + "px";
+  lbl.style.top  = (cy - 15) + "px";
+
+  dot.addEventListener("mousedown", e => {
+    if (armedLoc) return;
+    e.preventDefault(); e.stopPropagation();
+    startDrag(e.clientX, e.clientY, dot, lbl, loc, step);
+  });
+  dot.addEventListener("touchstart", e => {
+    if (armedLoc) return;
+    e.preventDefault(); e.stopPropagation();
+    const t = e.touches[0];
+    startDrag(t.clientX, t.clientY, dot, lbl, loc, step);
+  }, { passive: false });
+
+  editorWrap.appendChild(dot);
+  editorWrap.appendChild(lbl);
+}
+
+// ── Drag ───────────────────────────────────────────────────────────────────────
+function startDrag(clientX, clientY, dot, lbl, loc, step) {
+  isDragging = true;
+  activeDot = dot; activeLbl = lbl; activeLoc = loc; activeStep = step;
+  const rect  = editorWrap.getBoundingClientRect();
+  offsetX = (clientX - rect.left) - parseFloat(dot.style.left);
+  offsetY = (clientY - rect.top)  - parseFloat(dot.style.top);
+  dot.classList.add("dragging");
+}
+
+document.addEventListener("mousemove", e => {
+  if (!isDragging || !activeDot) return;
+  moveDot(e.clientX, e.clientY);
+});
+document.addEventListener("touchmove", e => {
+  if (!isDragging || !activeDot) return;
+  e.preventDefault();
+  moveDot(e.touches[0].clientX, e.touches[0].clientY);
+}, { passive: false });
+document.addEventListener("mouseup",  finishDrag);
+document.addEventListener("touchend", finishDrag);
+
+function moveDot(clientX, clientY) {
+  const rect = editorWrap.getBoundingClientRect();
+  const nx = Math.max(0, Math.min(rect.width,  (clientX - rect.left) - offsetX));
+  const ny = Math.max(0, Math.min(rect.height, (clientY - rect.top)  - offsetY));
+  activeDot.style.left = nx + "px";
+  activeDot.style.top  = ny + "px";
+  if (activeLbl) { activeLbl.style.left = nx + "px"; activeLbl.style.top = (ny - 15) + "px"; }
+}
+
+function finishDrag() {
+  if (!isDragging || !activeDot) return;
+  isDragging = false;
+  activeDot.classList.remove("dragging");
+
+  const s  = displayScale();
+  const nx = Math.round(parseFloat(activeDot.style.left) / s);
+  const ny = Math.round(parseFloat(activeDot.style.top)  / s);
+
+  const locs = coordsData.locations;
+  if (!locs[activeLoc]) locs[activeLoc] = {};
+  if (activeStep === "sat") {
+    locs[activeLoc].sat_x = nx; locs[activeLoc].sat_y = ny;
+    delete locs[activeLoc].x; delete locs[activeLoc].y;
+  } else {
+    locs[activeLoc].pressure_x = nx; locs[activeLoc].pressure_y = ny;
+  }
+
+  activeDot = null; activeLbl = null; activeLoc = null; activeStep = null;
+  markDirty();
+  buildLocList();
+}
+
+// ── Click-to-place (armed mode) ────────────────────────────────────────────────
+editorWrap.addEventListener("click", e => {
+  if (!armedLoc || !armedStep) return;
+  if (e.target.classList.contains("dot")) return;
+  const { px, py } = clientToImage(e.clientX, e.clientY);
+  const locs = coordsData.locations;
+  if (!locs[armedLoc]) locs[armedLoc] = { annotation_type: "saturation_and_pressure" };
+  if (armedStep === "sat") {
+    locs[armedLoc].sat_x = px; locs[armedLoc].sat_y = py;
+    delete locs[armedLoc].x; delete locs[armedLoc].y;
+    // auto-advance to pressure if needed
+    const ann = locs[armedLoc].annotation_type || "saturation_and_pressure";
+    if (ann === "saturation_and_pressure") {
+      armedStep = "pressure";
+      armedBanner.textContent = `📍 Click to place  ${armedLoc.replace(/_/g," ")}  PRESSURE`;
+    } else {
+      disarm();
+    }
+  } else {
+    locs[armedLoc].pressure_x = px; locs[armedLoc].pressure_y = py;
+    disarm();
+  }
+  buildDots();
+  buildLocList();
+  markDirty();
+});
+
+function armLocation(loc, step) {
+  armedLoc = loc; armedStep = step;
+  editorWrap.classList.add("armed");
+  armedBanner.textContent = `📍 Click to place  ${loc.replace(/_/g," ")}  ${step === "sat" ? "SATURATION" : "PRESSURE"}`;
+  buildLocList(); // highlight
+}
+
+function disarm() {
+  armedLoc = null; armedStep = null;
+  editorWrap.classList.remove("armed");
+  armedBanner.textContent = "";
+  buildLocList();
+}
+
+// ── Sidebar location list ──────────────────────────────────────────────────────
+function buildLocList() {
+  if (!coordsData) { locList.innerHTML = '<div id="empty-state">Select a diagram</div>'; return; }
+  const locs = coordsData.locations || {};
+  const allLocs = Object.keys(locs);
+
+  // Also show any standard locations that don't have dots yet by checking annotation_type
+  locList.innerHTML = "";
+
+  // Merge placed + expected locations (use placed keys for now)
+  const names = [...new Set([...allLocs])].sort();
+  if (names.length === 0) {
+    locList.innerHTML = '<div style="padding:12px;color:#94a3b8;font-size:12px">No locations yet — click 🤖 Auto to generate positions, then drag to adjust.</div>';
+    return;
+  }
+
+  names.forEach(loc => {
+    const coord = locs[loc] || {};
+    if (coord.skipped) return;
+    const ann = coord.annotation_type || "saturation_and_pressure";
+    const hasSat  = coord.sat_x != null || coord.x != null;
+    const hasPress= coord.pressure_x != null;
+    const needsSat  = ["saturation","saturation_and_pressure"].includes(ann);
+    const needsPress= ["pressure_only","saturation_and_pressure","pcwp"].includes(ann);
+
+    const complete = (!needsSat || hasSat) && (!needsPress || hasPress);
+
+    const row = document.createElement("div");
+    row.className = "loc-row" + (loc === armedLoc ? " active" : "");
+
+    const dotEl = document.createElement("div");
+    dotEl.className = "loc-dot " + (hasSat && hasPress ? "both" : hasSat ? "sat" : hasPress ? "pressure" : "missing");
+
+    const nameEl = document.createElement("span");
+    nameEl.className = "loc-name";
+    nameEl.textContent = loc.replace(/_/g," ");
+
+    const checkEl = document.createElement("span");
+    checkEl.className = "loc-check";
+    checkEl.textContent = complete ? "✓" : "";
+
+    row.appendChild(dotEl);
+    row.appendChild(nameEl);
+    row.appendChild(checkEl);
+
+    // Click row: arm for placement
+    row.addEventListener("click", () => {
+      if (armedLoc === loc) { disarm(); return; }
+      const step = needsSat && !hasSat ? "sat" : needsPress && !hasPress ? "pressure" : "sat";
+      armLocation(loc, step);
+    });
+
+    locList.appendChild(row);
+  });
+}
+
+// ── Progress ───────────────────────────────────────────────────────────────────
+function updateProgress() {
+  if (!coordsData) { progressFill.style.width = "0%"; return; }
+  const locs = coordsData.locations || {};
+  let total = 0, done = 0;
+  Object.entries(locs).forEach(([loc, coord]) => {
+    if (coord.skipped) return;
+    const ann = coord.annotation_type || "saturation_and_pressure";
+    if (["saturation","saturation_and_pressure"].includes(ann)) {
+      total++;
+      if (coord.sat_x != null || coord.x != null) done++;
+    }
+    if (["pressure_only","saturation_and_pressure","pcwp"].includes(ann)) {
+      total++;
+      if (coord.pressure_x != null) done++;
+    }
+  });
+  progressFill.style.width = total > 0 ? `${Math.round(100*done/total)}%` : "0%";
+}
+
+// ── Save ───────────────────────────────────────────────────────────────────────
+function markDirty() {
+  isDirty = true;
+  setStatus("Unsaved changes", "saving");
+  updateProgress();
+}
+
+async function saveCoords() {
+  if (!currentDiagram || !coordsData) return;
+  setStatus("Saving…", "saving");
+  saveBtn.disabled = true;
+  try {
+    const res = await fetch(`/api/coords/${currentDiagram.id}`, {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(coordsData),
+    });
+    if (!res.ok) throw new Error(await res.text());
+    isDirty = false;
+    setStatus("Saved ✓", "saved");
+    // Refresh diagram list to update ✅/⚠️ badges
+    await loadDiagramList();
+    diagSelect.value = currentDiagram.id;
+  } catch(e) {
+    setStatus("Save failed", "error");
+  }
+  saveBtn.disabled = false;
+}
+
+// ── Auto-configure ─────────────────────────────────────────────────────────────
+async function autoConfigureDiagram() {
+  if (!currentDiagram) return;
+  if (!confirm("Replace all current positions with auto-configured ones?")) return;
+  setStatus("Auto-configuring…", "saving");
+  // Fetch fresh from server by temporarily clearing coords and re-requesting
+  // We call the existing auto-configure by GETting with ?auto=1
+  // Actually just call a dedicated endpoint — for now, re-fetch coords after clearing
+  // The simplest approach: PUT empty locations so server will auto-configure on next GET
+  try {
+    // We'll call a simple approach: send a POST to generate auto coords
+    const res = await fetch(`/api/coords/${currentDiagram.id}/auto`, { method: "POST" });
+    if (!res.ok) throw new Error(await res.text());
+    coordsData = await res.json();
+    buildDots();
+    buildLocList();
+    updateProgress();
+    markDirty();
+    setStatus("Auto-configured — review & save", "saving");
+  } catch(e) {
+    setStatus("Auto-config failed", "error");
+  }
+}
+
+// ── Push to Render ─────────────────────────────────────────────────────────────
+async function pushToRender() {
+  if (isDirty) {
+    alert("Please save your changes first (💾 Save), then push.");
+    return;
+  }
+  setStatus("Pushing…", "saving");
+  pushBtn.disabled = true;
+  try {
+    const res = await fetch("/api/push_coords", { method: "POST" });
+    const data = await res.json();
+    if (data.ok) {
+      setStatus("Pushed ✓ (~1 min to deploy)", "saved");
+    } else {
+      setStatus(data.detail || "Push failed", "error");
+    }
+  } catch(e) {
+    setStatus("Push failed", "error");
+  }
+  pushBtn.disabled = false;
+}
+
+// ── Status helper ──────────────────────────────────────────────────────────────
+function setStatus(msg, cls) {
+  statusEl.textContent = msg;
+  statusEl.className = cls || "";
+}
+
+// ── Resize: rebuild dots at new scale ─────────────────────────────────────────
+let _resizeTimer = null;
+window.addEventListener("resize", () => {
+  clearTimeout(_resizeTimer);
+  _resizeTimer = setTimeout(() => { if (!isDragging) buildDots(); }, 100);
+});
+
+// ── Keyboard: Escape to disarm ────────────────────────────────────────────────
+document.addEventListener("keydown", e => {
+  if (e.key === "Escape") disarm();
+  if ((e.metaKey || e.ctrlKey) && e.key === "s") { e.preventDefault(); saveCoords(); }
+});
+
+// ── Init ───────────────────────────────────────────────────────────────────────
+loadDiagramList();
+</script>
+</body>
+</html>
