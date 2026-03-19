@@ -6,9 +6,11 @@ parser-compatible text (one location per line, same format as
 parse_hemodynamics() expects).
 """
 import base64
+import io
 import os
 
 import anthropic
+from PIL import Image
 
 OCR_PROMPT = """You are extracting hemodynamic measurements from a cardiac catheterization lab data sheet.
 
@@ -45,6 +47,40 @@ Aorta 98 95/55 72
 Now extract the values from the image:"""
 
 
+_MAX_BYTES = 4_800_000   # stay comfortably under the 5 MB API limit
+
+
+def _compress_to_limit(image_bytes: bytes) -> tuple[bytes, str]:
+    """
+    Compress/resize image bytes so they stay under _MAX_BYTES.
+
+    Returns (compressed_bytes, "image/jpeg").
+    Strategy:
+      1. Try JPEG at decreasing quality levels (85 → 70 → 55 → 40)
+      2. If still too large, halve the dimensions and repeat
+    """
+    img = Image.open(io.BytesIO(image_bytes)).convert("RGB")
+
+    for scale in (1.0, 0.75, 0.5, 0.35):
+        w = int(img.width * scale)
+        h = int(img.height * scale)
+        resized = img.resize((w, h), Image.LANCZOS) if scale < 1.0 else img
+
+        for quality in (85, 70, 55, 40):
+            buf = io.BytesIO()
+            resized.save(buf, format="JPEG", quality=quality, optimize=True)
+            data = buf.getvalue()
+            if len(data) <= _MAX_BYTES:
+                return data, "image/jpeg"
+
+    # Last resort: smallest viable size
+    buf = io.BytesIO()
+    img.resize((800, int(800 * img.height / img.width)), Image.LANCZOS).save(
+        buf, format="JPEG", quality=35, optimize=True
+    )
+    return buf.getvalue(), "image/jpeg"
+
+
 def extract_hemo_from_image(image_bytes: bytes, media_type: str = "image/jpeg") -> str:
     """
     Send an image to Claude Vision and return extracted hemodynamic text.
@@ -57,6 +93,11 @@ def extract_hemo_from_image(image_bytes: bytes, media_type: str = "image/jpeg") 
         raise ValueError("ANTHROPIC_API_KEY environment variable is not set.")
 
     client = anthropic.Anthropic(api_key=api_key)
+
+    # Compress if the image exceeds the API's 5 MB base64 limit
+    if len(image_bytes) > _MAX_BYTES:
+        image_bytes, media_type = _compress_to_limit(image_bytes)
+
     image_b64 = base64.standard_b64encode(image_bytes).decode("utf-8")
 
     message = client.messages.create(
