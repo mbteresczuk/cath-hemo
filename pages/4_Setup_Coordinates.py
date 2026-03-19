@@ -70,7 +70,11 @@ with st.sidebar:
 
     if st.button("← Back to Dashboard", use_container_width=True):
         st.switch_page("app.py")
-    st.link_button("🖱️ Open Drag Editor", url="http://localhost:8000/editor", use_container_width=True, help="Opens the fast standalone drag-and-drop editor in a new tab")
+    # Build the editor URL dynamically so it works both locally and on Render
+    _host = st.context.headers.get("host", "localhost:8000")
+    _scheme = "https" if "onrender.com" in _host or "render.com" in _host else "http"
+    _editor_url = f"{_scheme}://{_host}/editor"
+    st.link_button("🖱️ Open Drag Editor", url=_editor_url, use_container_width=True, help="Opens the fast standalone drag-and-drop editor in a new tab")
 
 # ── Load / init coords ────────────────────────────────────────────────────────
 diag_id           = selected_diag["id"]
