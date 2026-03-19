@@ -47,17 +47,19 @@ Aorta 98 95/55 72
 Now extract the values from the image:"""
 
 
-_MAX_BYTES = 4_800_000   # stay comfortably under the 5 MB API limit
+# The Anthropic API enforces a 5 MB limit on the base64-encoded image string.
+# Base64 expands raw bytes by ~4/3, so the raw byte limit is 5MB * 3/4 ≈ 3.75 MB.
+# We use 3.6 MB as a conservative raw-byte threshold to ensure the base64
+# output comfortably stays under 5 MB after encoding.
+_MAX_RAW_BYTES = 3_600_000   # raw bytes → base64 stays well under 5 MB
 
 
 def _compress_to_limit(image_bytes: bytes) -> tuple[bytes, str]:
     """
-    Compress/resize image bytes so they stay under _MAX_BYTES.
+    Compress/resize image bytes so the raw size stays under _MAX_RAW_BYTES
+    (ensuring the base64-encoded payload sent to the API stays under 5 MB).
 
-    Returns (compressed_bytes, "image/jpeg").
-    Strategy:
-      1. Try JPEG at decreasing quality levels (85 → 70 → 55 → 40)
-      2. If still too large, halve the dimensions and repeat
+    Strategy: try decreasing JPEG quality levels, then reduce dimensions.
     """
     img = Image.open(io.BytesIO(image_bytes)).convert("RGB")
 
@@ -70,10 +72,10 @@ def _compress_to_limit(image_bytes: bytes) -> tuple[bytes, str]:
             buf = io.BytesIO()
             resized.save(buf, format="JPEG", quality=quality, optimize=True)
             data = buf.getvalue()
-            if len(data) <= _MAX_BYTES:
+            if len(data) <= _MAX_RAW_BYTES:
                 return data, "image/jpeg"
 
-    # Last resort: smallest viable size
+    # Last resort: scale down aggressively
     buf = io.BytesIO()
     img.resize((800, int(800 * img.height / img.width)), Image.LANCZOS).save(
         buf, format="JPEG", quality=35, optimize=True
@@ -94,8 +96,9 @@ def extract_hemo_from_image(image_bytes: bytes, media_type: str = "image/jpeg") 
 
     client = anthropic.Anthropic(api_key=api_key)
 
-    # Compress if the image exceeds the API's 5 MB base64 limit
-    if len(image_bytes) > _MAX_BYTES:
+    # Compress if the raw image would produce a base64 payload > 5 MB.
+    # base64 size ≈ raw size * 4/3, so check raw bytes against _MAX_RAW_BYTES.
+    if len(image_bytes) > _MAX_RAW_BYTES:
         image_bytes, media_type = _compress_to_limit(image_bytes)
 
     image_b64 = base64.standard_b64encode(image_bytes).decode("utf-8")
