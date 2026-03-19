@@ -4,12 +4,6 @@
   "image_height": 518,
   "auto_configured": true,
   "locations": {
-    "SVC": {
-      "side": "right",
-      "annotation_type": "saturation",
-      "sat_x": 148,
-      "sat_y": 95
-    },
     "IVC": {
       "side": "right",
       "annotation_type": "saturation",
@@ -123,6 +117,15 @@
       "sat_y": 354,
       "pressure_x": 363,
       "pressure_y": 394
+    },
+    "SVC": {
+      "side": "left",
+      "annotation_type": "saturation_and_pressure",
+      "custom": true,
+      "sat_x": 147,
+      "sat_y": 90,
+      "pressure_x": 106,
+      "pressure_y": 89
     }
   }
 }
