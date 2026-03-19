@@ -54,6 +54,13 @@ _VENTRICULAR_LOCS = {
     "RV", "LV", "RV_systemic", "LV_systemic", "LV_pulmonary",
 }
 
+# These locations show only the mean pressure value on the diagram.
+# Systolic and diastolic values are suppressed for display purposes.
+_MEAN_ONLY_LOCS = {
+    "RPCWP", "LPCWP",
+    "RPV", "LPV", "RUPV", "LUPV", "RLPV", "LLPV", "PV_confluence",
+}
+
 
 def _load_fonts():
     """Load Calibri regular 16pt; fall back to Arial then PIL default."""
@@ -371,6 +378,11 @@ def annotate_diagram(image_path: str, coords: dict, hemodynamics: dict) -> Image
         systolic = hemo.get("systolic")
         diastolic = hemo.get("diastolic")
         mean = hemo.get("mean")
+
+        # PV and wedge locations: display mean pressure only on diagram
+        if loc_name in _MEAN_ONLY_LOCS:
+            systolic = None
+            diastolic = None
 
         sat_cx, sat_cy, press_cx, press_cy = _resolve_coords(coord)
 
