@@ -54,12 +54,18 @@ _VENTRICULAR_LOCS = {
     "RV", "LV", "RV_systemic", "LV_systemic", "LV_pulmonary",
 }
 
-# These locations show only the mean pressure value on the diagram.
+# These locations always show only the mean pressure value on the diagram.
 # Systolic and diastolic values are suppressed for display purposes.
 _MEAN_ONLY_LOCS = {
     "RPCWP", "LPCWP",
     "RPV", "LPV", "RUPV", "LUPV", "RLPV", "LLPV", "PV_confluence",
+    # Glenn/Fontan circuit pressures are reported as means only
+    "Glenn_anastomosis", "Fontan_IVC_limb", "Fontan_conduit",
 }
+
+# On Glenn/Fontan anatomy, PA branch pressures are also mean-only
+_GLENN_FONTAN_ANATOMY = {"post_glenn", "post_fontan"}
+_PA_LOCS = {"MPA", "RPA", "LPA"}
 
 
 def _load_fonts():
@@ -350,7 +356,8 @@ def _resolve_coords(coord: dict) -> tuple:
     return sat_cx, sat_cy, press_cx, press_cy
 
 
-def annotate_diagram(image_path: str, coords: dict, hemodynamics: dict) -> Image.Image:
+def annotate_diagram(image_path: str, coords: dict, hemodynamics: dict,
+                     anatomy_type: str = "biventricle") -> Image.Image:
     """
     Main annotation entry point.
 
@@ -358,6 +365,8 @@ def annotate_diagram(image_path: str, coords: dict, hemodynamics: dict) -> Image
       New: separate sat_x/sat_y for the saturation circle and
            pressure_x/pressure_y for the pressure text block.
       Old: single x/y (pressure auto-offset to the right of the circle).
+
+    anatomy_type: used to suppress sys/dia for PA locations on Glenn/Fontan diagrams.
     """
     img = load_image_as_rgba(image_path)
     draw = ImageDraw.Draw(img)
@@ -365,6 +374,9 @@ def annotate_diagram(image_path: str, coords: dict, hemodynamics: dict) -> Image
 
     if not coords or "locations" not in coords:
         return img
+
+    # On Glenn/Fontan anatomy, PA pressures are mean-only (like wedge/PV)
+    is_glenn_fontan = anatomy_type in _GLENN_FONTAN_ANATOMY
 
     for loc_name, coord in coords["locations"].items():
         hemo = hemodynamics.get(loc_name, {})
@@ -379,8 +391,8 @@ def annotate_diagram(image_path: str, coords: dict, hemodynamics: dict) -> Image
         diastolic = hemo.get("diastolic")
         mean = hemo.get("mean")
 
-        # PV and wedge locations: display mean pressure only on diagram
-        if loc_name in _MEAN_ONLY_LOCS:
+        # Suppress sys/dia for mean-only locations, and for PA on Glenn/Fontan anatomy
+        if loc_name in _MEAN_ONLY_LOCS or (is_glenn_fontan and loc_name in _PA_LOCS):
             systolic = None
             diastolic = None
 

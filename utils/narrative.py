@@ -347,14 +347,29 @@ def generate_hemodynamic_narrative(hemodynamics, calculations, patient_data, ste
         if desc_str:
             pres_sentences.append(f"Descending aorta pressure was {desc_str} mmHg.")
 
-    # Single-ventricle anatomy
+    # Glenn and Fontan circuit pressures — include whenever data is present,
+    # regardless of anatomy type (some diagrams carry both circuits).
+    fontan_p = _p("Fontan_IVC_limb", "mean", hemodynamics)
+    if fontan_p is None:
+        fontan_p = _p("Fontan_conduit", "mean", hemodynamics)
+    if fontan_p is not None:
+        pres_sentences.append(f"Fontan circuit pressure was {int(fontan_p)} mmHg.")
+
+    glenn_p = _p("Glenn_anastomosis", "mean", hemodynamics)
+    if glenn_p is not None:
+        pres_sentences.append(f"Glenn anastomosis pressure was {int(glenn_p)} mmHg.")
+
+    # On Glenn/Fontan anatomy, report PA mean pressure (already captured above in
+    # RV/MPA/RPA sentences but also add a dedicated mean summary if only mean is present)
     if anatomy_type in ("post_fontan", "post_glenn"):
-        fontan_p = _p("Fontan_IVC_limb", "mean", hemodynamics)
-        if fontan_p is not None:
-            pres_sentences.append(f"Fontan circuit pressure was {int(fontan_p)} mmHg.")
-        glenn_p = _p("Glenn_anastomosis", "mean", hemodynamics)
-        if glenn_p is not None:
-            pres_sentences.append(f"Glenn anastomosis pressure was {int(glenn_p)} mmHg.")
+        # If no RV systolic was available, PA mean may not have been mentioned yet
+        if rv_sys is None and mpa_sys is None and rpa_sys is None:
+            pa_mean = mpa_mean or rpa_mean or lpa_mean
+            if pa_mean is not None:
+                pa_label = "MPA" if mpa_mean else ("RPA" if rpa_mean else "LPA")
+                pres_sentences.append(
+                    f"Pulmonary artery mean pressure was {int(pa_mean)} mmHg ({pa_label})."
+                )
 
     para3 = " ".join(pres_sentences) if pres_sentences else ""
 

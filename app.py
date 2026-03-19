@@ -312,7 +312,8 @@ if generate_clicked and can_generate:
         )
         save_coords(chosen_diag["id"], coords)
         st.session_state.library = mark_coords_status(load_library())
-    annotated = annotate_diagram(str(img_path), coords, new_hemo)
+    annotated = annotate_diagram(str(img_path), coords, new_hemo,
+                                 anatomy_type=chosen_diag.get("anatomy_type", "biventricle"))
     st.session_state.annotated_image = annotated
 
 

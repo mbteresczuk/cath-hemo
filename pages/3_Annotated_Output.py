@@ -46,7 +46,8 @@ patient_data = st.session_state.patient_data
 if st.session_state.get("annotated_image") is None:
     img_path = BASE_DIR / diag["path"]
     coords = load_coords(diag["id"])
-    annotated = annotate_diagram(str(img_path), coords, hemodynamics)
+    annotated = annotate_diagram(str(img_path), coords, hemodynamics,
+                                 anatomy_type=patient_data.get("anatomy_type", "biventricle"))
     st.session_state.annotated_image = annotated
 
 annotated_img = st.session_state.annotated_image
