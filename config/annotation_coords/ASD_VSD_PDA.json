@@ -65,8 +65,8 @@
     "LPCWP": {
       "side": "left",
       "annotation_type": "pcwp",
-      "pressure_x": 447,
-      "pressure_y": 188
+      "pressure_x": 434,
+      "pressure_y": 191
     },
     "LA": {
       "side": "left",

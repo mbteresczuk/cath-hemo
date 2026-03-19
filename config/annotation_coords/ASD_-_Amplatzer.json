@@ -27,10 +27,10 @@
     "RV": {
       "side": "right",
       "annotation_type": "saturation_and_pressure",
-      "sat_x": 245,
-      "sat_y": 364,
-      "pressure_x": 294,
-      "pressure_y": 395
+      "sat_x": 247,
+      "sat_y": 354,
+      "pressure_x": 281,
+      "pressure_y": 387
     },
     "MPA": {
       "side": "right",
@@ -65,16 +65,16 @@
     "LPCWP": {
       "side": "left",
       "annotation_type": "pcwp",
-      "pressure_x": 449,
-      "pressure_y": 192
+      "pressure_x": 428,
+      "pressure_y": 197
     },
     "LA": {
       "side": "left",
       "annotation_type": "saturation_and_pressure",
       "sat_x": 279,
       "sat_y": 216,
-      "pressure_x": 319,
-      "pressure_y": 176
+      "pressure_x": 320,
+      "pressure_y": 240
     },
     "LV": {
       "side": "left",
