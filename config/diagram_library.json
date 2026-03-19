@@ -224,6 +224,19 @@
           "image_height": 522
         },
         {
+          "id": "CoarctationAorta_LAA_Bil_SVCs",
+          "filename": "CoarctationAorta_LAA_Bil SVCs.bmp",
+          "display_name": "CoarctationAorta LAA Bil SVCs",
+          "path": "diagrams/Uploaded/CoarctationAorta_LAA_Bil SVCs.bmp",
+          "category_id": "Uploaded",
+          "anatomy_type": "biventricle",
+          "location_set": "standard_biventricle",
+          "has_coords": false,
+          "coord_file": "config/annotation_coords/CoarctationAorta_LAA_Bil_SVCs.json",
+          "image_width": 629,
+          "image_height": 501
+        },
+        {
           "id": "HLHS__MA_AA__BDG",
           "filename": "HLHS (MA AA) BDG.bmp",
           "display_name": "HLHS (MA AA) BDG",
@@ -235,6 +248,19 @@
           "coord_file": "config/annotation_coords/HLHS__MA_AA__BDG.json",
           "image_width": 662,
           "image_height": 518
+        },
+        {
+          "id": "PA_IVS_ECF",
+          "filename": "PA_IVS_ECF.bmp",
+          "display_name": "PA IVS ECF",
+          "path": "diagrams/Uploaded/PA_IVS_ECF.bmp",
+          "category_id": "Uploaded",
+          "anatomy_type": "single_ventricle",
+          "location_set": "single_ventricle_norwood",
+          "has_coords": false,
+          "coord_file": "config/annotation_coords/PA_IVS_ECF.json",
+          "image_width": 746,
+          "image_height": 508
         },
         {
           "id": "Scimitar_Syndrome",
@@ -250,6 +276,19 @@
           "image_height": 511
         },
         {
+          "id": "Supravalvar_AS",
+          "filename": "Supravalvar AS.bmp",
+          "display_name": "Supravalvar AS",
+          "path": "diagrams/Uploaded/Supravalvar AS.bmp",
+          "category_id": "Uploaded",
+          "anatomy_type": "biventricle",
+          "location_set": "standard_biventricle",
+          "has_coords": false,
+          "coord_file": "config/annotation_coords/Supravalvar_AS.json",
+          "image_width": 696,
+          "image_height": 539
+        },
+        {
           "id": "TGA__IVS___S_D_D_",
           "filename": "TGA (IVS) {S,D,D}.bmp",
           "display_name": "TGA (IVS) {S,D,D}",
@@ -261,6 +300,19 @@
           "coord_file": "config/annotation_coords/TGA__IVS___S_D_D_.json",
           "image_width": 683,
           "image_height": 577
+        },
+        {
+          "id": "TetralogyofFallot_sp_transannularpatch",
+          "filename": "TetralogyofFallot_sp_transannularpatch.bmp",
+          "display_name": "TetralogyofFallot s/p transannularpatch",
+          "path": "diagrams/Uploaded/TetralogyofFallot_sp_transannularpatch.bmp",
+          "category_id": "Uploaded",
+          "anatomy_type": "biventricle",
+          "location_set": "standard_biventricle",
+          "has_coords": false,
+          "coord_file": "config/annotation_coords/TetralogyofFallot_sp_transannularpatch.json",
+          "image_width": 614,
+          "image_height": 503
         },
         {
           "id": "VSD_CoA_arch_repair_PA_band",
@@ -326,6 +378,19 @@
           "coord_file": "config/annotation_coords/tric_atresia__tga_Glenn.json",
           "image_width": 845,
           "image_height": 525
+        },
+        {
+          "id": "_S_L_L__Pulm_atresia_Mitral_atresia_-_rmBTS",
+          "filename": "{S,L,L} Pulm atresia Mitral atresia - rmBTS.bmp",
+          "display_name": "{S,L,L} Pulm atresia Mitral atresia - rmBTS",
+          "path": "diagrams/Uploaded/{S,L,L} Pulm atresia Mitral atresia - rmBTS.bmp",
+          "category_id": "Uploaded",
+          "anatomy_type": "single_ventricle",
+          "location_set": "single_ventricle_norwood",
+          "has_coords": false,
+          "coord_file": "config/annotation_coords/_S_L_L__Pulm_atresia_Mitral_atresia_-_rmBTS.json",
+          "image_width": 700,
+          "image_height": 497
         }
       ]
     }

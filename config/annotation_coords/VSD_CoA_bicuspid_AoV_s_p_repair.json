@@ -13,8 +13,8 @@
     "IVC": {
       "side": "right",
       "annotation_type": "saturation",
-      "sat_x": 118,
-      "sat_y": 397
+      "sat_x": 112,
+      "sat_y": 435
     },
     "RA": {
       "side": "right",
@@ -59,8 +59,8 @@
     "RPCWP": {
       "side": "left",
       "annotation_type": "pcwp",
-      "pressure_x": 34,
-      "pressure_y": 155
+      "pressure_x": 50,
+      "pressure_y": 195
     },
     "LPCWP": {
       "side": "left",
