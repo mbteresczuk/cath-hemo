@@ -138,6 +138,15 @@
       "sat_y": 326,
       "pressure_x": 477,
       "pressure_y": 355
+    },
+    "LA": {
+      "side": "right",
+      "annotation_type": "saturation_and_pressure",
+      "custom": true,
+      "sat_x": 353,
+      "sat_y": 215,
+      "pressure_x": 401,
+      "pressure_y": 237
     }
   }
 }

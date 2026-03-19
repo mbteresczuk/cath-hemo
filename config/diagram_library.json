@@ -250,6 +250,32 @@
           "image_height": 518
         },
         {
+          "id": "PA_IVS_sp_PV_perforation_and_PDA_stent",
+          "filename": "PA_IVS sp PV perforation and PDA stent.bmp",
+          "display_name": "PA IVS s/p PV perforation and PDA stent",
+          "path": "diagrams/Uploaded/PA_IVS sp PV perforation and PDA stent.bmp",
+          "category_id": "Uploaded",
+          "anatomy_type": "single_ventricle",
+          "location_set": "single_ventricle_norwood",
+          "has_coords": false,
+          "coord_file": "config/annotation_coords/PA_IVS_sp_PV_perforation_and_PDA_stent.json",
+          "image_width": 699,
+          "image_height": 561
+        },
+        {
+          "id": "PA_IVS_with_PDA",
+          "filename": "PA_IVS with PDA.bmp",
+          "display_name": "PA IVS with PDA",
+          "path": "diagrams/Uploaded/PA_IVS with PDA.bmp",
+          "category_id": "Uploaded",
+          "anatomy_type": "single_ventricle",
+          "location_set": "single_ventricle_norwood",
+          "has_coords": false,
+          "coord_file": "config/annotation_coords/PA_IVS_with_PDA.json",
+          "image_width": 690,
+          "image_height": 508
+        },
+        {
           "id": "PA_IVS_ECF",
           "filename": "PA_IVS_ECF.bmp",
           "display_name": "PA IVS ECF",
@@ -259,6 +285,19 @@
           "location_set": "single_ventricle_norwood",
           "has_coords": true,
           "coord_file": "config/annotation_coords/PA_IVS_ECF.json",
+          "image_width": 746,
+          "image_height": 508
+        },
+        {
+          "id": "PA_IVS_Glenn",
+          "filename": "PA_IVS_Glenn.bmp",
+          "display_name": "PA IVS Glenn",
+          "path": "diagrams/Uploaded/PA_IVS_Glenn.bmp",
+          "category_id": "Uploaded",
+          "anatomy_type": "post_glenn",
+          "location_set": "post_glenn",
+          "has_coords": false,
+          "coord_file": "config/annotation_coords/PA_IVS_Glenn.json",
           "image_width": 746,
           "image_height": 508
         },
