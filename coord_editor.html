@@ -109,6 +109,45 @@ body {
 .loc-status.partial  { color: #fbbf24; }
 .loc-status.missing  { color: #f87171; }
 
+/* Add location panel */
+#add-loc-wrap {
+  padding: 8px 10px;
+  border-top: 1px solid #334155;
+  flex-shrink: 0;
+  background: #162032;
+}
+#add-loc-wrap summary {
+  font-size: 11px; font-weight: 700; color: #64748b;
+  text-transform: uppercase; letter-spacing: 0.5px;
+  cursor: pointer; list-style: none; padding: 2px 0 6px;
+  display: flex; align-items: center; gap: 5px;
+}
+#add-loc-wrap summary::-webkit-details-marker { display: none; }
+#add-loc-wrap summary::before { content: "＋"; color: #22c55e; font-size: 13px; }
+#add-loc-form { display: flex; flex-direction: column; gap: 5px; }
+#add-loc-form input, #add-loc-form select {
+  width: 100%; padding: 5px 7px; border-radius: 5px;
+  border: 1px solid #334155; background: #0f172a; color: #f1f5f9;
+  font-size: 12px;
+}
+#add-loc-form input::placeholder { color: #475569; }
+#add-loc-btn {
+  width: 100%; padding: 6px; border-radius: 5px; border: none;
+  background: #22c55e; color: #fff; font-size: 12px; font-weight: 700;
+  cursor: pointer; margin-top: 2px;
+}
+#add-loc-btn:hover { background: #16a34a; }
+
+/* Delete button on each row */
+.loc-del {
+  font-size: 11px; color: #475569; cursor: pointer;
+  padding: 0 2px; border-radius: 3px; opacity: 0;
+  transition: opacity 0.15s, color 0.15s;
+  flex-shrink: 0;
+}
+.loc-row:hover .loc-del { opacity: 1; }
+.loc-del:hover { color: #ef4444 !important; opacity: 1; }
+
 /* Progress */
 #prog-wrap { padding: 8px 12px; border-top: 1px solid #334155; flex-shrink: 0; }
 #prog-bar { height: 4px; background: #334155; border-radius: 2px; overflow: hidden; }
@@ -215,6 +254,26 @@ body {
   <div id="sidebar">
     <div id="sidebar-title">Locations</div>
     <div id="loc-list"></div>
+
+    <!-- Add custom location -->
+    <details id="add-loc-wrap">
+      <summary>Add Location</summary>
+      <div id="add-loc-form">
+        <input id="add-loc-name" type="text" placeholder="Name (e.g. RVOT, Glenn)" maxlength="40">
+        <select id="add-loc-type">
+          <option value="saturation_and_pressure">Sat + Pressure</option>
+          <option value="saturation">Saturation only</option>
+          <option value="pressure_only">Pressure only</option>
+          <option value="pcwp">PCWP</option>
+        </select>
+        <select id="add-loc-side">
+          <option value="right">Right side (right heart)</option>
+          <option value="left">Left side (left heart)</option>
+        </select>
+        <button id="add-loc-btn" onclick="addCustomLocation()">＋ Add &amp; Place</button>
+      </div>
+    </details>
+
     <div id="prog-wrap">
       <div id="prog-bar"><div id="prog-fill"></div></div>
       <div id="prog-label">0 / 0 placed</div>
@@ -536,6 +595,61 @@ function jumpTo(ix, iy) {
   applyTransform();
 }
 
+// ── Add custom location ────────────────────────────────────────────────────────
+function addCustomLocation() {
+  if (!coordsData) return;
+  const nameEl = document.getElementById("add-loc-name");
+  const typeEl = document.getElementById("add-loc-type");
+  const sideEl = document.getElementById("add-loc-side");
+
+  const rawName = nameEl.value.trim();
+  if (!rawName) { nameEl.focus(); return; }
+
+  // Convert display name to a key (spaces → underscores)
+  const key = rawName.replace(/\s+/g, "_");
+
+  if (coordsData.locations[key]) {
+    alert(`"${rawName}" already exists — click it in the list to reposition it.`);
+    return;
+  }
+
+  coordsData.locations[key] = {
+    side: sideEl.value,
+    annotation_type: typeEl.value,
+    custom: true,
+  };
+
+  nameEl.value = "";
+  buildLocList();
+  updateProgress();
+
+  // Immediately arm it for placement
+  focusedLoc = key;
+  armLocation(key);
+  markDirty();
+}
+
+// Allow Enter key in the name field to submit
+document.addEventListener("DOMContentLoaded", () => {
+  document.getElementById("add-loc-name")?.addEventListener("keydown", e => {
+    if (e.key === "Enter") addCustomLocation();
+  });
+});
+
+// ── Delete a location ──────────────────────────────────────────────────────────
+function deleteLocation(loc) {
+  if (!coordsData) return;
+  if (!confirm(`Remove "${loc.replace(/_/g," ")}" from this diagram?`)) return;
+  delete coordsData.locations[loc];
+  if (focusedLoc === loc) focusedLoc = null;
+  if (armedLoc === loc) disarm();
+  buildDots();
+  buildLocList();
+  updateProgress();
+  markDirty();
+  autoSave();
+}
+
 // ── Sidebar ────────────────────────────────────────────────────────────────────
 function buildLocList() {
   if (!coordsData) {
@@ -545,7 +659,7 @@ function buildLocList() {
   const locs = coordsData.locations || {};
   const keys = Object.keys(locs).filter(k => !locs[k].skipped).sort();
   if (!keys.length) {
-    locListEl.innerHTML = '<div style="padding:14px 12px;color:#475569;font-size:12px">No locations — click 🤖 Auto-fill to generate starting positions.</div>';
+    locListEl.innerHTML = '<div style="padding:14px 12px;color:#475569;font-size:12px">No locations — click 🤖 Auto-fill or use Add Location below.</div>';
     return;
   }
   locListEl.innerHTML = "";
@@ -572,7 +686,14 @@ function buildLocList() {
     stat.className = "loc-status " + (complete ? "complete" : hasSat || hasPress ? "partial" : "missing");
     stat.textContent = complete ? "✓" : (hasSat || hasPress ? "~" : "!");
 
-    row.appendChild(ind); row.appendChild(name); row.appendChild(stat);
+    // Delete button (appears on hover)
+    const del = document.createElement("span");
+    del.className = "loc-del";
+    del.textContent = "✕";
+    del.title = "Remove this location";
+    del.addEventListener("click", e => { e.stopPropagation(); deleteLocation(loc); });
+
+    row.appendChild(ind); row.appendChild(name); row.appendChild(stat); row.appendChild(del);
     row.addEventListener("click", () => {
       if (armedLoc === loc) { disarm(); focusedLoc = null; buildDots(); return; }
       focusedLoc = loc;
