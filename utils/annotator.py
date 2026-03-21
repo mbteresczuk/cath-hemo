@@ -168,7 +168,11 @@ def draw_saturation_circle(draw, cx, cy, saturation, side, fonts, radius=CIRCLE_
 def draw_pressure_annotation(draw, x, y, systolic, diastolic, mean, side, fonts,
                              anchor="left", ventricular=False):
     """
-    Draw pressure annotation with its top-left corner exactly at (x, y).
+    Draw pressure annotation centered on (x, y).
+
+    The stored coordinate represents the CENTER of the text block so that it
+    aligns with the dot position in the coordinate editor (which uses
+    translate(-50%, -50%) to center every dot on its stored coordinate).
 
     Standard format (atria, great vessels):
         systolic/diastolic
@@ -178,7 +182,7 @@ def draw_pressure_annotation(draw, x, y, systolic, diastolic, mean, side, fonts,
     Ventricular format (RV, LV, etc.) — sys/mean on one line:
         systolic/mean
 
-    anchor: 'left' (x is left edge) or 'right' (x is right edge)
+    anchor: 'left' (block left-aligned) or 'right' (block right-aligned)
     White background ensures readability over anatomy lines.
     """
     color = COLORS["right_pressure"] if side == "right" else COLORS["left_pressure"]
@@ -198,6 +202,9 @@ def draw_pressure_annotation(draw, x, y, systolic, diastolic, mean, side, fonts,
         else:
             return
         tw, th = _text_size(draw, line1, font)
+        # Shift so block is centered at (x, y)
+        x = x - tw // 2
+        y = y - th // 2
         text_x = x - tw if anchor == "right" else x
         pad = 2
         draw.rectangle([text_x - pad, y - pad, text_x + tw + pad, y + th + pad], fill="white")
@@ -209,9 +216,12 @@ def draw_pressure_annotation(draw, x, y, systolic, diastolic, mean, side, fonts,
     if systolic is None and diastolic is None:
         mean_text = str(int(mean))
         mw, mh = _text_size(draw, mean_text, font)
+        total_h = 2 + 4 + mh         # overline thickness + gap + text
+        # Shift so block is centered at (x, y)
+        x = x - mw // 2
+        y = y - total_h // 2
         text_x = x - mw if anchor == "right" else x
         pad = 2
-        total_h = 2 + 4 + mh         # overline thickness + gap + text
         draw.rectangle(
             [text_x - pad, y - pad, text_x + mw + pad, y + total_h + pad],
             fill="white"
@@ -231,9 +241,8 @@ def draw_pressure_annotation(draw, x, y, systolic, diastolic, mean, side, fonts,
         line1 = str(int(diastolic))
 
     tw, th = _text_size(draw, line1, font)
-    text_x = x - tw if anchor == "right" else x
 
-    # Pre-calculate total block height for white background
+    # Pre-calculate total block size for centering and white background
     total_h = th
     max_w = tw
     mean_text = None
@@ -243,6 +252,11 @@ def draw_pressure_annotation(draw, x, y, systolic, diastolic, mean, side, fonts,
         mw, mh = _text_size(draw, mean_text, font)
         total_h += 3 + 1 + 3 + mh   # gap + overline + gap + mean text
         max_w = max(max_w, mw)
+
+    # Shift so block is centered at (x, y)
+    x = x - max_w // 2
+    y = y - total_h // 2
+    text_x = x - tw if anchor == "right" else x
 
     pad = 2
     draw.rectangle(
@@ -262,11 +276,13 @@ def draw_pressure_annotation(draw, x, y, systolic, diastolic, mean, side, fonts,
 
 def draw_pcwp_annotation(draw, x, y, label, systolic, diastolic, mean, fonts):
     """
-    Draw PCWP label + pressure with top-left corner exactly at (x, y):
+    Draw PCWP label + pressure centered on (x, y):
         RPCW
         17/12
         ─────
         14
+    The stored coordinate represents the CENTER of the block so that it aligns
+    with the dot position in the coordinate editor.
     White background ensures readability over anatomy lines.
     """
     color = COLORS["pcwp"]
@@ -294,6 +310,10 @@ def draw_pcwp_annotation(draw, x, y, label, systolic, diastolic, mean, fonts):
         pressure_str = None
     else:
         return
+
+    # Shift so block is centered at (x, y)
+    x = x - max_w // 2
+    y = y - total_h // 2
 
     pad = 2
     draw.rectangle([x - pad, y - pad, x + max_w + pad, y + total_h + pad], fill="white")
