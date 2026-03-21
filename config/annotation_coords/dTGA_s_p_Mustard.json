@@ -107,10 +107,10 @@
       "side": "right",
       "annotation_type": "saturation_and_pressure",
       "custom": true,
-      "sat_x": 125,
-      "sat_y": 313,
-      "pressure_x": 159,
-      "pressure_y": 329
+      "sat_x": 139,
+      "sat_y": 309,
+      "pressure_x": 165,
+      "pressure_y": 325
     },
     "Left_atrium": {
       "side": "right",
