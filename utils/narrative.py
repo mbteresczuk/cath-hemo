@@ -9,10 +9,10 @@ Follows the standard clinical template:
 
 Only sentences for which data are provided are included.
 
-Clinical thresholds (per hemodynamics example):
+Clinical thresholds (per hemodynamics example document):
   RA mean    : normal 2–7 mmHg; ≥8 elevated
   LA mean    : normal <10 mmHg; ≥10 elevated
-  RVEDP/LVEDP: normal <10 mmHg; >10 elevated
+  RVEDP/LVEDP: normal ≤10 mmHg; >10 elevated
   RVOT grad  : mild 25–49 mmHg; moderate 50–79 mmHg; severe ≥80 mmHg
   TPG        : normal <12 mmHg; elevated ≥12 mmHg
   PV sat     : <95% → mixed pulmonary vein desaturation
@@ -46,12 +46,19 @@ def _p(loc, field, hemo):
     return float(v) if v is not None else None
 
 
-def _grad_str(from_val, to_val):
-    """Return the computed gradient as a readable string.
+def _mean_or_sys(loc, hemo):
+    """Return mean pressure, falling back to systolic for mean-only locations
+    where a single entered value gets stored as systolic by the parser."""
+    v = hemo.get(loc, {})
+    m = v.get("mean")
+    if m is not None:
+        return float(m)
+    s = v.get("systolic")
+    return float(s) if s is not None else None
 
-    Always reports the actual number so clinicians can see the value.
-    Negative or zero → 'no gradient'; positive → 'a X mmHg gradient'.
-    """
+
+def _grad_str(from_val, to_val):
+    """Return 'no gradient' or 'a X mmHg gradient'. Returns None if either value missing."""
     if from_val is None or to_val is None:
         return None
     diff = int(round(from_val - to_val))
@@ -75,7 +82,7 @@ def _la_level(mean):
 
 
 def _vedp_level(val):
-    """RVEDP/LVEDP normal <10 mmHg; >10 elevated."""
+    """RVEDP/LVEDP normal ≤10 mmHg; >10 elevated."""
     if val is None:
         return None
     return "normal" if val <= 10 else "elevated"
@@ -106,6 +113,35 @@ def _tpg_level(tpg):
     return "normal" if tpg < 12 else "elevated"
 
 
+def _step_up_description(step_ups):
+    """
+    Build a specific step-up phrase from the list of detected step-ups.
+
+    Examples:
+      []                          → "no significant step-up"
+      [atrial]                    → "an atrial-level step-up"
+      [ventricular]               → "a ventricular-level step-up"
+      [atrial, ventricular]       → "step-ups at the atrial and ventricular levels"
+      [atrial, ventricular, PA]   → "step-ups at the atrial, ventricular, and PA levels"
+    """
+    if not step_ups:
+        return "no significant step-up"
+
+    levels = [su["level"] for su in step_ups]
+
+    if len(levels) == 1:
+        level = levels[0]
+        article = "an" if level[0].lower() in "aeiou" else "a"
+        return f"{article} {level}-level step-up"
+
+    # Multiple levels
+    if len(levels) == 2:
+        return f"step-ups at the {levels[0]} and {levels[1]} levels"
+
+    joined = ", ".join(levels[:-1]) + f", and {levels[-1]}"
+    return f"step-ups at the {joined} levels"
+
+
 # ── Main function ──────────────────────────────────────────────────────────────
 
 def generate_hemodynamic_narrative(hemodynamics, calculations, patient_data, step_ups):
@@ -121,6 +157,7 @@ def generate_hemodynamic_narrative(hemodynamics, calculations, patient_data, ste
     avo2         = float(_avo2_raw) if _avo2_raw not in (None, "", 0) else None
     hgb          = float(_hgb_raw)  if _hgb_raw  not in (None, "", 0) else None
     anatomy_type = patient_data.get("anatomy_type", "biventricle")
+    is_fontan_glenn = anatomy_type in ("post_fontan", "post_glenn")
 
     # ═══════════════════════════════════════════════════════════════════════
     # PARAGRAPH 1 — CONDITIONS
@@ -150,8 +187,8 @@ def generate_hemodynamic_narrative(hemodynamics, calculations, patient_data, ste
     rlpv_sat = _p("RLPV", "sat", hemodynamics)
     llpv_sat = _p("LLPV", "sat", hemodynamics)
 
-    # Step-up language
-    step_up_desc = "a step-up" if step_ups else "no step-up"
+    # Step-up phrase — specific to level(s) detected
+    step_up_desc = _step_up_description(step_ups)
 
     # --- Sentence 1: SVC → right-heart chain ---
     right_chain = []
@@ -176,7 +213,13 @@ def generate_hemodynamic_narrative(hemodynamics, calculations, patient_data, ste
         s += "."
         sat_sentences.append(s)
     elif right_chain:
+        # No SVC sat but have other right-sided saturations
         sat_sentences.append("Right-sided saturations: " + ", ".join(right_chain) + ".")
+        # Still report any detected step-ups as a separate sentence
+        if step_ups:
+            sat_sentences.append(
+                f"There was {step_up_desc} noted through the right-heart."
+            )
 
     # IVC (separate sentence when SVC was already mentioned)
     if svc_sat is not None and ivc_sat is not None:
@@ -184,12 +227,12 @@ def generate_hemodynamic_narrative(hemodynamics, calculations, patient_data, ste
     elif svc_sat is None and ivc_sat is not None and not right_chain:
         sat_sentences.append(f"The IVC saturation was {_fmt_sat(ivc_sat)}.")
 
-    # L-SVC saturation (reported as mean pressure for Glenn/Fontan; as sat circle otherwise)
+    # L-SVC saturation
     if lsvc_sat is not None:
         sat_sentences.append(f"The L-SVC saturation was {_fmt_sat(lsvc_sat)}.")
 
     # --- Pulmonary vein saturations ---
-    # Named PV sats (individual veins take priority over generic RPV/LPV)
+    # Named PV sats take priority over generic RPV/LPV
     named_pv = [(n, v) for n, v in [
         ("RUPV", rupv_sat), ("LUPV", lupv_sat),
         ("RLPV", rlpv_sat), ("LLPV", llpv_sat),
@@ -206,14 +249,12 @@ def generate_hemodynamic_narrative(hemodynamics, calculations, patient_data, ste
         any_desaturated = any(v < 95 for v in pv_vals)
 
         if any_desaturated:
-            # Mixed PV desaturation — list individual values
             pv_parts = [f"{_fmt_sat(v)} ({n})" for n, v in pv_entries]
             sat_sentences.append(
                 f"There were mixed pulmonary vein desaturations with PV saturations of "
                 f"{', '.join(pv_parts)}."
             )
         else:
-            # All fully saturated
             unique_vals = list(dict.fromkeys(_fmt_sat(v) for v in pv_vals))
             if len(unique_vals) == 1:
                 sat_sentences.append(
@@ -248,13 +289,12 @@ def generate_hemodynamic_narrative(hemodynamics, calculations, patient_data, ste
     ra_sys  = _p("RA", "systolic", hemodynamics)
     ra_dia  = _p("RA", "diastolic", hemodynamics)
     ra_mean = _p("RA", "mean", hemodynamics)
-    # RVEDP: stored as "mean" by the parser for ventricular locations (third value, e.g. 34/3/10)
+    # RVEDP stored as "mean" by parser for ventricular locations (e.g. 34/3/10)
     rvedp   = _p("RV", "mean", hemodynamics)
 
     # --- Right-sided filling pressures ---
     if ra_mean is not None or ra_sys is not None or rvedp is not None:
-        # Determine level from RA mean and RVEDP
-        ra_elev   = ra_mean is not None and ra_mean > 7
+        ra_elev    = ra_mean is not None and ra_mean > 7
         rvedp_elev = rvedp is not None and rvedp > 10
         level = "elevated" if (ra_elev or rvedp_elev) else "normal"
 
@@ -282,6 +322,15 @@ def generate_hemodynamic_narrative(hemodynamics, calculations, patient_data, ste
     mpa_dia  = _p("MPA", "diastolic", hemodynamics)
     mpa_mean = _p("MPA", "mean", hemodynamics)
 
+    # For Glenn/Fontan anatomy, PA pressures are mean-only — promote systolic to mean
+    if is_fontan_glenn:
+        if rpa_mean is None and rpa_sys is not None:
+            rpa_mean, rpa_sys, rpa_dia = rpa_sys, None, None
+        if lpa_mean is None and lpa_sys is not None:
+            lpa_mean, lpa_sys, lpa_dia = lpa_sys, None, None
+        if mpa_mean is None and mpa_sys is not None:
+            mpa_mean, mpa_sys, mpa_dia = mpa_sys, None, None
+
     if rv_sys is not None:
         rv_s = f"The RV systolic pressure was {int(rv_sys)} mmHg"
 
@@ -295,29 +344,48 @@ def generate_hemodynamic_narrative(hemodynamics, calculations, patient_data, ste
             elif rvot_grad > 0:
                 rv_s += f" with a {rvot_grad} mmHg gradient to the PA"
 
-        # Gradient to branch PAs (prefer RPA; fall back to MPA)
+        # Gradient to branch PAs
         if rpa_sys is not None or rpa_mean is not None:
-            rpa_str = _fmt_press(rpa_sys, rpa_dia, rpa_mean)
+            rpa_str  = _fmt_press(rpa_sys, rpa_dia, rpa_mean)
             rpa_grad = _grad_str(rv_sys, rpa_sys)
             if rpa_str and rpa_grad:
                 rv_s += f" with {rpa_grad} to RPA pressure {rpa_str} mmHg"
                 if lpa_sys is not None or lpa_mean is not None:
-                    lpa_str = _fmt_press(lpa_sys, lpa_dia, lpa_mean)
+                    lpa_str  = _fmt_press(lpa_sys, lpa_dia, lpa_mean)
                     lpa_grad = _grad_str(rv_sys, lpa_sys)
                     if lpa_str and lpa_grad:
                         rv_s += f" and {lpa_grad} to LPA pressure {lpa_str} mmHg"
         elif mpa_sys is not None or mpa_mean is not None:
-            mpa_str = _fmt_press(mpa_sys, mpa_dia, mpa_mean)
+            mpa_str  = _fmt_press(mpa_sys, mpa_dia, mpa_mean)
             mpa_grad = _grad_str(rv_sys, mpa_sys)
             if mpa_str and mpa_grad:
                 rv_s += f" with {mpa_grad} to MPA pressure {mpa_str} mmHg"
 
         rv_s += "."
         pres_sentences.append(rv_s)
-    elif mpa_sys is not None or mpa_mean is not None:
-        mpa_str = _fmt_press(mpa_sys, mpa_dia, mpa_mean)
-        if mpa_str:
-            pres_sentences.append(f"Main pulmonary artery pressure was {mpa_str} mmHg.")
+
+    else:
+        # No RV — report PA pressures directly (common for Glenn/Fontan or PA-only data)
+        if mpa_sys is not None or mpa_mean is not None:
+            mpa_str = _fmt_press(mpa_sys, mpa_dia, mpa_mean)
+            if mpa_str:
+                pres_sentences.append(f"Main pulmonary artery pressure was {mpa_str} mmHg.")
+
+        # Branch PA pressures when no MPA and no RV
+        if mpa_sys is None and mpa_mean is None:
+            pa_parts = []
+            if rpa_sys is not None or rpa_mean is not None:
+                rpa_str = _fmt_press(rpa_sys, rpa_dia, rpa_mean)
+                if rpa_str:
+                    pa_parts.append(f"RPA pressure {rpa_str} mmHg")
+            if lpa_sys is not None or lpa_mean is not None:
+                lpa_str = _fmt_press(lpa_sys, lpa_dia, lpa_mean)
+                if lpa_str:
+                    pa_parts.append(f"LPA pressure {lpa_str} mmHg")
+            if pa_parts:
+                pres_sentences.append(
+                    "Pulmonary artery pressures were: " + " and ".join(pa_parts) + "."
+                )
 
     # --- RPCWP ---
     rpcwp_sys  = _p("RPCWP", "systolic", hemodynamics)
@@ -346,7 +414,7 @@ def generate_hemodynamic_narrative(hemodynamics, calculations, patient_data, ste
                 pres_sentences.append(
                     f"The left pulmonary capillary wedge pressure was {s} mmHg."
                 )
-    elif (rpcwp_sys is not None or rpcwp_mean is not None):
+    elif rpcwp_sys is not None or rpcwp_mean is not None:
         # Only RPCWP present — still report TPG if calculable
         tpg = calculations.get("tpg")
         if tpg is not None:
@@ -362,19 +430,17 @@ def generate_hemodynamic_narrative(hemodynamics, calculations, patient_data, ste
     if la_sys is not None or la_mean is not None:
         s = _fmt_press(la_sys, la_dia, la_mean)
         if s:
-            la_lvl = _la_level(la_mean)
+            la_lvl    = _la_level(la_mean)
             qualifier = f" ({la_lvl})" if la_lvl else ""
             pres_sentences.append(f"LA pressure was {s} mmHg{qualifier}.")
 
     # --- PV pressure to LA gradient ---
-    rpv_sys  = _p("RPV", "systolic", hemodynamics)
-    rpv_dia  = _p("RPV", "diastolic", hemodynamics)
-    rpv_mean = _p("RPV", "mean", hemodynamics)
-    lpv_sys  = _p("LPV", "systolic", hemodynamics)
-    lpv_dia  = _p("LPV", "diastolic", hemodynamics)
-    lpv_mean = _p("LPV", "mean", hemodynamics)
-
-    # Also check individual PV pressures (RUPV/LUPV/RLPV/LLPV mean)
+    rpv_sys   = _p("RPV", "systolic", hemodynamics)
+    rpv_dia   = _p("RPV", "diastolic", hemodynamics)
+    rpv_mean  = _p("RPV", "mean", hemodynamics)
+    lpv_sys   = _p("LPV", "systolic", hemodynamics)
+    lpv_dia   = _p("LPV", "diastolic", hemodynamics)
+    lpv_mean  = _p("LPV", "mean", hemodynamics)
     rupv_mean = _p("RUPV", "mean", hemodynamics)
     lupv_mean = _p("LUPV", "mean", hemodynamics)
     rlpv_mean = _p("RLPV", "mean", hemodynamics)
@@ -414,7 +480,6 @@ def generate_hemodynamic_narrative(hemodynamics, calculations, patient_data, ste
         lv_str = _fmt_press(lv_sys, lv_dia, None)
         lv_s   = f"LV pressure was {lv_str} mmHg"
 
-        # Ascending aorta (prefer explicit Ascending_Aorta; fallback Neoaorta)
         asc_sys  = asc_ao_sys  or neoao_sys
         asc_dia  = asc_ao_dia  or neoao_dia
         asc_mean = asc_ao_mean or neoao_mean
@@ -437,7 +502,7 @@ def generate_hemodynamic_narrative(hemodynamics, calculations, patient_data, ste
         lv_s += "."
         pres_sentences.append(lv_s)
 
-        # LVEDP normality (separate sentence after LV pressure)
+        # LVEDP normality (separate sentence)
         if lvedp is not None and lvedp > 10:
             pres_sentences.append(f"LVEDP was {int(lvedp)} mmHg (elevated).")
 
@@ -446,36 +511,43 @@ def generate_hemodynamic_narrative(hemodynamics, calculations, patient_data, ste
         qualifier = f" ({lvedp_lvl})" if lvedp_lvl else ""
         pres_sentences.append(f"LVEDP was {int(lv_dia)} mmHg{qualifier}.")
 
-    # Standalone descending aorta (when no LV)
+    # Standalone descending aorta (when no LV data)
     if lv_sys is None and lv_dia is None and desc_ao_sys is not None:
         desc_str = _fmt_press(desc_ao_sys, desc_ao_dia, desc_ao_mean)
         if desc_str:
             pres_sentences.append(f"Descending aorta pressure was {desc_str} mmHg.")
 
     # --- Glenn and Fontan circuit pressures ---
-    # Normal Fontan/Glenn pressure is <15 mmHg; ≥15 is elevated.
-    fontan_p = _p("Fontan_IVC_limb", "mean", hemodynamics)
+    # Use _mean_or_sys to capture single values stored as systolic by the parser.
+    fontan_p = _mean_or_sys("Fontan_IVC_limb", hemodynamics)
     if fontan_p is None:
-        fontan_p = _p("Fontan_conduit", "mean", hemodynamics)
+        fontan_p = _mean_or_sys("Fontan_conduit", hemodynamics)
     if fontan_p is not None:
-        f_lvl = _fontan_level(fontan_p)
+        f_lvl     = _fontan_level(fontan_p)
         qualifier = f" ({f_lvl})" if f_lvl else ""
         pres_sentences.append(f"Fontan circuit pressure was {int(fontan_p)} mmHg{qualifier}.")
 
-    glenn_p = _p("Glenn_anastomosis", "mean", hemodynamics)
+    glenn_p = _mean_or_sys("Glenn_anastomosis", hemodynamics)
     if glenn_p is not None:
-        g_lvl = _fontan_level(glenn_p)
+        g_lvl     = _fontan_level(glenn_p)
         qualifier = f" ({g_lvl})" if g_lvl else ""
         pres_sentences.append(f"Glenn anastomosis pressure was {int(glenn_p)} mmHg{qualifier}.")
 
-    # On Glenn/Fontan anatomy, report PA mean pressure if not already captured
-    if anatomy_type in ("post_fontan", "post_glenn"):
-        if rv_sys is None and mpa_sys is None and rpa_sys is None:
-            pa_mean = mpa_mean or rpa_mean or lpa_mean
-            if pa_mean is not None:
-                pa_label = "MPA" if mpa_mean else ("RPA" if rpa_mean else "LPA")
+    # For Glenn/Fontan anatomy, report branch PA mean pressures if not yet captured above
+    if is_fontan_glenn:
+        # After the promote-systolic-to-mean pass earlier, rpa_mean/lpa_mean may be populated
+        # even if rv_sys was None. Report them if they weren't already in the RV sentence.
+        if rv_sys is None:
+            pa_parts = []
+            if rpa_mean is not None:
+                pa_parts.append(f"RPA mean {int(rpa_mean)} mmHg")
+            if lpa_mean is not None:
+                pa_parts.append(f"LPA mean {int(lpa_mean)} mmHg")
+            if mpa_mean is not None:
+                pa_parts.append(f"MPA mean {int(mpa_mean)} mmHg")
+            if pa_parts:
                 pres_sentences.append(
-                    f"Pulmonary artery mean pressure was {int(pa_mean)} mmHg ({pa_label})."
+                    "Pulmonary artery mean pressures were " + ", ".join(pa_parts) + "."
                 )
 
     para3 = " ".join(pres_sentences) if pres_sentences else ""
@@ -499,9 +571,10 @@ def generate_hemodynamic_narrative(hemodynamics, calculations, patient_data, ste
             if hgb is not None and hgb != int(hgb)
             else (str(int(hgb)) if hgb is not None else "?")
         )
+        # Wording matches document template exactly
         calc_sentences.append(
-            f"Using the Fick method with an aVO\u2082 of {avo2_str} mL/min/m\u00b2 "
-            f"and Hgb of {hgb_str} g/dL, "
+            f"Using Fick and an assumed aVO\u2082 of {avo2_str} mL/min/m\u00b2 "
+            f"and hemoglobin of {hgb_str} g/dL, "
             f"Qs was equal to {qs:.2f} L/min/m\u00b2."
         )
 
@@ -517,7 +590,7 @@ def generate_hemodynamic_narrative(hemodynamics, calculations, patient_data, ste
             pvri_s += f" and SVRi was {svri:.1f} iWU"
         calc_sentences.append(pvri_s + ".")
 
-    # Calculation warnings — suppress the "skipped" note since the absent para4 speaks for itself
+    # Calculation warnings — suppress the "skipped" note (absent para4 speaks for itself)
     warnings = [
         w for w in calculations.get("warnings", [])
         if "Fick flow calculations skipped" not in w
