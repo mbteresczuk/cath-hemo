@@ -132,6 +132,15 @@
       "sat_y": 444,
       "pressure_x": 129,
       "pressure_y": 446
+    },
+    "RV": {
+      "side": "right",
+      "annotation_type": "saturation_and_pressure",
+      "custom": true,
+      "sat_x": 338,
+      "sat_y": 355,
+      "pressure_x": 390,
+      "pressure_y": 384
     }
   }
 }

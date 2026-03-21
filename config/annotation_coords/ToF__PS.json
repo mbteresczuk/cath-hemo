@@ -43,10 +43,10 @@
     "RPA": {
       "side": "right",
       "annotation_type": "saturation_and_pressure",
-      "sat_x": 187,
-      "sat_y": 62,
-      "pressure_x": 177,
-      "pressure_y": 94
+      "sat_x": 182,
+      "sat_y": 129,
+      "pressure_x": 97,
+      "pressure_y": 130
     },
     "LPA": {
       "side": "right",
