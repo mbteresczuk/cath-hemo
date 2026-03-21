@@ -83,8 +83,18 @@ def calculate_all(hemodynamics, patient_data):
     """
     warnings = []
 
-    hgb = float(patient_data.get("hgb") or 12.0)
-    avo2 = float(patient_data.get("avo2") or 125.0)  # mL/min/m2
+    _hgb_raw  = patient_data.get("hgb")
+    _avo2_raw = patient_data.get("avo2")
+    hgb  = float(_hgb_raw)  if _hgb_raw  not in (None, "", 0) else None
+    avo2 = float(_avo2_raw) if _avo2_raw not in (None, "", 0) else None
+
+    if hgb is None or avo2 is None:
+        missing = []
+        if hgb  is None: missing.append("Hgb")
+        if avo2 is None: missing.append("aVO\u2082")
+        warnings.append(
+            f"{' and '.join(missing)} not entered — Fick flow calculations skipped."
+        )
 
     # Saturation values
     def sat(loc):
@@ -100,39 +110,42 @@ def calculate_all(hemodynamics, patient_data):
     pv_sat = sat("LA") or sat("LV")
     ao_sat = sat("Descending_Aorta") or sat("LV") or sat("Neoaorta")
 
-    # Mixed venous
+    # Mixed venous (always computed — useful even without flow calcs)
     mv_sat = calculate_mixed_venous(svc_sat, ivc_sat)
-    if mv_sat is None and pa_sat is not None:
-        mv_sat = pa_sat
-        warnings.append("No SVC/IVC saturations entered; using PA sat as mixed venous proxy.")
-    # Pulmonary venous saturation
-    if pv_sat is None:
-        pv_sat = 98.0
-        if ao_sat and ao_sat < 95:
-            warnings.append("Assuming PV saturation of 98% (LA/LV sat not entered).")
 
-    # PA saturation fallback
-    if pa_sat is None and mv_sat is not None:
-        pa_sat = mv_sat
-        warnings.append("PA saturation not entered; using mixed venous for Qp estimate.")
-
-    # Qp and Qs
+    # Qp and Qs — only when Hgb and aVO2 are explicitly entered
     qp = None
     qs = None
-
-    if pa_sat is not None and pv_sat is not None:
-        qp = calculate_fick_flow(avo2, pv_sat, pa_sat, hgb)
-        if qp is None:
-            warnings.append("Qp could not be calculated (PV sat ≤ PA sat).")
-
-    if ao_sat is not None and mv_sat is not None:
-        qs = calculate_fick_flow(avo2, ao_sat, mv_sat, hgb)
-        if qs is None:
-            warnings.append("Qs could not be calculated (Ao sat ≤ mixed venous sat).")
-
     qp_qs = None
-    if qp and qs and qs > 0:
-        qp_qs = qp / qs
+
+    if hgb is not None and avo2 is not None:
+        if mv_sat is None and pa_sat is not None:
+            mv_sat = pa_sat
+            warnings.append("No SVC/IVC saturations entered; using PA sat as mixed venous proxy.")
+
+        _pv_sat = pv_sat
+        if _pv_sat is None:
+            _pv_sat = 98.0
+            if ao_sat and ao_sat < 95:
+                warnings.append("Assuming PV saturation of 98% (LA/LV sat not entered).")
+
+        _pa_sat = pa_sat
+        if _pa_sat is None and mv_sat is not None:
+            _pa_sat = mv_sat
+            warnings.append("PA saturation not entered; using mixed venous for Qp estimate.")
+
+        if _pa_sat is not None and _pv_sat is not None:
+            qp = calculate_fick_flow(avo2, _pv_sat, _pa_sat, hgb)
+            if qp is None:
+                warnings.append("Qp could not be calculated (PV sat ≤ PA sat).")
+
+        if ao_sat is not None and mv_sat is not None:
+            qs = calculate_fick_flow(avo2, ao_sat, mv_sat, hgb)
+            if qs is None:
+                warnings.append("Qs could not be calculated (Ao sat ≤ mixed venous sat).")
+
+        if qp and qs and qs > 0:
+            qp_qs = qp / qs
 
     # Pressures
     mean_mpa = pressure("MPA", "mean")
