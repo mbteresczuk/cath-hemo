@@ -457,8 +457,8 @@ async function runReport() {
         hemo_text: hemoText,
         diagram_id: selectedDiagram.id,
         patient_data: {
-          hgb: patientData.hgb || 12.0,
-          avo2: patientData.avo2 || 125,
+          hgb: patientData.hgb != null ? patientData.hgb : null,
+          avo2: patientData.avo2 != null ? patientData.avo2 : null,
           anesthesia: patientData.anesthesia || 'general anesthesia',
           anatomy_type: selectedDiagram.anatomy_type || 'biventricle',
           fio2: '21%'
