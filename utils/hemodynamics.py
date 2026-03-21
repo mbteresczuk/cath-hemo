@@ -38,18 +38,24 @@ def calculate_fick_flow(avo2_indexed, sat_high, sat_low, hgb):
     return avo2_indexed / delta_content
 
 
-def detect_step_ups(hemodynamics, threshold=7.0):
+def detect_step_ups(hemodynamics):
     """
-    Detect O2 saturation step-ups (left-to-right shunting) > threshold%.
+    Detect O2 saturation step-ups (left-to-right shunting).
+
+    Thresholds per level (per clinical convention):
+      Atrial  (SVC → RA):  >8%
+      Ventricular (RA → RV): >5%
+      PA level (RV → MPA): >5%
+
     Returns list of step-up dicts.
     """
     SEQUENCE = [
-        ("SVC", "RA", "atrial"),
-        ("RA", "RV", "ventricular"),
-        ("RV", "MPA", "PA level"),
+        ("SVC", "RA",  "atrial",       8.0),
+        ("RA",  "RV",  "ventricular",  5.0),
+        ("RV",  "MPA", "PA level",     5.0),
     ]
     step_ups = []
-    for from_loc, to_loc, level in SEQUENCE:
+    for from_loc, to_loc, level, threshold in SEQUENCE:
         from_sat = hemodynamics.get(from_loc, {}).get("sat")
         to_sat = hemodynamics.get(to_loc, {}).get("sat")
         if from_sat is not None and to_sat is not None:
