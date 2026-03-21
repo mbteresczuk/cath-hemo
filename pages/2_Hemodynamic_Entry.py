@@ -81,16 +81,21 @@ with right_col:
         dob = st.text_input("DOB", value=st.session_state.patient_data.get("dob", ""))
     with pi_col2:
         doc_date = st.text_input("Date of Cath", value=st.session_state.patient_data.get("doc", ""))
-        hgb = st.number_input("Hgb (g/dL)", min_value=1.0, max_value=25.0,
-                               value=float(st.session_state.patient_data.get("hgb", 12.0)), step=0.1)
-
+        _saved_hgb = st.session_state.patient_data.get("hgb")
+        hgb = st.number_input(
+            "Hgb (g/dL)", min_value=1.0, max_value=25.0, step=0.1,
+            value=float(_saved_hgb) if _saved_hgb not in (None, "") else None,
+            placeholder="Leave blank to skip Fick",
+        )
 
     avo2_col, anes_col = st.columns(2)
     with avo2_col:
+        _saved_avo2 = st.session_state.patient_data.get("avo2")
         avo2 = st.number_input(
-            "aVO₂ (mL/min/m²)", min_value=50, max_value=300,
-            value=int(st.session_state.patient_data.get("avo2", 125)),
-            help="Assumed O2 consumption index. Default 125 mL/min/m² at rest.",
+            "aVO₂ (mL/min/m²)", min_value=50, max_value=300, step=1,
+            value=int(_saved_avo2) if _saved_avo2 not in (None, "") else None,
+            placeholder="Leave blank to skip Fick",
+            help="O₂ consumption index. Leave blank if not measured.",
         )
     with anes_col:
         anesthesia = st.selectbox(

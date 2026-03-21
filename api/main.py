@@ -77,8 +77,8 @@ class ParseRequest(BaseModel):
 
 
 class PatientData(BaseModel):
-    hgb: float = 12.0
-    avo2: int = 125
+    hgb: Optional[float] = None   # None → Fick calculations skipped
+    avo2: Optional[int] = None    # None → Fick calculations skipped
     anesthesia: str = "general anesthesia"
     anatomy_type: str = "biventricle"
     fio2: str = "21%"
