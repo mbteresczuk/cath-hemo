@@ -165,7 +165,7 @@ with col_hemo:
     hemo_text = st.text_area(
         "Hemodynamic data",
         value=st.session_state.get("hemo_text_input", ""),
-        height=340,
+        height=300,
         placeholder=(
             "SVC  79\n"
             "IVC  81\n"
@@ -183,6 +183,25 @@ with col_hemo:
         key="hemo_text_input",
         label_visibility="collapsed",
     )
+
+    # Optional Fick inputs — leave blank to omit Fick paragraph from narrative
+    _fick_c1, _fick_c2 = st.columns(2)
+    with _fick_c1:
+        st.number_input(
+            "Hgb (g/dL)",
+            min_value=1.0, max_value=25.0, step=0.1,
+            value=None,
+            placeholder="Leave blank to skip Fick",
+            key="pi_hgb",
+        )
+    with _fick_c2:
+        st.number_input(
+            "aVO₂ (mL/min/m²)",
+            min_value=50, max_value=300, step=1,
+            value=None,
+            placeholder="Leave blank to skip Fick",
+            key="pi_avo2",
+        )
 
     # Live parse preview + conflict detection
     if hemo_text.strip():
@@ -271,8 +290,8 @@ if generate_clicked and can_generate:
         "mrn": st.session_state.get("pi_mrn", ""),
         "dob": st.session_state.get("pi_dob", ""),
         "doc": st.session_state.get("pi_doc", ""),
-        "hgb": st.session_state.get("pi_hgb", 12.0),
-        "avo2": st.session_state.get("pi_avo2", 125),
+        "hgb": st.session_state.get("pi_hgb"),   # None if left blank → no Fick
+        "avo2": st.session_state.get("pi_avo2"),  # None if left blank → no Fick
         "anesthesia": st.session_state.get("pi_anes", "general anesthesia"),
         "case_type": st.session_state.get("pi_case", "standard"),
         "fio2": "21%",
