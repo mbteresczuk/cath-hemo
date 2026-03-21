@@ -92,8 +92,11 @@ PRESSURE_ONLY = {
     "RPCWP", "LPCWP",
     # Glenn/Fontan circuit pressures — always reported as means
     "Glenn_anastomosis", "Fontan_IVC_limb", "Fontan_conduit",
-    # Pulmonary veins — only mean pressure is clinically used on diagram
-    "RPV", "LPV", "RUPV", "LUPV", "RLPV", "LLPV", "PV_confluence",
+    # Generic PV confluence — pressure only (no individual PV sats)
+    "RPV", "LPV", "PV_confluence",
+    # Note: individual pulmonary veins (RUPV/LUPV/RLPV/LLPV) are NOT listed here
+    # because they DO have measurable O₂ saturations that should display as circles.
+    # A lone value ≥40 is treated as a saturation; a value <40 becomes a mean pressure.
 }
 
 # ---------------------------------------------------------------------------

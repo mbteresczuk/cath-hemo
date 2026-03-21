@@ -6,6 +6,7 @@ from pathlib import Path
 from PIL import Image
 
 from utils.annotator import pil_to_bytes, safe_open_image
+from utils.coordinator import load_coords
 from utils.diagram_library import get_location_set, get_annotation_type, load_library, mark_coords_status
 from utils.hemodynamics import calculate_all, detect_step_ups
 from utils.narrative import generate_hemodynamic_narrative
@@ -31,6 +32,17 @@ diag = st.session_state.selected_diagram
 location_set_name = diag.get("location_set", "standard_biventricle")
 anatomy_type = diag.get("anatomy_type", "biventricle")
 locations = get_location_set(location_set_name)
+
+# Also include any extra locations that have been configured in this diagram's coord file
+# (e.g. LSVC on the bilateral-SVC coarctation diagram)
+_coords_for_extras = load_coords(diag["id"])
+if _coords_for_extras:
+    _extra_locs = [
+        loc for loc in _coords_for_extras.get("locations", {})
+        if loc not in locations and not _coords_for_extras["locations"][loc].get("skipped")
+    ]
+    if _extra_locs:
+        locations = locations + _extra_locs
 
 st.info(f"**Diagram:** {diag['display_name']} | **Anatomy:** {anatomy_type.replace('_', ' ')}")
 

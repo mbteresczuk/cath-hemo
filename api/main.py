@@ -41,6 +41,7 @@ from utils.diagram_library import (
     get_diagram_by_id,
     load_library,
     mark_coords_status,
+    rename_diagram,
 )
 from utils.hemodynamics import calculate_all, detect_step_ups
 from utils.matcher import match_diagrams
@@ -299,6 +300,21 @@ def put_coords(diagram_id: str, payload: dict = Body(...)):
     global _library_cache
     _library_cache = None
     return {"ok": True}
+
+
+@app.put("/api/diagrams/{diagram_id}/rename")
+def rename_diag(diagram_id: str, payload: dict = Body(...)):
+    """Rename a diagram. Body: {"name": "New Display Name"}"""
+    library = _get_library()
+    if get_diagram_by_id(library, diagram_id) is None:
+        raise HTTPException(status_code=404, detail=f"Diagram '{diagram_id}' not found.")
+    new_name = payload.get("name", "").strip()
+    if not new_name:
+        raise HTTPException(status_code=422, detail="name must not be empty.")
+    rename_diagram(diagram_id, new_name)
+    global _library_cache
+    _library_cache = None
+    return {"ok": True, "diagram_id": diagram_id, "name": new_name}
 
 
 @app.get("/editor")
