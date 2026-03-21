@@ -251,6 +251,24 @@ def _safe_id(filename: str) -> str:
     return safe
 
 
+_NAME_OVERRIDES_PATH = BASE_DIR / "config" / "diagram_name_overrides.json"
+
+
+def _load_name_overrides() -> dict:
+    """Load the persistent diagram name overrides (id -> custom name)."""
+    if _NAME_OVERRIDES_PATH.exists():
+        with open(_NAME_OVERRIDES_PATH) as f:
+            return json.load(f)
+    return {}
+
+
+def _save_name_overrides(overrides: dict) -> None:
+    """Persist diagram name overrides to disk."""
+    os.makedirs(str(_NAME_OVERRIDES_PATH.parent), exist_ok=True)
+    with open(_NAME_OVERRIDES_PATH, "w") as f:
+        json.dump(overrides, f, indent=2)
+
+
 def build_library_from_source(output_path: str = None) -> dict:
     """
     Scan all category folders and build the diagram library JSON.
@@ -258,6 +276,8 @@ def build_library_from_source(output_path: str = None) -> dict:
     """
     if output_path is None:
         output_path = str(BASE_DIR / "config" / "diagram_library.json")
+
+    name_overrides = _load_name_overrides()
 
     categories = []
     for cat in CATEGORY_CONFIG:
@@ -282,10 +302,13 @@ def build_library_from_source(output_path: str = None) -> dict:
             except Exception:
                 width, height = 0, 0
 
+            # Use custom name override if present, otherwise derive from filename
+            display_name = name_overrides.get(diagram_id, _make_display_name(img_file.name))
+
             diagrams.append({
                 "id": diagram_id,
                 "filename": img_file.name,
-                "display_name": _make_display_name(img_file.name),
+                "display_name": display_name,
                 "path": str(img_file.relative_to(BASE_DIR)),
                 "category_id": cat["id"],
                 "anatomy_type": anatomy_type,
@@ -475,6 +498,21 @@ def add_uploaded_diagram(
                 json.dump(library, f, indent=2)
 
     return mark_coords_status(library)
+
+
+def rename_diagram(diagram_id: str, new_name: str) -> None:
+    """
+    Persist a custom display name for any diagram.
+    The name survives library rebuilds via config/diagram_name_overrides.json.
+    Pass new_name="" to remove the override and revert to the filename-derived name.
+    """
+    overrides = _load_name_overrides()
+    new_name = new_name.strip()
+    if new_name:
+        overrides[diagram_id] = new_name
+    else:
+        overrides.pop(diagram_id, None)
+    _save_name_overrides(overrides)
 
 
 def delete_uploaded_diagram(diagram_id: str, library: dict) -> dict:

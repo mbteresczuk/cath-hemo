@@ -14,6 +14,8 @@ from utils.diagram_library import (
     mark_coords_status,
     add_uploaded_diagram,
     delete_uploaded_diagram,
+    rename_diagram,
+    build_library_from_source,
     ANATOMY_UPLOAD_OPTIONS,
 )
 from utils.styles import inject_styles
@@ -125,6 +127,28 @@ def _render_grid(diagrams: list):
                     st.session_state.narrative = ""
                     st.session_state.annotated_image = None
                     st.rerun()
+
+                # Rename control
+                rename_key = f"rename_input_{diag['id']}"
+                new_name = st.text_input(
+                    "Rename",
+                    value=diag["display_name"],
+                    key=rename_key,
+                    label_visibility="collapsed",
+                    placeholder="Rename diagram…",
+                )
+                if st.button("✏️ Rename", key=f"rename_btn_{diag['id']}",
+                             use_container_width=True):
+                    if new_name.strip() and new_name.strip() != diag["display_name"]:
+                        rename_diagram(diag["id"], new_name.strip())
+                        st.session_state.library = mark_coords_status(
+                            build_library_from_source()
+                        )
+                        # Update selected diagram if it's the one being renamed
+                        if current and current["id"] == diag["id"]:
+                            st.session_state.selected_diagram["display_name"] = new_name.strip()
+                        st.success(f"Renamed to **{new_name.strip()}**")
+                        st.rerun()
 
                 # Delete button for uploaded diagrams
                 if diag.get("category_id") == "Uploaded":

@@ -124,14 +124,12 @@
       "pressure_x": 364,
       "pressure_y": 216
     },
-    "L-SVC": {
+    "LSVC": {
       "side": "right",
-      "annotation_type": "saturation_and_pressure",
+      "annotation_type": "saturation",
       "custom": true,
       "sat_x": 297,
-      "sat_y": 83,
-      "pressure_x": 337,
-      "pressure_y": 84
+      "sat_y": 83
     },
     "Ascending_Aorta": {
       "side": "right",
