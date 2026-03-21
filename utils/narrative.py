@@ -116,8 +116,10 @@ def generate_hemodynamic_narrative(hemodynamics, calculations, patient_data, ste
     """
 
     fio2         = patient_data.get("fio2", "21%")
-    avo2         = float(patient_data.get("avo2") or 125.0)
-    hgb          = float(patient_data.get("hgb") or 12.0)
+    _avo2_raw    = patient_data.get("avo2")
+    _hgb_raw     = patient_data.get("hgb")
+    avo2         = float(_avo2_raw) if _avo2_raw not in (None, "", 0) else None
+    hgb          = float(_hgb_raw)  if _hgb_raw  not in (None, "", 0) else None
     anatomy_type = patient_data.get("anatomy_type", "biventricle")
 
     # ═══════════════════════════════════════════════════════════════════════
@@ -490,9 +492,15 @@ def generate_hemodynamic_narrative(hemodynamics, calculations, patient_data, ste
     svri  = calculations.get("svri")
 
     if qs is not None:
-        hgb_str = f"{hgb:.1f}".rstrip("0").rstrip(".") if hgb != int(hgb) else str(int(hgb))
+        # Both avo2 and hgb must be present for qs to be non-None (enforced in hemodynamics.py)
+        avo2_str = str(int(avo2)) if avo2 is not None else "?"
+        hgb_str  = (
+            f"{hgb:.1f}".rstrip("0").rstrip(".")
+            if hgb is not None and hgb != int(hgb)
+            else (str(int(hgb)) if hgb is not None else "?")
+        )
         calc_sentences.append(
-            f"Using Fick and an assumed aVO\u2082 of {int(avo2)} mL/min/m\u00b2 "
+            f"Using the Fick method with an aVO\u2082 of {avo2_str} mL/min/m\u00b2 "
             f"and Hgb of {hgb_str} g/dL, "
             f"Qs was equal to {qs:.2f} L/min/m\u00b2."
         )
@@ -509,8 +517,11 @@ def generate_hemodynamic_narrative(hemodynamics, calculations, patient_data, ste
             pvri_s += f" and SVRi was {svri:.1f} iWU"
         calc_sentences.append(pvri_s + ".")
 
-    # Calculation warnings
-    warnings = calculations.get("warnings", [])
+    # Calculation warnings — suppress the "skipped" note since the absent para4 speaks for itself
+    warnings = [
+        w for w in calculations.get("warnings", [])
+        if "Fick flow calculations skipped" not in w
+    ]
     if warnings:
         calc_sentences.append("Note: " + "; ".join(warnings) + ".")
 
