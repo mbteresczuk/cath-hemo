@@ -45,22 +45,22 @@
       "annotation_type": "saturation_and_pressure",
       "sat_x": 191,
       "sat_y": 122,
-      "pressure_x": 105,
-      "pressure_y": 127
+      "pressure_x": 95,
+      "pressure_y": 112
     },
     "LPA": {
       "side": "right",
       "annotation_type": "saturation_and_pressure",
       "sat_x": 395,
       "sat_y": 130,
-      "pressure_x": 444,
-      "pressure_y": 127
+      "pressure_x": 443,
+      "pressure_y": 112
     },
     "RPCWP": {
       "side": "left",
       "annotation_type": "pcwp",
-      "pressure_x": 101,
-      "pressure_y": 187
+      "pressure_x": 76,
+      "pressure_y": 182
     },
     "LPCWP": {
       "side": "left",
@@ -73,8 +73,8 @@
       "annotation_type": "saturation_and_pressure",
       "sat_x": 337,
       "sat_y": 216,
-      "pressure_x": 385,
-      "pressure_y": 243
+      "pressure_x": 366,
+      "pressure_y": 244
     },
     "LV": {
       "side": "left",

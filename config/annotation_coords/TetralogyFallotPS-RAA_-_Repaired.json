@@ -29,8 +29,8 @@
       "annotation_type": "saturation_and_pressure",
       "sat_x": 312,
       "sat_y": 368,
-      "pressure_x": 369,
-      "pressure_y": 394
+      "pressure_x": 355,
+      "pressure_y": 392
     },
     "MPA": {
       "side": "right",
@@ -73,7 +73,7 @@
       "annotation_type": "saturation_and_pressure",
       "sat_x": 335,
       "sat_y": 216,
-      "pressure_x": 376,
+      "pressure_x": 368,
       "pressure_y": 247
     },
     "LV": {
