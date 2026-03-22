@@ -54,6 +54,11 @@ _VENTRICULAR_LOCS = {
     "RV", "LV", "RV_systemic", "LV_systemic", "LV_pulmonary",
 }
 
+# Atrial chambers: the cath paper records A-wave as "systolic" and V-wave as
+# "diastolic", but the diagram should display V/A (V on top) to match
+# clinical convention.  Mean is left unchanged.
+_ATRIAL_LOCS = {"RA", "LA"}
+
 # These locations always show only the mean pressure value on the diagram.
 # Systolic and diastolic values are suppressed for display purposes.
 _MEAN_ONLY_LOCS = {
@@ -448,6 +453,11 @@ def annotate_diagram(image_path: str, coords: dict, hemodynamics: dict,
                 mean = systolic   # treat lone value as mean
             systolic = None
             diastolic = None
+
+        # Atrial locations (RA, LA): paper stores A-wave as systolic and
+        # V-wave as diastolic, but the diagram displays V/A (V on top).
+        if loc_name in _ATRIAL_LOCS:
+            systolic, diastolic = diastolic, systolic
 
         sat_cx, sat_cy, press_cx, press_cy = _resolve_coords(coord)
 
