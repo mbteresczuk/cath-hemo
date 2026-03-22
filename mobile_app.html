@@ -76,6 +76,25 @@ textarea:focus,input:focus{outline:none;border-color:var(--crimson)}
 .search-wrap svg{position:absolute;left:10px;top:50%;transform:translateY(-50%);
   width:18px;height:18px;color:var(--muted)}
 .search-input{padding-left:36px!important;font-family:inherit!important}
+/* ── Category folders ── */
+.folder{border:1px solid var(--border);border-radius:12px;overflow:hidden;margin-bottom:10px;background:var(--surface)}
+.folder-hdr{display:flex;align-items:center;justify-content:space-between;
+  padding:12px 14px;cursor:pointer;user-select:none;background:var(--surface)}
+.folder-hdr:active{background:#F0EDE8}
+.folder-title{font-size:14px;font-weight:700;color:var(--navy)}
+.folder-meta{display:flex;align-items:center;gap:8px}
+.folder-count{font-size:12px;color:var(--muted);font-weight:500}
+.folder-chevron{width:18px;height:18px;color:var(--muted);transition:transform .2s;flex-shrink:0}
+.folder-chevron.open{transform:rotate(180deg)}
+.folder-body{display:none;padding:0 10px 10px;border-top:1px solid var(--border)}
+.folder-body.open{display:block}
+/* ── Search result sections ── */
+.results-label{font-size:11px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;
+  color:var(--muted);margin:16px 0 8px}
+.show-more-btn{width:100%;padding:11px;border-radius:10px;border:1.5px dashed var(--border);
+  background:transparent;color:var(--crimson);font-size:14px;font-weight:600;cursor:pointer;
+  margin-top:6px;margin-bottom:20px;transition:border-color .15s}
+.show-more-btn:active{border-color:var(--crimson);background:#FFF5F5}
 table{width:100%;border-collapse:collapse;font-size:14px}
 th{text-align:left;padding:8px 6px;font-size:12px;font-weight:700;color:var(--muted);
   border-bottom:1.5px solid var(--border)}
@@ -170,7 +189,7 @@ td:last-child{text-align:right;font-weight:600;font-family:monospace}
            oninput="onSearch(this.value)"/>
   </div>
 
-  <div id="diagram-grid" class="diagram-grid"></div>
+  <div id="diagram-grid"></div>
 
   <button class="btn btn-primary" id="btn-generate" onclick="goToOutput()" disabled>
     Generate Report →
@@ -365,40 +384,128 @@ function onSearch(q) {
   searchDebounce = setTimeout(() => loadDiagrams(q), 350)
 }
 
+// Flat list used for index-based selection (populated by both browse and search modes)
 let _diagramList = []
+// Full categories from /api/diagrams (cached after first load)
+let _categoriesCache = null
 
 async function loadDiagrams(q) {
   const grid = document.getElementById('diagram-grid')
-  grid.innerHTML = '<div style="grid-column:1/-1;text-align:center;padding:32px"><div class="spinner"></div></div>'
+  grid.innerHTML = '<div style="text-align:center;padding:32px"><div class="spinner"></div></div>'
   try {
-    const url = q.trim()
-      ? `/api/diagrams/match?q=${encodeURIComponent(q)}&top_n=20`
-      : `/api/diagrams/match?q=&top_n=20`
-    const res = await fetch(url)
-    const data = await res.json()
-    _diagramList = data.results || []
-
-    if (!_diagramList.length) {
-      grid.innerHTML = '<p style="grid-column:1/-1;text-align:center;color:var(--muted);padding:32px">No diagrams found.</p>'
-      return
+    if (q.trim()) {
+      await renderSearch(q.trim(), grid)
+    } else {
+      await renderBrowse(grid)
     }
-
-    grid.innerHTML = _diagramList.map((d, i) => `
-      <div class="dcard${selectedDiagram?.id === d.id ? ' sel' : ''}" data-id="${d.id}">
-        <img src="${d.thumbnail_url}" alt="${d.display_name}"
-             onclick="selectDiagramByIndex(${i})"
-             onerror="this.src='';this.style.display='none'"/>
-        <div class="dcard-name" onclick="selectDiagramByIndex(${i})">${d.display_name}</div>
-        <button class="dcard-rename-toggle" onclick="toggleRename(event,'${d.id}')">✏️ rename</button>
-        <div class="dcard-rename" id="rename-row-${d.id}" style="display:none;align-items:center;">
-          <input type="text" value="${d.display_name.replace(/"/g,'&quot;')}"
-                 id="rename-input-${d.id}" onclick="event.stopPropagation()"/>
-          <button onclick="saveDiagramName(event,'${d.id}')">Save</button>
-        </div>
-      </div>`).join('')
   } catch (e) {
-    grid.innerHTML = `<p style="grid-column:1/-1" class="alert error-alert">${e.message}</p>`
+    grid.innerHTML = `<div class="alert error-alert">${e.message}</div>`
   }
+}
+
+// ── Browse mode: category folders ──────────────────────────────────────
+async function renderBrowse(grid) {
+  if (!_categoriesCache) {
+    const res = await fetch('/api/diagrams')
+    const data = await res.json()
+    _categoriesCache = (data.categories || []).filter(c => c.diagrams && c.diagrams.length)
+  }
+  // Rebuild flat list from all categories
+  _diagramList = _categoriesCache.flatMap(c => c.diagrams)
+
+  grid.innerHTML = _categoriesCache.map((cat, ci) => `
+    <div class="folder" id="folder-${ci}">
+      <div class="folder-hdr" onclick="toggleFolder(${ci})">
+        <span class="folder-title">${cat.display_name}</span>
+        <span class="folder-meta">
+          <span class="folder-count">${cat.diagrams.length} diagrams</span>
+          <svg class="folder-chevron" id="chevron-${ci}" viewBox="0 0 24 24" fill="none"
+               stroke="currentColor" stroke-width="2.5">
+            <polyline points="6 9 12 15 18 9"/>
+          </svg>
+        </span>
+      </div>
+      <div class="folder-body" id="folder-body-${ci}">
+        <div class="diagram-grid" style="margin-bottom:0">
+          ${cat.diagrams.map(d => dcard(d)).join('')}
+        </div>
+      </div>
+    </div>`).join('')
+}
+
+function toggleFolder(ci) {
+  const body = document.getElementById(`folder-body-${ci}`)
+  const chev = document.getElementById(`chevron-${ci}`)
+  const open = body.classList.toggle('open')
+  chev.classList.toggle('open', open)
+}
+
+// ── Search mode: best match + show more ────────────────────────────────
+async function renderSearch(q, grid) {
+  // Fetch top 5 for best-match display
+  const [topRes, allRes] = await Promise.all([
+    fetch(`/api/diagrams/match?q=${encodeURIComponent(q)}&top_n=5`),
+    fetch(`/api/diagrams/match?q=${encodeURIComponent(q)}&top_n=999`)
+  ])
+  const topData = await topRes.json()
+  const allData = await allRes.json()
+  const topMatches = topData.results || []
+  const allMatches = allData.results || []
+
+  if (!allMatches.length) {
+    grid.innerHTML = '<p style="text-align:center;color:var(--muted);padding:32px">No diagrams found — try a different search term or browse by category.</p>'
+    _diagramList = []
+    return
+  }
+
+  // _diagramList for index lookup: top first, then rest
+  const topIds = new Set(topMatches.map(d => d.id))
+  const restMatches = allMatches.filter(d => !topIds.has(d.id))
+  _diagramList = [...topMatches, ...restMatches]
+
+  const moreCount = restMatches.length
+
+  grid.innerHTML = `
+    <div class="results-label">Best Match${topMatches.length > 1 ? 'es' : ''}</div>
+    <div class="diagram-grid" id="top-results">
+      ${topMatches.map(d => dcard(d)).join('')}
+    </div>
+    ${moreCount > 0 ? `
+    <button class="show-more-btn" id="show-more-btn"
+            onclick="expandMoreResults()">
+      Show more results (${moreCount} more)
+    </button>
+    <div id="more-results" style="display:none">
+      <div class="results-label">All Matches</div>
+      <div class="diagram-grid">
+        ${restMatches.map(d => dcard(d)).join('')}
+      </div>
+    </div>` : ''}
+  `
+}
+
+function expandMoreResults() {
+  document.getElementById('more-results').style.display = 'block'
+  document.getElementById('show-more-btn').style.display = 'none'
+}
+
+// ── Shared card template ────────────────────────────────────────────────
+function dcard(d) {
+  const sel = selectedDiagram?.id === d.id ? ' sel' : ''
+  const idx = _diagramList.findIndex(x => x.id === d.id)
+  return `
+    <div class="dcard${sel}" data-id="${d.id}">
+      <img src="${d.thumbnail_url}" alt="${d.display_name}"
+           onclick="selectDiagramByIndex(${idx})"
+           onerror="this.src='';this.style.display='none'"/>
+      <div class="dcard-name" onclick="selectDiagramByIndex(${idx})">${d.display_name}</div>
+      <button class="dcard-rename-toggle" onclick="toggleRename(event,'${d.id}')">✏️ rename</button>
+      <div class="dcard-rename" id="rename-row-${d.id}" style="display:none;align-items:center;">
+        <input type="text" value="${d.display_name.replace(/"/g,'&quot;')}"
+               id="rename-input-${d.id}" onclick="event.stopPropagation()"/>
+        <button onclick="saveDiagramName(event,'${d.id}')">Save</button>
+      </div>
+    </div>`
 }
 
 function selectDiagramByIndex(i) {
