@@ -1,128 +1,135 @@
 {
-  "diagram_id": "ASD_",
-  "image_width": 645,
-  "image_height": 537,
+  "diagram_id": "Post-surgical_Re-Coarctation_LAA",
+  "image_width": 629,
+  "image_height": 501,
   "auto_configured": true,
   "locations": {
     "SVC": {
       "side": "right",
       "annotation_type": "saturation",
-      "sat_x": 115,
-      "sat_y": 175
+      "sat_x": 147,
+      "sat_y": 196
     },
     "IVC": {
       "side": "right",
       "annotation_type": "saturation",
-      "sat_x": 108,
-      "sat_y": 429
+      "sat_x": 146,
+      "sat_y": 430
     },
     "RA": {
       "side": "right",
       "annotation_type": "saturation_and_pressure",
-      "sat_x": 152,
-      "sat_y": 289,
-      "pressure_x": 191,
-      "pressure_y": 329
+      "sat_x": 180,
+      "sat_y": 297,
+      "pressure_x": 215,
+      "pressure_y": 339
     },
     "RV": {
       "side": "right",
       "annotation_type": "saturation_and_pressure",
-      "sat_x": 276,
-      "sat_y": 358,
-      "pressure_x": 321,
-      "pressure_y": 394
+      "sat_x": 306,
+      "sat_y": 356,
+      "pressure_x": 356,
+      "pressure_y": 393
     },
     "MPA": {
       "side": "right",
       "annotation_type": "saturation_and_pressure",
-      "sat_x": 250,
-      "sat_y": 249,
-      "pressure_x": 255,
-      "pressure_y": 209
+      "sat_x": 277,
+      "sat_y": 253,
+      "pressure_x": 280,
+      "pressure_y": 222
     },
     "RPA": {
       "side": "right",
       "annotation_type": "saturation_and_pressure",
-      "sat_x": 149,
-      "sat_y": 120,
-      "pressure_x": 60,
-      "pressure_y": 119
+      "sat_x": 177,
+      "sat_y": 126,
+      "pressure_x": 80,
+      "pressure_y": 126
     },
     "LPA": {
       "side": "right",
       "annotation_type": "saturation_and_pressure",
-      "sat_x": 337,
-      "sat_y": 139,
-      "pressure_x": 397,
-      "pressure_y": 142
+      "sat_x": 350,
+      "sat_y": 135,
+      "pressure_x": 415,
+      "pressure_y": 140
     },
     "RPCWP": {
       "side": "left",
       "annotation_type": "pcwp",
-      "pressure_x": 29,
-      "pressure_y": 185
+      "pressure_x": 67,
+      "pressure_y": 192
     },
     "LPCWP": {
       "side": "left",
       "annotation_type": "pcwp",
-      "pressure_x": 470,
-      "pressure_y": 195
+      "pressure_x": 504,
+      "pressure_y": 186
     },
     "LA": {
       "side": "left",
       "annotation_type": "saturation_and_pressure",
-      "sat_x": 305,
-      "sat_y": 222,
-      "pressure_x": 348,
-      "pressure_y": 242
+      "sat_x": 334,
+      "sat_y": 207,
+      "pressure_x": 369,
+      "pressure_y": 238
     },
     "LV": {
       "side": "left",
       "annotation_type": "saturation_and_pressure",
-      "sat_x": 360,
-      "sat_y": 330,
-      "pressure_x": 416,
-      "pressure_y": 352
+      "sat_x": 392,
+      "sat_y": 325,
+      "pressure_x": 444,
+      "pressure_y": 359
     },
     "Descending_Aorta": {
       "side": "left",
       "annotation_type": "saturation_and_pressure",
-      "sat_x": 301,
-      "sat_y": 462,
-      "pressure_x": 361,
-      "pressure_y": 469
+      "sat_x": 340,
+      "sat_y": 457,
+      "pressure_x": 397,
+      "pressure_y": 462
     },
     "RUPV": {
       "side": "left",
       "annotation_type": "saturation_and_pressure",
-      "sat_x": 149,
-      "sat_y": 180,
-      "pressure_x": 72,
-      "pressure_y": 159
+      "sat_x": 179,
+      "sat_y": 183,
+      "pressure_x": 98,
+      "pressure_y": 170
     },
     "LUPV": {
       "side": "left",
       "annotation_type": "saturation_and_pressure",
-      "sat_x": 378,
-      "sat_y": 197,
-      "pressure_x": 424,
-      "pressure_y": 184
+      "sat_x": 399,
+      "sat_y": 195,
+      "pressure_x": 451,
+      "pressure_y": 178
     },
     "RLPV": {
       "side": "left",
       "annotation_type": "saturation_and_pressure",
-      "sat_x": 148,
-      "sat_y": 217,
-      "pressure_x": 69,
-      "pressure_y": 206
+      "sat_x": 177,
+      "sat_y": 218,
+      "pressure_x": 92,
+      "pressure_y": 216
     },
     "LLPV": {
       "side": "left",
       "annotation_type": "saturation_and_pressure",
-      "sat_x": 395,
-      "sat_y": 232,
-      "pressure_x": 446,
-      "pressure_y": 231
+      "sat_x": 418,
+      "sat_y": 227,
+      "pressure_x": 464,
+      "pressure_y": 220
+    },
+    "Ascending_Aorta": {
+      "side": "right",
+      "annotation_type": "pressure_only",
+      "custom": true,
+      "pressure_x": 234,
+      "pressure_y": 180
     }
   }
 }

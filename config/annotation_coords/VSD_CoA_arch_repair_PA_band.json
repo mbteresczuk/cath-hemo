@@ -123,6 +123,13 @@
       "sat_y": 229,
       "pressure_x": 432,
       "pressure_y": 226
+    },
+    "Ascending": {
+      "side": "right",
+      "annotation_type": "pressure_only",
+      "custom": true,
+      "pressure_x": 205,
+      "pressure_y": 193
     }
   }
 }

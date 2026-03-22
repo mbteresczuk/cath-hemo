@@ -1,128 +1,137 @@
 {
-  "diagram_id": "ASD_",
-  "image_width": 645,
-  "image_height": 537,
+  "diagram_id": "PAPVR_RPVtoSVC",
+  "image_width": 561,
+  "image_height": 481,
   "auto_configured": true,
   "locations": {
     "SVC": {
       "side": "right",
       "annotation_type": "saturation",
-      "sat_x": 115,
-      "sat_y": 175
+      "sat_x": 131,
+      "sat_y": 169
     },
     "IVC": {
       "side": "right",
       "annotation_type": "saturation",
-      "sat_x": 108,
-      "sat_y": 429
+      "sat_x": 126,
+      "sat_y": 405
     },
     "RA": {
       "side": "right",
       "annotation_type": "saturation_and_pressure",
-      "sat_x": 152,
-      "sat_y": 289,
-      "pressure_x": 191,
-      "pressure_y": 329
+      "sat_x": 162,
+      "sat_y": 270,
+      "pressure_x": 197,
+      "pressure_y": 310
     },
     "RV": {
       "side": "right",
       "annotation_type": "saturation_and_pressure",
-      "sat_x": 276,
-      "sat_y": 358,
-      "pressure_x": 321,
-      "pressure_y": 394
+      "sat_x": 284,
+      "sat_y": 336,
+      "pressure_x": 318,
+      "pressure_y": 370
     },
     "MPA": {
       "side": "right",
       "annotation_type": "saturation_and_pressure",
-      "sat_x": 250,
-      "sat_y": 249,
-      "pressure_x": 255,
-      "pressure_y": 209
+      "sat_x": 257,
+      "sat_y": 243,
+      "pressure_x": 262,
+      "pressure_y": 217
     },
     "RPA": {
       "side": "right",
       "annotation_type": "saturation_and_pressure",
-      "sat_x": 149,
-      "sat_y": 120,
-      "pressure_x": 60,
-      "pressure_y": 119
+      "sat_x": 158,
+      "sat_y": 112,
+      "pressure_x": 90,
+      "pressure_y": 115
     },
     "LPA": {
       "side": "right",
       "annotation_type": "saturation_and_pressure",
-      "sat_x": 337,
-      "sat_y": 139,
-      "pressure_x": 397,
-      "pressure_y": 142
+      "sat_x": 329,
+      "sat_y": 129,
+      "pressure_x": 393,
+      "pressure_y": 133
     },
     "RPCWP": {
       "side": "left",
       "annotation_type": "pcwp",
-      "pressure_x": 29,
-      "pressure_y": 185
+      "pressure_x": 28,
+      "pressure_y": 215
     },
     "LPCWP": {
       "side": "left",
       "annotation_type": "pcwp",
-      "pressure_x": 470,
-      "pressure_y": 195
+      "pressure_x": 468,
+      "pressure_y": 187
     },
     "LA": {
       "side": "left",
       "annotation_type": "saturation_and_pressure",
-      "sat_x": 305,
-      "sat_y": 222,
-      "pressure_x": 348,
-      "pressure_y": 242
+      "sat_x": 306,
+      "sat_y": 203,
+      "pressure_x": 345,
+      "pressure_y": 230
     },
     "LV": {
       "side": "left",
       "annotation_type": "saturation_and_pressure",
       "sat_x": 360,
-      "sat_y": 330,
-      "pressure_x": 416,
-      "pressure_y": 352
+      "sat_y": 306,
+      "pressure_x": 415,
+      "pressure_y": 339
     },
     "Descending_Aorta": {
       "side": "left",
       "annotation_type": "saturation_and_pressure",
-      "sat_x": 301,
-      "sat_y": 462,
-      "pressure_x": 361,
-      "pressure_y": 469
+      "sat_x": 313,
+      "sat_y": 435,
+      "pressure_x": 369,
+      "pressure_y": 440
     },
     "RUPV": {
       "side": "left",
       "annotation_type": "saturation_and_pressure",
-      "sat_x": 149,
-      "sat_y": 180,
-      "pressure_x": 72,
-      "pressure_y": 159
+      "sat_x": 104,
+      "sat_y": 56,
+      "pressure_x": 50,
+      "pressure_y": 49
     },
     "LUPV": {
       "side": "left",
       "annotation_type": "saturation_and_pressure",
-      "sat_x": 378,
-      "sat_y": 197,
-      "pressure_x": 424,
-      "pressure_y": 184
+      "sat_x": 382,
+      "sat_y": 187,
+      "pressure_x": 420,
+      "pressure_y": 173
     },
     "RLPV": {
       "side": "left",
       "annotation_type": "saturation_and_pressure",
-      "sat_x": 148,
-      "sat_y": 217,
-      "pressure_x": 69,
-      "pressure_y": 206
+      "sat_x": 92,
+      "sat_y": 261,
+      "pressure_x": 49,
+      "pressure_y": 254
     },
     "LLPV": {
       "side": "left",
       "annotation_type": "saturation_and_pressure",
-      "sat_x": 395,
-      "sat_y": 232,
-      "pressure_x": 446,
-      "pressure_y": 231
+      "sat_x": 397,
+      "sat_y": 216,
+      "pressure_x": 443,
+      "pressure_y": 209
+    },
+    "Ascending": {
+      "side": "right",
+      "annotation_type": "saturation_and_pressure",
+      "custom": true,
+      "sat_x": 231,
+      "sat_y": 196,
+      "pressure_x": 208,
+      "pressure_y": 165
     }
   }
 }

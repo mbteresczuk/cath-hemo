@@ -51,7 +51,7 @@
     "LPA": {
       "side": "right",
       "annotation_type": "saturation_and_pressure",
-      "sat_x": 311,
+      "sat_x": 304,
       "sat_y": 134,
       "pressure_x": 366,
       "pressure_y": 137
@@ -97,8 +97,8 @@
       "annotation_type": "saturation_and_pressure",
       "sat_x": 119,
       "sat_y": 175,
-      "pressure_x": 36,
-      "pressure_y": 148
+      "pressure_x": 40,
+      "pressure_y": 150
     },
     "LUPV": {
       "side": "left",
@@ -113,7 +113,7 @@
       "annotation_type": "saturation_and_pressure",
       "sat_x": 116,
       "sat_y": 208,
-      "pressure_x": 33,
+      "pressure_x": 37,
       "pressure_y": 201
     },
     "LLPV": {

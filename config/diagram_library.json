@@ -137,7 +137,7 @@
           "category_id": "ASD_VSD_CCAVC",
           "anatomy_type": "biventricle",
           "location_set": "standard_biventricle",
-          "has_coords": false,
+          "has_coords": true,
           "coord_file": "config/annotation_coords/ASD_LAA_hypoplasia_coarctation_LSVC_to_CS.json",
           "image_width": 629,
           "image_height": 501
@@ -163,7 +163,7 @@
           "category_id": "ASD_VSD_CCAVC",
           "anatomy_type": "biventricle",
           "location_set": "standard_biventricle",
-          "has_coords": false,
+          "has_coords": true,
           "coord_file": "config/annotation_coords/ASD_sp_Warden.json",
           "image_width": 719,
           "image_height": 542
@@ -228,7 +228,7 @@
           "category_id": "ASD_VSD_CCAVC",
           "anatomy_type": "biventricle",
           "location_set": "standard_biventricle",
-          "has_coords": false,
+          "has_coords": true,
           "coord_file": "config/annotation_coords/CCAVC_transitional.json",
           "image_width": 652,
           "image_height": 522
@@ -241,7 +241,7 @@
           "category_id": "ASD_VSD_CCAVC",
           "anatomy_type": "biventricle",
           "location_set": "standard_biventricle",
-          "has_coords": false,
+          "has_coords": true,
           "coord_file": "config/annotation_coords/Cor_triatriatum.json",
           "image_width": 593,
           "image_height": 505
@@ -254,7 +254,7 @@
           "category_id": "ASD_VSD_CCAVC",
           "anatomy_type": "biventricle",
           "location_set": "standard_biventricle",
-          "has_coords": false,
+          "has_coords": true,
           "coord_file": "config/annotation_coords/PAPVR_RPVtoSVC.json",
           "image_width": 561,
           "image_height": 481
@@ -267,7 +267,7 @@
           "category_id": "ASD_VSD_CCAVC",
           "anatomy_type": "biventricle",
           "location_set": "standard_biventricle",
-          "has_coords": false,
+          "has_coords": true,
           "coord_file": "config/annotation_coords/PAPVR_sinusvenosusASD_SVCtype.json",
           "image_width": 617,
           "image_height": 501
@@ -306,7 +306,7 @@
           "category_id": "ASD_VSD_CCAVC",
           "anatomy_type": "biventricle",
           "location_set": "standard_biventricle",
-          "has_coords": false,
+          "has_coords": true,
           "coord_file": "config/annotation_coords/VSD_sp_patchclosure.json",
           "image_width": 606,
           "image_height": 534
@@ -326,7 +326,7 @@
           "category_id": "Coarctation_IAA",
           "anatomy_type": "biventricle",
           "location_set": "standard_biventricle",
-          "has_coords": false,
+          "has_coords": true,
           "coord_file": "config/annotation_coords/Arch_Hypoplasia___Re-Coarctation_LAA.json",
           "image_width": 629,
           "image_height": 501
@@ -339,7 +339,7 @@
           "category_id": "Coarctation_IAA",
           "anatomy_type": "biventricle",
           "location_set": "standard_biventricle",
-          "has_coords": false,
+          "has_coords": true,
           "coord_file": "config/annotation_coords/CoA_sp_repair.json",
           "image_width": 515,
           "image_height": 488
@@ -352,7 +352,7 @@
           "category_id": "Coarctation_IAA",
           "anatomy_type": "biventricle",
           "location_set": "standard_biventricle",
-          "has_coords": false,
+          "has_coords": true,
           "coord_file": "config/annotation_coords/CoarctationAorta_LAA.json",
           "image_width": 629,
           "image_height": 501
@@ -378,7 +378,7 @@
           "category_id": "Coarctation_IAA",
           "anatomy_type": "biventricle",
           "location_set": "standard_biventricle",
-          "has_coords": false,
+          "has_coords": true,
           "coord_file": "config/annotation_coords/CoarctationAorta_PDA.json",
           "image_width": 629,
           "image_height": 501
@@ -404,7 +404,7 @@
           "category_id": "Coarctation_IAA",
           "anatomy_type": "biventricle",
           "location_set": "standard_biventricle",
-          "has_coords": false,
+          "has_coords": true,
           "coord_file": "config/annotation_coords/Post-surgical_Re-Coarctation_LAA.json",
           "image_width": 629,
           "image_height": 501
@@ -417,7 +417,7 @@
           "category_id": "Coarctation_IAA",
           "anatomy_type": "biventricle",
           "location_set": "standard_biventricle",
-          "has_coords": false,
+          "has_coords": true,
           "coord_file": "config/annotation_coords/ShonesSyndrome.json",
           "image_width": 607,
           "image_height": 508
@@ -456,7 +456,7 @@
           "category_id": "Coarctation_IAA",
           "anatomy_type": "biventricle",
           "location_set": "standard_biventricle",
-          "has_coords": false,
+          "has_coords": true,
           "coord_file": "config/annotation_coords/VSD-CoA-BAV_s-p_repair.json",
           "image_width": 672,
           "image_height": 529
@@ -476,7 +476,7 @@
           "category_id": "Aortic_Stenosis",
           "anatomy_type": "biventricle",
           "location_set": "standard_biventricle",
-          "has_coords": false,
+          "has_coords": true,
           "coord_file": "config/annotation_coords/AorticStenosis_Coarc_VSD_sp_RossKonno_Arch_repair.json",
           "image_width": 662,
           "image_height": 518
@@ -489,7 +489,7 @@
           "category_id": "Aortic_Stenosis",
           "anatomy_type": "biventricle",
           "location_set": "standard_biventricle",
-          "has_coords": false,
+          "has_coords": true,
           "coord_file": "config/annotation_coords/AorticStenosis_sp_Ross.json",
           "image_width": 662,
           "image_height": 518
@@ -502,7 +502,7 @@
           "category_id": "Aortic_Stenosis",
           "anatomy_type": "biventricle",
           "location_set": "standard_biventricle",
-          "has_coords": false,
+          "has_coords": true,
           "coord_file": "config/annotation_coords/SubvalvarAS_subaorticmembrane.json",
           "image_width": 644,
           "image_height": 509
@@ -528,7 +528,7 @@
           "category_id": "Aortic_Stenosis",
           "anatomy_type": "biventricle",
           "location_set": "standard_biventricle",
-          "has_coords": false,
+          "has_coords": true,
           "coord_file": "config/annotation_coords/UnicuspidAorticValve.json",
           "image_width": 648,
           "image_height": 510
@@ -548,7 +548,7 @@
           "category_id": "TAPVR_PAPVR",
           "anatomy_type": "biventricle",
           "location_set": "standard_biventricle",
-          "has_coords": false,
+          "has_coords": true,
           "coord_file": "config/annotation_coords/Isolated_PV_stenosis_RUPV_LUPV.json",
           "image_width": 1083,
           "image_height": 717
@@ -561,7 +561,7 @@
           "category_id": "TAPVR_PAPVR",
           "anatomy_type": "biventricle",
           "location_set": "standard_biventricle",
-          "has_coords": false,
+          "has_coords": true,
           "coord_file": "config/annotation_coords/Isolated_PV_stenosis_RUPV_RLPV_LUPV.json",
           "image_width": 662,
           "image_height": 518
@@ -587,7 +587,7 @@
           "category_id": "TAPVR_PAPVR",
           "anatomy_type": "biventricle",
           "location_set": "standard_biventricle",
-          "has_coords": false,
+          "has_coords": true,
           "coord_file": "config/annotation_coords/TAPVR_supracardiac.json",
           "image_width": 565,
           "image_height": 515
@@ -600,7 +600,7 @@
           "category_id": "TAPVR_PAPVR",
           "anatomy_type": "biventricle",
           "location_set": "standard_biventricle",
-          "has_coords": false,
+          "has_coords": true,
           "coord_file": "config/annotation_coords/TAPVR_urnoofed_to_LA.json",
           "image_width": 599,
           "image_height": 578
@@ -620,7 +620,7 @@
           "category_id": "PA_IVS_TGA",
           "anatomy_type": "single_ventricle",
           "location_set": "single_ventricle_norwood",
-          "has_coords": false,
+          "has_coords": true,
           "coord_file": "config/annotation_coords/PA_IVS_rmBT_shunt.json",
           "image_width": 695,
           "image_height": 555
@@ -698,7 +698,7 @@
           "category_id": "PA_IVS_TGA",
           "anatomy_type": "biventricle",
           "location_set": "standard_biventricle",
-          "has_coords": false,
+          "has_coords": true,
           "coord_file": "config/annotation_coords/PA_RVtoAorta_RAA_TriStenosis_blPDA_blSVC.json",
           "image_width": 571,
           "image_height": 498

@@ -1,0 +1,110 @@
+{
+  "diagram_id": "TAPVR_supracardiac",
+  "image_width": 565,
+  "image_height": 515,
+  "auto_configured": true,
+  "locations": {
+    "SVC": {
+      "side": "right",
+      "annotation_type": "saturation",
+      "sat_x": 123,
+      "sat_y": 211
+    },
+    "IVC": {
+      "side": "right",
+      "annotation_type": "saturation",
+      "sat_x": 124,
+      "sat_y": 439
+    },
+    "RA": {
+      "side": "right",
+      "annotation_type": "saturation_and_pressure",
+      "sat_x": 158,
+      "sat_y": 302,
+      "pressure_x": 193,
+      "pressure_y": 349
+    },
+    "RV": {
+      "side": "right",
+      "annotation_type": "saturation_and_pressure",
+      "sat_x": 284,
+      "sat_y": 366,
+      "pressure_x": 332,
+      "pressure_y": 405
+    },
+    "MPA": {
+      "side": "right",
+      "annotation_type": "saturation_and_pressure",
+      "sat_x": 256,
+      "sat_y": 267,
+      "pressure_x": 257,
+      "pressure_y": 235
+    },
+    "RPA": {
+      "side": "right",
+      "annotation_type": "saturation_and_pressure",
+      "sat_x": 150,
+      "sat_y": 133,
+      "pressure_x": 53,
+      "pressure_y": 137
+    },
+    "LPA": {
+      "side": "right",
+      "annotation_type": "saturation_and_pressure",
+      "sat_x": 310,
+      "sat_y": 143,
+      "pressure_x": 432,
+      "pressure_y": 141
+    },
+    "RPCWP": {
+      "side": "left",
+      "annotation_type": "pcwp",
+      "pressure_x": 41,
+      "pressure_y": 203
+    },
+    "LPCWP": {
+      "side": "left",
+      "annotation_type": "pcwp",
+      "pressure_x": 446,
+      "pressure_y": 212
+    },
+    "LA": {
+      "side": "left",
+      "annotation_type": "saturation_and_pressure",
+      "sat_x": 306,
+      "sat_y": 219,
+      "pressure_x": 342,
+      "pressure_y": 259
+    },
+    "LV": {
+      "side": "left",
+      "annotation_type": "saturation_and_pressure",
+      "sat_x": 366,
+      "sat_y": 333,
+      "pressure_x": 421,
+      "pressure_y": 360
+    },
+    "Descending_Aorta": {
+      "side": "left",
+      "annotation_type": "saturation_and_pressure",
+      "sat_x": 325,
+      "sat_y": 466,
+      "pressure_x": 382,
+      "pressure_y": 467
+    },
+    "Ascending_Aorta": {
+      "side": "right",
+      "annotation_type": "pressure_only",
+      "custom": true,
+      "pressure_x": 195,
+      "pressure_y": 160
+    },
+    "Vertical_Vein": {
+      "side": "right",
+      "annotation_type": "pressure_only",
+      "custom": true,
+      "pressure_x": 342,
+      "pressure_y": 90
+    }
+  }
+}
