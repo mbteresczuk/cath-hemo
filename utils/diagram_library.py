@@ -10,14 +10,14 @@ BASE_DIR = Path(__file__).parent.parent
 
 CATEGORY_CONFIG = [
     {
+        "id": "Normal",
+        "display_name": "Normal Heart",
+        "folder": "diagrams/Normal",
+    },
+    {
         "id": "ASD_VSD_CCAVC",
         "display_name": "ASD / VSD / CCAVC / AP Window",
         "folder": "diagrams/ASD_VSD_CCAVC",
-    },
-    {
-        "id": "PA_IVS_TGA",
-        "display_name": "PA-IVS / TGA + VSD",
-        "folder": "diagrams/PA_IVS_TGA",
     },
     {
         "id": "Coarctation_IAA",
@@ -25,9 +25,19 @@ CATEGORY_CONFIG = [
         "folder": "diagrams/Coarctation_IAA",
     },
     {
-        "id": "HLHS_MA_AA",
-        "display_name": "HLHS (Mitral Atresia / Aortic Atresia)",
-        "folder": "diagrams/HLHS_MA_AA",
+        "id": "Aortic_Stenosis",
+        "display_name": "Aortic Stenosis / Aortic Valve",
+        "folder": "diagrams/Aortic_Stenosis",
+    },
+    {
+        "id": "TAPVR_PAPVR",
+        "display_name": "TAPVR / PAPVR / Pulmonary Vein Stenosis",
+        "folder": "diagrams/TAPVR_PAPVR",
+    },
+    {
+        "id": "PA_IVS_TGA",
+        "display_name": "PA-IVS / TGA + VSD",
+        "folder": "diagrams/PA_IVS_TGA",
     },
     {
         "id": "TOF",
@@ -45,19 +55,39 @@ CATEGORY_CONFIG = [
         "folder": "diagrams/DORV",
     },
     {
-        "id": "HLHS_MS_AS",
-        "display_name": "HLHS (Mitral Stenosis / Aortic Stenosis)",
-        "folder": "diagrams/HLHS_MS_AS",
-    },
-    {
         "id": "Tricuspid_Atresia",
         "display_name": "Tricuspid Atresia",
         "folder": "diagrams/Tricuspid_Atresia",
     },
     {
-        "id": "Uploaded",
-        "display_name": "Uploaded Diagrams",
-        "folder": "diagrams/Uploaded",
+        "id": "Ebsteins",
+        "display_name": "Ebstein's Anomaly",
+        "folder": "diagrams/Ebsteins",
+    },
+    {
+        "id": "Truncus_Arteriosus",
+        "display_name": "Truncus Arteriosus",
+        "folder": "diagrams/Truncus_Arteriosus",
+    },
+    {
+        "id": "HLHS_MA_AA",
+        "display_name": "HLHS (Mitral Atresia / Aortic Atresia)",
+        "folder": "diagrams/HLHS_MA_AA",
+    },
+    {
+        "id": "HLHS_MS_AS",
+        "display_name": "HLHS (Mitral Stenosis / Aortic Stenosis or Atresia)",
+        "folder": "diagrams/HLHS_MS_AS",
+    },
+    {
+        "id": "UCCAVC",
+        "display_name": "Unbalanced CAVC / UCCAVC",
+        "folder": "diagrams/UCCAVC",
+    },
+    {
+        "id": "DILV_Single_Ventricle",
+        "display_name": "DILV / Single Ventricle (Other)",
+        "folder": "diagrams/DILV_Single_Ventricle",
     },
 ]
 
