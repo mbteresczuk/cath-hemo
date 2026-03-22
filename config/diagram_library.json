@@ -711,7 +711,7 @@
           "category_id": "PA_IVS_TGA",
           "anatomy_type": "biventricle",
           "location_set": "standard_biventricle",
-          "has_coords": false,
+          "has_coords": true,
           "coord_file": "config/annotation_coords/PA_VSD_PDA_toPAs.json",
           "image_width": 593,
           "image_height": 576

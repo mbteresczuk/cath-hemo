@@ -131,7 +131,15 @@ def _startup():
 @app.get("/")
 def serve_mobile_app():
     """Serve the single-file mobile web app."""
-    return FileResponse(str(BASE_DIR / "mobile_app.html"), media_type="text/html")
+    return FileResponse(
+        str(BASE_DIR / "mobile_app.html"),
+        media_type="text/html",
+        headers={
+            "Cache-Control": "no-cache, no-store, must-revalidate",
+            "Pragma": "no-cache",
+            "Expires": "0",
+        },
+    )
 
 
 @app.post("/api/ocr")
@@ -320,7 +328,15 @@ def rename_diag(diagram_id: str, payload: dict = Body(...)):
 @app.get("/editor")
 def serve_coord_editor():
     """Serve the standalone coordinate editor."""
-    return FileResponse(str(BASE_DIR / "coord_editor.html"), media_type="text/html")
+    return FileResponse(
+        str(BASE_DIR / "coord_editor.html"),
+        media_type="text/html",
+        headers={
+            "Cache-Control": "no-cache, no-store, must-revalidate",
+            "Pragma": "no-cache",
+            "Expires": "0",
+        },
+    )
 
 
 @app.post("/api/coords/{diagram_id}/auto")
