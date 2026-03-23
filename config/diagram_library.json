@@ -1547,7 +1547,7 @@
           "category_id": "HLHS_MS_AS",
           "anatomy_type": "post_fontan",
           "location_set": "post_fontan",
-          "has_coords": false,
+          "has_coords": true,
           "coord_file": "config/annotation_coords/HLHS_MS_AA_LTFF.json",
           "image_width": 463,
           "image_height": 537
@@ -1560,7 +1560,7 @@
           "category_id": "HLHS_MS_AS",
           "anatomy_type": "post_fontan",
           "location_set": "post_fontan",
-          "has_coords": false,
+          "has_coords": true,
           "coord_file": "config/annotation_coords/HLHS_MS_AA_LTFF_2.json",
           "image_width": 649,
           "image_height": 537
@@ -1573,7 +1573,7 @@
           "category_id": "HLHS_MS_AS",
           "anatomy_type": "post_fontan",
           "location_set": "post_fontan",
-          "has_coords": false,
+          "has_coords": true,
           "coord_file": "config/annotation_coords/HLHS_MS_AA_NORWOOD_ECFF.json",
           "image_width": 593,
           "image_height": 524
@@ -1599,7 +1599,7 @@
           "category_id": "HLHS_MS_AS",
           "anatomy_type": "post_glenn",
           "location_set": "post_glenn",
-          "has_coords": false,
+          "has_coords": true,
           "coord_file": "config/annotation_coords/HLHS_MS_AA_RBDG.json",
           "image_width": 593,
           "image_height": 524
@@ -1612,7 +1612,7 @@
           "category_id": "HLHS_MS_AS",
           "anatomy_type": "post_fontan",
           "location_set": "post_fontan",
-          "has_coords": false,
+          "has_coords": true,
           "coord_file": "config/annotation_coords/HLHS_MS_AS_HemiFontan.json",
           "image_width": 633,
           "image_height": 524
@@ -1625,7 +1625,7 @@
           "category_id": "HLHS_MS_AS",
           "anatomy_type": "post_fontan",
           "location_set": "post_fontan",
-          "has_coords": false,
+          "has_coords": true,
           "coord_file": "config/annotation_coords/HLHS_MS_AS_NORWOOD_ECFF_-_LPA_stent.json",
           "image_width": 676,
           "image_height": 524
@@ -1651,7 +1651,7 @@
           "category_id": "HLHS_MS_AS",
           "anatomy_type": "post_fontan",
           "location_set": "post_fontan",
-          "has_coords": false,
+          "has_coords": true,
           "coord_file": "config/annotation_coords/HLHS_MS_AS_NORWOOD_ECFF_Bilat_Glenn.json",
           "image_width": 676,
           "image_height": 524
@@ -1677,7 +1677,7 @@
           "category_id": "HLHS_MS_AS",
           "anatomy_type": "post_fontan",
           "location_set": "post_fontan",
-          "has_coords": false,
+          "has_coords": true,
           "coord_file": "config/annotation_coords/HLHS_MS_AS_NORWOOD_ECFF_fendevice.json",
           "image_width": 676,
           "image_height": 524
@@ -1710,7 +1710,7 @@
           "category_id": "UCCAVC",
           "anatomy_type": "single_ventricle",
           "location_set": "single_ventricle_norwood",
-          "has_coords": false,
+          "has_coords": true,
           "coord_file": "config/annotation_coords/CUAVC_Norwood_BTS.json",
           "image_width": 594,
           "image_height": 563
@@ -1723,7 +1723,7 @@
           "category_id": "UCCAVC",
           "anatomy_type": "post_glenn",
           "location_set": "post_glenn",
-          "has_coords": false,
+          "has_coords": true,
           "coord_file": "config/annotation_coords/UCCAVC_NORWOOD_BLBDG_InterruptedIVC_hepaticveininclusion.json",
           "image_width": 630,
           "image_height": 524
@@ -1736,7 +1736,7 @@
           "category_id": "UCCAVC",
           "anatomy_type": "post_fontan",
           "location_set": "post_fontan",
-          "has_coords": false,
+          "has_coords": true,
           "coord_file": "config/annotation_coords/UCCAVC_NORWOOD_ECFF_St_JUDE.json",
           "image_width": 593,
           "image_height": 524
@@ -1749,7 +1749,7 @@
           "category_id": "UCCAVC",
           "anatomy_type": "post_fontan",
           "location_set": "post_fontan",
-          "has_coords": false,
+          "has_coords": true,
           "coord_file": "config/annotation_coords/UCCAVC_NORWOOD_Fontan.json",
           "image_width": 756,
           "image_height": 517
@@ -1762,7 +1762,7 @@
           "category_id": "UCCAVC",
           "anatomy_type": "post_glenn",
           "location_set": "post_glenn",
-          "has_coords": false,
+          "has_coords": true,
           "coord_file": "config/annotation_coords/UCCAVC_NORWOOD_RBDG.json",
           "image_width": 593,
           "image_height": 524
@@ -1775,7 +1775,7 @@
           "category_id": "UCCAVC",
           "anatomy_type": "post_glenn",
           "location_set": "post_glenn",
-          "has_coords": false,
+          "has_coords": true,
           "coord_file": "config/annotation_coords/_S_D_D__RU-CAVC_DORV_PS_-_BBDG_LTF.json",
           "image_width": 606,
           "image_height": 518
@@ -1788,7 +1788,7 @@
           "category_id": "UCCAVC",
           "anatomy_type": "post_glenn",
           "location_set": "post_glenn",
-          "has_coords": false,
+          "has_coords": true,
           "coord_file": "config/annotation_coords/_S_D_D__RU-CAVC_DORV_PS_-_R_BDG.json",
           "image_width": 670,
           "image_height": 518
@@ -1808,7 +1808,7 @@
           "category_id": "DILV_Single_Ventricle",
           "anatomy_type": "single_ventricle",
           "location_set": "single_ventricle_norwood",
-          "has_coords": false,
+          "has_coords": true,
           "coord_file": "config/annotation_coords/DILV__S_D_D__hypoplastic_RV_s-p_Norwood_rmBTS.json",
           "image_width": 662,
           "image_height": 518
