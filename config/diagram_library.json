@@ -1371,7 +1371,7 @@
           "category_id": "HLHS_MA_AA",
           "anatomy_type": "single_ventricle",
           "location_set": "single_ventricle_norwood",
-          "has_coords": false,
+          "has_coords": true,
           "coord_file": "config/annotation_coords/HLHS__MA__AA_status_post_Stage_1_with_RMBTS.json",
           "image_width": 662,
           "image_height": 525
@@ -1384,7 +1384,7 @@
           "category_id": "HLHS_MA_AA",
           "anatomy_type": "single_ventricle",
           "location_set": "single_ventricle_norwood",
-          "has_coords": false,
+          "has_coords": true,
           "coord_file": "config/annotation_coords/HLHS__MA__AA_status_post_Stage_1_with_Sano_Modification.json",
           "image_width": 662,
           "image_height": 525
@@ -1397,7 +1397,7 @@
           "category_id": "HLHS_MA_AA",
           "anatomy_type": "biventricle",
           "location_set": "standard_biventricle",
-          "has_coords": false,
+          "has_coords": true,
           "coord_file": "config/annotation_coords/HLHS__MA__AA.json",
           "image_width": 520,
           "image_height": 506
@@ -1449,7 +1449,7 @@
           "category_id": "HLHS_MA_AA",
           "anatomy_type": "post_fontan",
           "location_set": "post_fontan",
-          "has_coords": false,
+          "has_coords": true,
           "coord_file": "config/annotation_coords/HLHS_MA_AA_HemiFontan.json",
           "image_width": 700,
           "image_height": 518
@@ -1475,7 +1475,7 @@
           "category_id": "HLHS_MA_AA",
           "anatomy_type": "biventricle",
           "location_set": "standard_biventricle",
-          "has_coords": false,
+          "has_coords": true,
           "coord_file": "config/annotation_coords/HLHS_MA_AA_PDA.json",
           "image_width": 564,
           "image_height": 506
@@ -1521,7 +1521,7 @@
           "category_id": "HLHS_MS_AS",
           "anatomy_type": "biventricle",
           "location_set": "standard_biventricle",
-          "has_coords": false,
+          "has_coords": true,
           "coord_file": "config/annotation_coords/HLHS_MS_AA.json",
           "image_width": 557,
           "image_height": 532
@@ -1534,7 +1534,7 @@
           "category_id": "HLHS_MS_AS",
           "anatomy_type": "post_fontan",
           "location_set": "post_fontan",
-          "has_coords": false,
+          "has_coords": true,
           "coord_file": "config/annotation_coords/HLHS_MS_AA_HemiFontan.json",
           "image_width": 581,
           "image_height": 537
