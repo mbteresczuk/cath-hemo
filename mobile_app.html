@@ -410,7 +410,12 @@ async function _ensureCache() {
   const res = await fetch('/api/diagrams')
   if (!res.ok) throw new Error('Failed to load diagram library')
   const data = await res.json()
-  _categoriesCache = (data.categories || []).filter(c => c.diagrams && c.diagrams.length)
+  const cats = (data.categories || []).filter(c => c.diagrams && c.diagrams.length)
+  // Stamp each diagram with its category's display name so search can use it
+  cats.forEach(cat => {
+    cat.diagrams.forEach(d => { d._cat_display = cat.display_name })
+  })
+  _categoriesCache = cats
 }
 
 // ── Browse mode: category folders ──────────────────────────────────────
@@ -445,20 +450,86 @@ function toggleFolder(ci) {
   chev.classList.toggle('open', open)
 }
 
+// ── Medical abbreviation expansion ────────────────────────────────────
+const ABBR = {
+  'tof': 'tetralogy fallot',
+  'hlhs': 'hypoplastic left heart',
+  'asd': 'atrial septal defect',
+  'vsd': 'ventricular septal defect',
+  'pda': 'patent ductus arteriosus',
+  'tga': 'transposition great arteries',
+  'dtga': 'dextro transposition',
+  'pa': 'pulmonary atresia',
+  'ivs': 'intact ventricular septum',
+  'ra': 'right atrium',
+  'la': 'left atrium',
+  'rv': 'right ventricle',
+  'lv': 'left ventricle',
+  'mpa': 'main pulmonary artery',
+  'rpa': 'right pulmonary artery',
+  'lpa': 'left pulmonary artery',
+  'coarc': 'coarctation',
+  'coa': 'coarctation aorta',
+  'iaa': 'interrupted aortic arch',
+  'cavc': 'complete atrioventricular canal',
+  'ccavc': 'complete atrioventricular canal',
+  'aso': 'arterial switch',
+  'bdg': 'bidirectional glenn',
+  'ecf': 'extracardiac fontan',
+  'ltff': 'lateral tunnel fontan',
+  'norwood': 'norwood hlhs single ventricle',
+  'dorv': 'double outlet right ventricle',
+  'dilv': 'double inlet left ventricle',
+  'tapvr': 'total anomalous pulmonary venous',
+  'papvr': 'partial anomalous pulmonary venous',
+  'pvs': 'pulmonary vein stenosis',
+  'ebstein': 'ebsteins anomaly tricuspid',
+  'fontan': 'fontan single ventricle',
+  'glenn': 'glenn bidirectional superior vena cava',
+  'truncus': 'truncus arteriosus',
+  'raa': 'right aortic arch',
+  'laa': 'left aortic arch',
+  'bts': 'blalock taussig shunt',
+  'rmbts': 'right modified blalock taussig',
+  'uccavc': 'unbalanced atrioventricular canal',
+  'mustard': 'mustard atrial switch baffle',
+  'rastelli': 'rastelli conduit repair',
+  'shone': 'shones syndrome',
+  'ross': 'ross procedure aortic',
+}
+
 // ── Client-side search scoring (no server round-trip) ──────────────────
 function _scoreMatch(q, d) {
-  const terms = q.toLowerCase().split(/\s+/).filter(Boolean)
-  const haystack = [
+  // Expand abbreviations in query
+  let expanded = q.toLowerCase()
+  Object.entries(ABBR).forEach(([abbr, full]) => {
+    expanded = expanded.replace(new RegExp('\\b' + abbr + '\\b', 'g'), abbr + ' ' + full)
+  })
+  const terms = expanded.split(/\s+/).filter(Boolean)
+
+  // Build rich haystack from all text fields + category display name
+  const rawHaystack = [
     d.display_name,
-    d.id,
+    d.id.replace(/[_\-]/g, ' '),   // underscores/dashes → spaces
     d.category_id || '',
+    (d._cat_display || ''),          // full category name e.g. "Tetralogy of Fallot"
     d.anatomy_type || '',
-  ].join(' ').toLowerCase()
+    d.location_set || '',
+  ].join(' ').toLowerCase().replace(/[_\-]/g, ' ')
+
+  // Also expand abbreviations in the haystack
+  let haystack = rawHaystack
+  Object.entries(ABBR).forEach(([abbr, full]) => {
+    haystack = haystack.replace(new RegExp('\\b' + abbr + '\\b', 'g'), abbr + ' ' + full)
+  })
+
   let score = 0
+  const words = haystack.split(/\s+/)
   for (const t of terms) {
-    if (haystack.includes(t)) score += 2
-    // Partial prefix match scores less
-    if (haystack.split(/\s+/).some(w => w.startsWith(t))) score += 1
+    if (t.length < 2) continue
+    if (haystack.includes(t)) score += 2          // substring hit
+    if (words.some(w => w.startsWith(t))) score += 1  // word-prefix hit
+    if (words.some(w => w === t)) score += 2       // exact word match bonus
   }
   return score
 }
@@ -467,35 +538,34 @@ function _scoreMatch(q, d) {
 function renderSearch(q, grid) {
   const allDiagrams = _categoriesCache.flatMap(c => c.diagrams)
 
-  // Score and sort entirely in-browser — no server call
-  const scored = allDiagrams
-    .map(d => ({ d, score: _scoreMatch(q, d) }))
-    .filter(x => x.score > 0)
-    .sort((a, b) => b.score - a.score)
-    .map(x => x.d)
+  // Score every diagram
+  const withScores = allDiagrams.map(d => ({ d, score: _scoreMatch(q, d) }))
+  const matched = withScores.filter(x => x.score > 0).sort((a, b) => b.score - a.score).map(x => x.d)
 
-  if (!scored.length) {
-    grid.innerHTML = '<p style="text-align:center;color:var(--muted);padding:32px 16px">No diagrams found — try a different term or clear the search to browse all categories.</p>'
-    _diagramList = []
-    return
-  }
+  // If nothing matched, show all diagrams as a flat list (never a dead end)
+  const results = matched.length > 0 ? matched : allDiagrams
+  const noMatch = matched.length === 0
 
-  const topMatches = scored.slice(0, 5)
-  const restMatches = scored.slice(5)
-  _diagramList = scored   // full ordered list for index lookup
+  const topMatches = results.slice(0, 5)
+  const restMatches = results.slice(5)
+  _diagramList = results
 
   const moreCount = restMatches.length
+  const label = noMatch
+    ? `No exact match for "${q}" — showing all diagrams`
+    : `Best Match${topMatches.length > 1 ? 'es' : ''}`
+
   grid.innerHTML = `
-    <div class="results-label">Best Match${topMatches.length > 1 ? 'es' : ''}</div>
+    <div class="results-label">${label}</div>
     <div class="diagram-grid" id="top-results">
       ${topMatches.map(d => dcard(d)).join('')}
     </div>
     ${moreCount > 0 ? `
     <button class="show-more-btn" id="show-more-btn" onclick="expandMoreResults()">
-      Show more results (${moreCount} more)
+      Show more (${moreCount} more)
     </button>
     <div id="more-results" style="display:none">
-      <div class="results-label">All Matches</div>
+      <div class="results-label">All Diagrams</div>
       <div class="diagram-grid">
         ${restMatches.map(d => dcard(d)).join('')}
       </div>
