@@ -393,23 +393,28 @@ async function loadDiagrams(q) {
   const grid = document.getElementById('diagram-grid')
   grid.innerHTML = '<div style="text-align:center;padding:32px"><div class="spinner"></div></div>'
   try {
+    // Always ensure categories are cached first (one fetch, reused for both browse and search)
+    await _ensureCache()
     if (q.trim()) {
-      await renderSearch(q.trim(), grid)
+      renderSearch(q.trim(), grid)
     } else {
-      await renderBrowse(grid)
+      renderBrowse(grid)
     }
   } catch (e) {
-    grid.innerHTML = `<div class="alert error-alert">${e.message}</div>`
+    grid.innerHTML = `<div class="alert error-alert">Could not load diagrams: ${e.message}</div>`
   }
 }
 
+async function _ensureCache() {
+  if (_categoriesCache) return
+  const res = await fetch('/api/diagrams')
+  if (!res.ok) throw new Error('Failed to load diagram library')
+  const data = await res.json()
+  _categoriesCache = (data.categories || []).filter(c => c.diagrams && c.diagrams.length)
+}
+
 // ── Browse mode: category folders ──────────────────────────────────────
-async function renderBrowse(grid) {
-  if (!_categoriesCache) {
-    const res = await fetch('/api/diagrams')
-    const data = await res.json()
-    _categoriesCache = (data.categories || []).filter(c => c.diagrams && c.diagrams.length)
-  }
+function renderBrowse(grid) {
   // Rebuild flat list from all categories
   _diagramList = _categoriesCache.flatMap(c => c.diagrams)
 
@@ -440,39 +445,53 @@ function toggleFolder(ci) {
   chev.classList.toggle('open', open)
 }
 
-// ── Search mode: best match + show more ────────────────────────────────
-async function renderSearch(q, grid) {
-  // Fetch top 5 for best-match display
-  const [topRes, allRes] = await Promise.all([
-    fetch(`/api/diagrams/match?q=${encodeURIComponent(q)}&top_n=5`),
-    fetch(`/api/diagrams/match?q=${encodeURIComponent(q)}&top_n=999`)
-  ])
-  const topData = await topRes.json()
-  const allData = await allRes.json()
-  const topMatches = topData.results || []
-  const allMatches = allData.results || []
+// ── Client-side search scoring (no server round-trip) ──────────────────
+function _scoreMatch(q, d) {
+  const terms = q.toLowerCase().split(/\s+/).filter(Boolean)
+  const haystack = [
+    d.display_name,
+    d.id,
+    d.category_id || '',
+    d.anatomy_type || '',
+  ].join(' ').toLowerCase()
+  let score = 0
+  for (const t of terms) {
+    if (haystack.includes(t)) score += 2
+    // Partial prefix match scores less
+    if (haystack.split(/\s+/).some(w => w.startsWith(t))) score += 1
+  }
+  return score
+}
 
-  if (!allMatches.length) {
-    grid.innerHTML = '<p style="text-align:center;color:var(--muted);padding:32px">No diagrams found — try a different search term or browse by category.</p>'
+// ── Search mode: client-side best match + show more ────────────────────
+function renderSearch(q, grid) {
+  const allDiagrams = _categoriesCache.flatMap(c => c.diagrams)
+
+  // Score and sort entirely in-browser — no server call
+  const scored = allDiagrams
+    .map(d => ({ d, score: _scoreMatch(q, d) }))
+    .filter(x => x.score > 0)
+    .sort((a, b) => b.score - a.score)
+    .map(x => x.d)
+
+  if (!scored.length) {
+    grid.innerHTML = '<p style="text-align:center;color:var(--muted);padding:32px 16px">No diagrams found — try a different term or clear the search to browse all categories.</p>'
     _diagramList = []
     return
   }
 
-  // _diagramList for index lookup: top first, then rest
-  const topIds = new Set(topMatches.map(d => d.id))
-  const restMatches = allMatches.filter(d => !topIds.has(d.id))
-  _diagramList = [...topMatches, ...restMatches]
+  const topMatches = scored.slice(0, 5)
+  const restMatches = scored.slice(5)
+  _diagramList = scored   // full ordered list for index lookup
 
   const moreCount = restMatches.length
-
   grid.innerHTML = `
     <div class="results-label">Best Match${topMatches.length > 1 ? 'es' : ''}</div>
     <div class="diagram-grid" id="top-results">
       ${topMatches.map(d => dcard(d)).join('')}
     </div>
     ${moreCount > 0 ? `
-    <button class="show-more-btn" id="show-more-btn"
-            onclick="expandMoreResults()">
+    <button class="show-more-btn" id="show-more-btn" onclick="expandMoreResults()">
       Show more results (${moreCount} more)
     </button>
     <div id="more-results" style="display:none">
