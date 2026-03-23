@@ -90,13 +90,17 @@ LOCATION_ALIASES = {
 # A lone number at these locations is interpreted as a mean pressure, not systolic.
 PRESSURE_ONLY = {
     "RPCWP", "LPCWP",
-    # Glenn/Fontan circuit pressures — always reported as means
-    "Glenn_anastomosis", "Fontan_IVC_limb", "Fontan_conduit",
+    # Glenn anastomosis — pressure only (no saturation measured here)
+    "Glenn_anastomosis",
     # Generic PV confluence — pressure only (no individual PV sats)
     "RPV", "LPV", "PV_confluence",
     # Note: individual pulmonary veins (RUPV/LUPV/RLPV/LLPV) are NOT listed here
     # because they DO have measurable O₂ saturations that should display as circles.
     # A lone value ≥40 is treated as a saturation; a value <40 becomes a mean pressure.
+    #
+    # Fontan_IVC_limb and Fontan_conduit are intentionally NOT listed here —
+    # Fontan limb saturations are clinically important and must be captured.
+    # A value entered alongside a pressure (e.g. "Fontan 62 12") is: sat=62, mean=12.
 }
 
 # ---------------------------------------------------------------------------

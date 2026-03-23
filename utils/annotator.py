@@ -72,6 +72,17 @@ _MEAN_ONLY_LOCS = {
 _GLENN_FONTAN_ANATOMY = {"post_glenn", "post_fontan"}
 _PA_LOCS = {"MPA", "RPA", "LPA"}
 
+# Legacy coord-file key names → canonical hemodynamics key names.
+# Some older coord files use short names ("Fontan", "Conduit") while the
+# parser outputs the full canonical names ("Fontan_IVC_limb", "Fontan_conduit").
+# This mapping lets the annotator find the right hemodynamics data regardless.
+_COORD_KEY_ALIASES: dict[str, str] = {
+    "Fontan":    "Fontan_IVC_limb",
+    "Conduit":   "Fontan_conduit",
+    "IVC_limb":  "Fontan_IVC_limb",
+    "SVC_limb":  "Fontan_IVC_limb",   # some files use SVC_limb for the conduit entry
+}
+
 
 def _load_fonts():
     """Load Calibri regular 16pt; fall back to Arial then PIL default."""
@@ -434,6 +445,11 @@ def annotate_diagram(image_path: str, coords: dict, hemodynamics: dict,
 
     for loc_name, coord in coords["locations"].items():
         hemo = hemodynamics.get(loc_name, {})
+        # Fall back to canonical alias if the coord file uses a legacy key name
+        # (e.g. "Fontan" in coord file vs "Fontan_IVC_limb" in hemodynamics)
+        canonical = _COORD_KEY_ALIASES.get(loc_name, loc_name)
+        if not hemo and canonical != loc_name:
+            hemo = hemodynamics.get(canonical, {})
         if not hemo:
             continue
 
@@ -448,7 +464,8 @@ def annotate_diagram(image_path: str, coords: dict, hemodynamics: dict,
         # For mean-only locations, a single entered value is often stored as
         # systolic by the parser.  Promote it to mean before suppressing so
         # the overline rendering path receives a value to display.
-        if loc_name in _MEAN_ONLY_LOCS or (is_glenn_fontan and loc_name in _PA_LOCS):
+        # Use the canonical name so aliased keys (e.g. "Fontan") also hit this.
+        if canonical in _MEAN_ONLY_LOCS or (is_glenn_fontan and canonical in _PA_LOCS):
             if mean is None and systolic is not None:
                 mean = systolic   # treat lone value as mean
             systolic = None
