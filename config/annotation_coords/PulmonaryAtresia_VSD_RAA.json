@@ -1,0 +1,111 @@
+{
+  "diagram_id": "PulmonaryAtresia_VSD_RAA",
+  "image_width": 592,
+  "image_height": 596,
+  "auto_configured": true,
+  "locations": {
+    "SVC": {
+      "side": "right",
+      "annotation_type": "saturation",
+      "sat_x": 98,
+      "sat_y": 182
+    },
+    "IVC": {
+      "side": "right",
+      "annotation_type": "saturation",
+      "sat_x": 95,
+      "sat_y": 440
+    },
+    "RA": {
+      "side": "right",
+      "annotation_type": "saturation_and_pressure",
+      "sat_x": 149,
+      "sat_y": 299,
+      "pressure_x": 173,
+      "pressure_y": 337
+    },
+    "RV": {
+      "side": "right",
+      "annotation_type": "saturation_and_pressure",
+      "sat_x": 267,
+      "sat_y": 372,
+      "pressure_x": 295,
+      "pressure_y": 411
+    },
+    "RPCWP": {
+      "side": "left",
+      "annotation_type": "pcwp",
+      "pressure_x": 36,
+      "pressure_y": 201
+    },
+    "LPCWP": {
+      "side": "left",
+      "annotation_type": "pcwp",
+      "pressure_x": 454,
+      "pressure_y": 204
+    },
+    "LA": {
+      "side": "left",
+      "annotation_type": "saturation_and_pressure",
+      "sat_x": 301,
+      "sat_y": 219,
+      "pressure_x": 325,
+      "pressure_y": 255
+    },
+    "LV": {
+      "side": "left",
+      "annotation_type": "saturation_and_pressure",
+      "sat_x": 357,
+      "sat_y": 337,
+      "pressure_x": 397,
+      "pressure_y": 366
+    },
+    "Descending_Aorta": {
+      "side": "left",
+      "annotation_type": "saturation_and_pressure",
+      "sat_x": 305,
+      "sat_y": 483,
+      "pressure_x": 367,
+      "pressure_y": 485
+    },
+    "RUPV": {
+      "side": "left",
+      "annotation_type": "saturation_and_pressure",
+      "sat_x": 128,
+      "sat_y": 195,
+      "pressure_x": 53,
+      "pressure_y": 179
+    },
+    "LUPV": {
+      "side": "left",
+      "annotation_type": "saturation_and_pressure",
+      "sat_x": 361,
+      "sat_y": 206,
+      "pressure_x": 403,
+      "pressure_y": 197
+    },
+    "RLPV": {
+      "side": "left",
+      "annotation_type": "saturation_and_pressure",
+      "sat_x": 130,
+      "sat_y": 230,
+      "pressure_x": 53,
+      "pressure_y": 220
+    },
+    "LLPV": {
+      "side": "left",
+      "annotation_type": "saturation_and_pressure",
+      "sat_x": 374,
+      "sat_y": 240,
+      "pressure_x": 421,
+      "pressure_y": 235
+    },
+    "Ascending_aorta": {
+      "side": "right",
+      "annotation_type": "pressure_only",
+      "custom": true,
+      "pressure_x": 242,
+      "pressure_y": 202
+    }
+  }
+}

@@ -724,7 +724,7 @@
           "category_id": "PA_IVS_TGA",
           "anatomy_type": "biventricle",
           "location_set": "standard_biventricle",
-          "has_coords": false,
+          "has_coords": true,
           "coord_file": "config/annotation_coords/PulmonaryAtresia_VSD_RAA.json",
           "image_width": 592,
           "image_height": 596
@@ -750,7 +750,7 @@
           "category_id": "PA_IVS_TGA",
           "anatomy_type": "biventricle",
           "location_set": "standard_biventricle",
-          "has_coords": false,
+          "has_coords": true,
           "coord_file": "config/annotation_coords/Valvar_PS_-_isolated.json",
           "image_width": 729,
           "image_height": 515
@@ -822,7 +822,7 @@
           "category_id": "TOF",
           "anatomy_type": "biventricle",
           "location_set": "standard_biventricle",
-          "has_coords": false,
+          "has_coords": true,
           "coord_file": "config/annotation_coords/TOF_PA__RV-PA_conduit__VSD_patch.json",
           "image_width": 662,
           "image_height": 525
@@ -835,7 +835,7 @@
           "category_id": "TOF",
           "anatomy_type": "biventricle",
           "location_set": "standard_biventricle",
-          "has_coords": false,
+          "has_coords": true,
           "coord_file": "config/annotation_coords/TOF_sp_RVtoPAconduit_RAA.json",
           "image_width": 594,
           "image_height": 518
@@ -848,7 +848,7 @@
           "category_id": "TOF",
           "anatomy_type": "biventricle",
           "location_set": "standard_biventricle",
-          "has_coords": false,
+          "has_coords": true,
           "coord_file": "config/annotation_coords/TetralogyFallotPS_-_Repaired_-_LPA_Stenosis.json",
           "image_width": 662,
           "image_height": 525
@@ -874,7 +874,7 @@
           "category_id": "TOF",
           "anatomy_type": "biventricle",
           "location_set": "standard_biventricle",
-          "has_coords": false,
+          "has_coords": true,
           "coord_file": "config/annotation_coords/TetralogyFallotPS_-_Repaired_-_bilateral_PA_Stenosis.json",
           "image_width": 662,
           "image_height": 525
@@ -887,7 +887,7 @@
           "category_id": "TOF",
           "anatomy_type": "biventricle",
           "location_set": "standard_biventricle",
-          "has_coords": false,
+          "has_coords": true,
           "coord_file": "config/annotation_coords/TetralogyFallotPS_-_doublebarrel_RVOT.json",
           "image_width": 594,
           "image_height": 508
@@ -913,7 +913,7 @@
           "category_id": "TOF",
           "anatomy_type": "biventricle",
           "location_set": "standard_biventricle",
-          "has_coords": false,
+          "has_coords": true,
           "coord_file": "config/annotation_coords/TetralogyoFallot_PS_CentralShunt.json",
           "image_width": 690,
           "image_height": 519
@@ -926,7 +926,7 @@
           "category_id": "TOF",
           "anatomy_type": "biventricle",
           "location_set": "standard_biventricle",
-          "has_coords": false,
+          "has_coords": true,
           "coord_file": "config/annotation_coords/TetralogyoFallot_PS_waterstonShunt.json",
           "image_width": 692,
           "image_height": 510
@@ -965,7 +965,7 @@
           "category_id": "TOF",
           "anatomy_type": "biventricle",
           "location_set": "standard_biventricle",
-          "has_coords": false,
+          "has_coords": true,
           "coord_file": "config/annotation_coords/ToF__PA_status_post_BT_Shunt.json",
           "image_width": 564,
           "image_height": 501
@@ -978,7 +978,7 @@
           "category_id": "TOF",
           "anatomy_type": "biventricle",
           "location_set": "standard_biventricle",
-          "has_coords": false,
+          "has_coords": true,
           "coord_file": "config/annotation_coords/ToF__PA.json",
           "image_width": 635,
           "image_height": 501
@@ -991,7 +991,7 @@
           "category_id": "TOF",
           "anatomy_type": "biventricle",
           "location_set": "standard_biventricle",
-          "has_coords": false,
+          "has_coords": true,
           "coord_file": "config/annotation_coords/ToF__PS__RAA_with_MIB.json",
           "image_width": 608,
           "image_height": 505
@@ -1024,7 +1024,7 @@
           "category_id": "DTGA",
           "anatomy_type": "biventricle",
           "location_set": "standard_biventricle",
-          "has_coords": false,
+          "has_coords": true,
           "coord_file": "config/annotation_coords/Dextrocardia_TGA_IVS__S_D_D_.json",
           "image_width": 555,
           "image_height": 541
@@ -1050,7 +1050,7 @@
           "category_id": "DTGA",
           "anatomy_type": "biventricle",
           "location_set": "standard_biventricle",
-          "has_coords": false,
+          "has_coords": true,
           "coord_file": "config/annotation_coords/TGA__IVS___S_L_L_.json",
           "image_width": 510,
           "image_height": 504
@@ -1063,7 +1063,7 @@
           "category_id": "DTGA",
           "anatomy_type": "biventricle",
           "location_set": "standard_biventricle",
-          "has_coords": false,
+          "has_coords": true,
           "coord_file": "config/annotation_coords/TGA__VSD_PABand.json",
           "image_width": 653,
           "image_height": 558
@@ -1076,7 +1076,7 @@
           "category_id": "DTGA",
           "anatomy_type": "biventricle",
           "location_set": "standard_biventricle",
-          "has_coords": false,
+          "has_coords": true,
           "coord_file": "config/annotation_coords/TGA_IVS_sp_ArterialSwitch.json",
           "image_width": 637,
           "image_height": 526
@@ -1135,7 +1135,7 @@
           "category_id": "DORV",
           "anatomy_type": "biventricle",
           "location_set": "standard_biventricle",
-          "has_coords": false,
+          "has_coords": true,
           "coord_file": "config/annotation_coords/DORV_SubpulmonicVSD_PA.json",
           "image_width": 652,
           "image_height": 522
@@ -1148,7 +1148,7 @@
           "category_id": "DORV",
           "anatomy_type": "biventricle",
           "location_set": "standard_biventricle",
-          "has_coords": false,
+          "has_coords": true,
           "coord_file": "config/annotation_coords/DORV_SubpulmonicVSD_PS_RAA.json",
           "image_width": 637,
           "image_height": 533
@@ -1181,7 +1181,7 @@
           "category_id": "Tricuspid_Atresia",
           "anatomy_type": "post_fontan",
           "location_set": "post_fontan",
-          "has_coords": false,
+          "has_coords": true,
           "coord_file": "config/annotation_coords/Tri_Atresia_NRGA_-_ECFF.json",
           "image_width": 662,
           "image_height": 525
@@ -1194,7 +1194,7 @@
           "category_id": "Tricuspid_Atresia",
           "anatomy_type": "biventricle",
           "location_set": "standard_biventricle",
-          "has_coords": false,
+          "has_coords": true,
           "coord_file": "config/annotation_coords/Tri_Atresia_NRGA.json",
           "image_width": 662,
           "image_height": 525
@@ -1227,7 +1227,7 @@
           "category_id": "Ebsteins",
           "anatomy_type": "biventricle",
           "location_set": "standard_biventricle",
-          "has_coords": false,
+          "has_coords": true,
           "coord_file": "config/annotation_coords/Ebsteins.json",
           "image_width": 556,
           "image_height": 501
@@ -1240,7 +1240,7 @@
           "category_id": "Ebsteins",
           "anatomy_type": "biventricle",
           "location_set": "standard_biventricle",
-          "has_coords": false,
+          "has_coords": true,
           "coord_file": "config/annotation_coords/EbsteinsVSD.json",
           "image_width": 606,
           "image_height": 514
@@ -1253,7 +1253,7 @@
           "category_id": "Ebsteins",
           "anatomy_type": "post_fontan",
           "location_set": "post_fontan",
-          "has_coords": false,
+          "has_coords": true,
           "coord_file": "config/annotation_coords/Severe_Ebstein_s_Starnes_EC_Fontan.json",
           "image_width": 619,
           "image_height": 532
@@ -1273,7 +1273,7 @@
           "category_id": "Truncus_Arteriosus",
           "anatomy_type": "biventricle",
           "location_set": "standard_biventricle",
-          "has_coords": false,
+          "has_coords": true,
           "coord_file": "config/annotation_coords/Truncus_Arteriosus.json",
           "image_width": 646,
           "image_height": 605
@@ -1286,7 +1286,7 @@
           "category_id": "Truncus_Arteriosus",
           "anatomy_type": "biventricle",
           "location_set": "standard_biventricle",
-          "has_coords": false,
+          "has_coords": true,
           "coord_file": "config/annotation_coords/Truncus_with_RAA.json",
           "image_width": 656,
           "image_height": 566
@@ -1299,7 +1299,7 @@
           "category_id": "Truncus_Arteriosus",
           "anatomy_type": "biventricle",
           "location_set": "standard_biventricle",
-          "has_coords": false,
+          "has_coords": true,
           "coord_file": "config/annotation_coords/TruncusArteriosus_typeI_LAA.json",
           "image_width": 809,
           "image_height": 638
@@ -1312,7 +1312,7 @@
           "category_id": "Truncus_Arteriosus",
           "anatomy_type": "biventricle",
           "location_set": "standard_biventricle",
-          "has_coords": false,
+          "has_coords": true,
           "coord_file": "config/annotation_coords/TruncusArteriosus_typeI_RAA.json",
           "image_width": 809,
           "image_height": 638
@@ -1358,7 +1358,7 @@
           "category_id": "HLHS_MA_AA",
           "anatomy_type": "post_fontan",
           "location_set": "post_fontan",
-          "has_coords": false,
+          "has_coords": true,
           "coord_file": "config/annotation_coords/HLHS__MA__AA_status_post_Stage_1_with_Fontan.json",
           "image_width": 662,
           "image_height": 525
