@@ -1821,7 +1821,7 @@
           "category_id": "DILV_Single_Ventricle",
           "anatomy_type": "biventricle",
           "location_set": "standard_biventricle",
-          "has_coords": false,
+          "has_coords": true,
           "coord_file": "config/annotation_coords/DILV__S_D_S__Holmes_Heart_ECF.json",
           "image_width": 662,
           "image_height": 518
