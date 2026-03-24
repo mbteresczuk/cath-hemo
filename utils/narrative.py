@@ -553,7 +553,11 @@ def generate_hemodynamic_narrative(hemodynamics, calculations, patient_data, ste
                 if desc_ao_sys is not None:
                     desc_str = _fmt_press(desc_ao_sys, desc_ao_dia, desc_ao_mean)
                     if desc_str:
-                        lv_s += f" and descending aorta pressure of {desc_str} mmHg"
+                        coarc_diff = int(round(asc_sys - desc_ao_sys))
+                        if coarc_diff > 0:
+                            lv_s += f" with a {coarc_diff} mmHg gradient to descending aorta pressure of {desc_str} mmHg"
+                        else:
+                            lv_s += f" and descending aorta pressure of {desc_str} mmHg"
         elif desc_ao_sys is not None:
             av_grad = _grad_str(lv_sys, desc_ao_sys)
             desc_str = _fmt_press(desc_ao_sys, desc_ao_dia, desc_ao_mean)
@@ -576,7 +580,19 @@ def generate_hemodynamic_narrative(hemodynamics, calculations, patient_data, ste
     if lv_sys is None and lv_dia is None and desc_ao_sys is not None:
         desc_str = _fmt_press(desc_ao_sys, desc_ao_dia, desc_ao_mean)
         if desc_str:
-            pres_sentences.append(f"Descending aorta pressure was {desc_str} mmHg.")
+            asc_sys = asc_ao_sys or neoao_sys
+            if asc_sys is not None:
+                # Ascending already reported above; add coarctation gradient here
+                coarc_diff = int(round(asc_sys - desc_ao_sys))
+                if coarc_diff > 0:
+                    pres_sentences.append(
+                        f"There was a {coarc_diff} mmHg gradient from ascending to "
+                        f"descending aorta pressure of {desc_str} mmHg."
+                    )
+                else:
+                    pres_sentences.append(f"Descending aorta pressure was {desc_str} mmHg.")
+            else:
+                pres_sentences.append(f"Descending aorta pressure was {desc_str} mmHg.")
 
     # --- Glenn and Fontan circuit pressures ---
     # Use _mean_or_sys to capture single values stored as systolic by the parser.
