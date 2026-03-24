@@ -46,7 +46,7 @@ from utils.diagram_library import (
 from utils.hemodynamics import calculate_all, detect_step_ups
 from utils.matcher import match_diagrams
 from utils.narrative import generate_hemodynamic_narrative
-from utils.parser import parse_hemodynamics
+from utils.parser import parse_hemodynamics, parse_metadata
 
 from api.ocr_service import extract_hemo_from_image
 
@@ -227,12 +227,15 @@ def generate_report(req: ReportRequest):
     )
 
     # --- Patient data dict (matches what app.py builds) ---
+    # If hgb/avo2 were not supplied as patient defaults, try extracting them
+    # from the hemodynamic text (user may type "HGB 12.5" or "AVO2 130").
+    meta = parse_metadata(req.hemo_text)
     patient_data = {
         "name": req.patient_data.name,
         "mrn": req.patient_data.mrn,
         "dob": req.patient_data.dob,
-        "hgb": req.patient_data.hgb,
-        "avo2": req.patient_data.avo2,
+        "hgb":  req.patient_data.hgb  if req.patient_data.hgb  is not None else meta.get("hgb"),
+        "avo2": req.patient_data.avo2 if req.patient_data.avo2 is not None else meta.get("avo2"),
         "anesthesia": req.patient_data.anesthesia,
         "fio2": req.patient_data.fio2,
         "anatomy_type": req.patient_data.anatomy_type or diagram.get("anatomy_type", "biventricle"),

@@ -334,32 +334,54 @@ def generate_hemodynamic_narrative(hemodynamics, calculations, patient_data, ste
     if rv_sys is not None:
         rv_s = f"The RV systolic pressure was {int(rv_sys)} mmHg"
 
-        # RVOT gradient: RV systolic − PA systolic
-        pa_sys_for_rvot = rpa_sys or mpa_sys or lpa_sys
+        # RVOT gradient: RV systolic − PA systolic (only report named severity)
+        pa_sys_for_rvot = mpa_sys or rpa_sys or lpa_sys
         if pa_sys_for_rvot is not None:
             rvot_grad = int(round(rv_sys - pa_sys_for_rvot))
             severity = _rvot_severity(rvot_grad)
             if severity:
                 rv_s += f" with a {severity} RVOT gradient of {rvot_grad} mmHg"
-            elif rvot_grad > 0:
-                rv_s += f" with a {rvot_grad} mmHg gradient to the PA"
 
-        # Gradient to branch PAs
-        if rpa_sys is not None or rpa_mean is not None:
+        # Gradient flow: RV → MPA → branch PAs (when MPA present)
+        if mpa_sys is not None or mpa_mean is not None:
+            mpa_str  = _fmt_press(mpa_sys, mpa_dia, mpa_mean)
+            mpa_grad = _grad_str(rv_sys, mpa_sys)
+            if mpa_str:
+                if mpa_grad:
+                    rv_s += f" with {mpa_grad} to MPA pressure {mpa_str} mmHg"
+                else:
+                    rv_s += f" with MPA pressure {mpa_str} mmHg"
+            # Branch PA gradients measured from MPA when MPA is present
+            mpa_ref = mpa_sys or mpa_mean
+            if rpa_sys is not None or rpa_mean is not None:
+                rpa_str = _fmt_press(rpa_sys, rpa_dia, rpa_mean)
+                if rpa_str:
+                    rpa_compare = rpa_sys if rpa_sys is not None else rpa_mean
+                    rpa_diff = int(round(mpa_ref - rpa_compare)) if mpa_ref is not None else 0
+                    if rpa_diff > 0:
+                        rv_s += f" and a further {rpa_diff} mmHg gradient to RPA pressure {rpa_str} mmHg"
+                    else:
+                        rv_s += f" and RPA pressure {rpa_str} mmHg"
+            if lpa_sys is not None or lpa_mean is not None:
+                lpa_str = _fmt_press(lpa_sys, lpa_dia, lpa_mean)
+                if lpa_str:
+                    lpa_compare = lpa_sys if lpa_sys is not None else lpa_mean
+                    lpa_diff = int(round(mpa_ref - lpa_compare)) if mpa_ref is not None else 0
+                    if lpa_diff > 0:
+                        rv_s += f" and {lpa_diff} mmHg gradient to LPA pressure {lpa_str} mmHg"
+                    else:
+                        rv_s += f" and LPA pressure {lpa_str} mmHg"
+        elif rpa_sys is not None or rpa_mean is not None:
+            # No MPA — report branch PA gradients directly from RV
             rpa_str  = _fmt_press(rpa_sys, rpa_dia, rpa_mean)
             rpa_grad = _grad_str(rv_sys, rpa_sys)
             if rpa_str and rpa_grad:
                 rv_s += f" with {rpa_grad} to RPA pressure {rpa_str} mmHg"
-                if lpa_sys is not None or lpa_mean is not None:
-                    lpa_str  = _fmt_press(lpa_sys, lpa_dia, lpa_mean)
-                    lpa_grad = _grad_str(rv_sys, lpa_sys)
-                    if lpa_str and lpa_grad:
-                        rv_s += f" and {lpa_grad} to LPA pressure {lpa_str} mmHg"
-        elif mpa_sys is not None or mpa_mean is not None:
-            mpa_str  = _fmt_press(mpa_sys, mpa_dia, mpa_mean)
-            mpa_grad = _grad_str(rv_sys, mpa_sys)
-            if mpa_str and mpa_grad:
-                rv_s += f" with {mpa_grad} to MPA pressure {mpa_str} mmHg"
+            if lpa_sys is not None or lpa_mean is not None:
+                lpa_str  = _fmt_press(lpa_sys, lpa_dia, lpa_mean)
+                lpa_grad = _grad_str(rv_sys, lpa_sys)
+                if lpa_str and lpa_grad:
+                    rv_s += f" and {lpa_grad} to LPA pressure {lpa_str} mmHg"
 
         rv_s += "."
         pres_sentences.append(rv_s)
@@ -387,41 +409,67 @@ def generate_hemodynamic_narrative(hemodynamics, calculations, patient_data, ste
                     "Pulmonary artery pressures were: " + " and ".join(pa_parts) + "."
                 )
 
-    # --- RPCWP ---
+    # --- RPCWP and LPCWP with transpulmonary gradients ---
     rpcwp_sys  = _p("RPCWP", "systolic", hemodynamics)
     rpcwp_dia  = _p("RPCWP", "diastolic", hemodynamics)
     rpcwp_mean = _p("RPCWP", "mean", hemodynamics)
-    if rpcwp_sys is not None or rpcwp_mean is not None:
-        s = _fmt_press(rpcwp_sys, rpcwp_dia, rpcwp_mean)
-        if s:
-            pres_sentences.append(f"The right pulmonary capillary wedge pressure was {s} mmHg.")
 
-    # --- LPCWP with transpulmonary gradient ---
     lpcwp_sys  = _p("LPCWP", "systolic", hemodynamics)
     lpcwp_dia  = _p("LPCWP", "diastolic", hemodynamics)
     lpcwp_mean = _p("LPCWP", "mean", hemodynamics)
+
+    # Resolve available PA mean for fallback TPG calculation
+    pa_mean_for_tpg = mpa_mean or rpa_mean or lpa_mean
+
+    # Pre-compute right and left TPG (use calculations values when available)
+    rtpg = calculations.get("rtpg")
+    ltpg = calculations.get("ltpg")
+    tpg  = calculations.get("tpg")
+
+    # Fallback: derive from PA mean if hemodynamics.py couldn't calculate
+    if rtpg is None and rpcwp_mean is not None and pa_mean_for_tpg is not None:
+        rtpg = pa_mean_for_tpg - rpcwp_mean
+    if ltpg is None and lpcwp_mean is not None and pa_mean_for_tpg is not None:
+        ltpg = pa_mean_for_tpg - lpcwp_mean
+
+    # Determine whether we have both sides (use directional labels) or just one
+    both_sides = (rpcwp_sys is not None or rpcwp_mean is not None) and (
+        lpcwp_sys is not None or lpcwp_mean is not None
+    )
+
+    # RPCWP sentence with right TPG
+    if rpcwp_sys is not None or rpcwp_mean is not None:
+        s = _fmt_press(rpcwp_sys, rpcwp_dia, rpcwp_mean)
+        if s:
+            tpg_val = rtpg if rtpg is not None else (tpg if not both_sides else None)
+            if tpg_val is not None:
+                label = "right transpulmonary gradient" if both_sides else "transpulmonary gradient"
+                tpg_desc = _tpg_level(tpg_val)
+                pres_sentences.append(
+                    f"The right pulmonary capillary wedge pressure was {s} mmHg, "
+                    f"yielding a {label} of {int(round(tpg_val))} mmHg ({tpg_desc})."
+                )
+            else:
+                pres_sentences.append(
+                    f"The right pulmonary capillary wedge pressure was {s} mmHg."
+                )
+
+    # LPCWP sentence with left TPG
     if lpcwp_sys is not None or lpcwp_mean is not None:
         s = _fmt_press(lpcwp_sys, lpcwp_dia, lpcwp_mean)
         if s:
-            tpg = calculations.get("tpg")
-            if tpg is not None:
-                tpg_desc = _tpg_level(tpg)
+            tpg_val = ltpg if ltpg is not None else (tpg if not both_sides else None)
+            if tpg_val is not None:
+                label = "left transpulmonary gradient" if both_sides else "transpulmonary gradient"
+                tpg_desc = _tpg_level(tpg_val)
                 pres_sentences.append(
                     f"The left pulmonary capillary wedge pressure was {s} mmHg, "
-                    f"yielding a transpulmonary gradient of {int(round(tpg))} mmHg ({tpg_desc})."
+                    f"yielding a {label} of {int(round(tpg_val))} mmHg ({tpg_desc})."
                 )
             else:
                 pres_sentences.append(
                     f"The left pulmonary capillary wedge pressure was {s} mmHg."
                 )
-    elif rpcwp_sys is not None or rpcwp_mean is not None:
-        # Only RPCWP present — still report TPG if calculable
-        tpg = calculations.get("tpg")
-        if tpg is not None:
-            tpg_desc = _tpg_level(tpg)
-            pres_sentences.append(
-                f"The transpulmonary gradient was {int(round(tpg))} mmHg ({tpg_desc})."
-            )
 
     # --- LA pressure ---
     la_sys  = _p("LA", "systolic", hemodynamics)

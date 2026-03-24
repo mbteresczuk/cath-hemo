@@ -386,3 +386,43 @@ def format_parsed_for_display(parsed: dict) -> str:
                     parts.append(f"mean {int(d['mean'])}")
             lines.append(f"  {loc:<20} {' | '.join(parts)}")
     return "\n".join(lines) if lines else "  (nothing parsed yet)"
+
+
+# ---------------------------------------------------------------------------
+# Metadata extraction: HGB and aVO2 from free-text
+# ---------------------------------------------------------------------------
+
+_META_PATTERNS = {
+    # Hemoglobin
+    "hgb": re.compile(
+        r'(?:^|[\s,;])'
+        r'(?:HGB|HB|HEMOGLOBIN|HAEMOGLOBIN|HGBCONC)'
+        r'[\s:=]*'
+        r'(\d+\.?\d*)',
+        re.IGNORECASE | re.MULTILINE,
+    ),
+    # Assumed AV O2 difference (indexed VO2 / assumed content difference)
+    "avo2": re.compile(
+        r'(?:^|[\s,;])'
+        r'(?:AVO2|AVDO2|AV ?O2|A-?VO2|A-?V ?O2 ?DIFF(?:ERENCE)?|ASSUMED ?VO2|VO2)'
+        r'[\s:=]*'
+        r'(\d+\.?\d*)',
+        re.IGNORECASE | re.MULTILINE,
+    ),
+}
+
+
+def parse_metadata(text: str) -> dict:
+    """
+    Extract non-hemodynamic metadata from free text.
+
+    Returns a dict with any of:
+      { "hgb": float, "avo2": float }
+    Only keys that were found are included.
+    """
+    result = {}
+    for key, pattern in _META_PATTERNS.items():
+        m = pattern.search(text)
+        if m:
+            result[key] = float(m.group(1))
+    return result

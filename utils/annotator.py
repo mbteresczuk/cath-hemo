@@ -72,15 +72,19 @@ _MEAN_ONLY_LOCS = {
 _GLENN_FONTAN_ANATOMY = {"post_glenn", "post_fontan"}
 _PA_LOCS = {"MPA", "RPA", "LPA"}
 
-# Legacy coord-file key names → canonical hemodynamics key names.
-# Some older coord files use short names ("Fontan", "Conduit") while the
-# parser outputs the full canonical names ("Fontan_IVC_limb", "Fontan_conduit").
-# This mapping lets the annotator find the right hemodynamics data regardless.
-_COORD_KEY_ALIASES: dict[str, str] = {
-    "Fontan":    "Fontan_IVC_limb",
-    "Conduit":   "Fontan_conduit",
-    "IVC_limb":  "Fontan_IVC_limb",
-    "SVC_limb":  "Fontan_IVC_limb",   # some files use SVC_limb for the conduit entry
+# Coord files often use non-canonical key names.  Map them to the canonical
+# names used by the parser and hemodynamics dict so annotations render.
+_COORD_KEY_ALIASES = {
+    # Ascending aorta variants
+    "Ascending_aorta": "Ascending_Aorta",
+    "ascending_aorta": "Ascending_Aorta",
+    "Ascending":       "Ascending_Aorta",
+    "ascending":       "Ascending_Aorta",
+    # Fontan circuit variants
+    "Fontan":          "Fontan_IVC_limb",
+    "Conduit":         "Fontan_conduit",
+    "IVC_limb":        "Fontan_IVC_limb",
+    "SVC_limb":        "Fontan_IVC_limb",
 }
 
 
@@ -444,12 +448,8 @@ def annotate_diagram(image_path: str, coords: dict, hemodynamics: dict,
     is_glenn_fontan = anatomy_type in _GLENN_FONTAN_ANATOMY
 
     for loc_name, coord in coords["locations"].items():
-        hemo = hemodynamics.get(loc_name, {})
-        # Fall back to canonical alias if the coord file uses a legacy key name
-        # (e.g. "Fontan" in coord file vs "Fontan_IVC_limb" in hemodynamics)
         canonical = _COORD_KEY_ALIASES.get(loc_name, loc_name)
-        if not hemo and canonical != loc_name:
-            hemo = hemodynamics.get(canonical, {})
+        hemo = hemodynamics.get(canonical, {})
         if not hemo:
             continue
 
