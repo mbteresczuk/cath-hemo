@@ -67,6 +67,19 @@ _MEAN_ONLY_LOCS = {
 _GLENN_FONTAN_ANATOMY = {"post_glenn", "post_fontan"}
 _PA_LOCS = {"MPA", "RPA", "LPA"}
 
+# Coord files often use non-canonical key names.  Map them to the canonical
+# names used by the parser and hemodynamics dict so annotations render.
+_COORD_KEY_ALIASES = {
+    # Ascending aorta variants
+    "Ascending_aorta": "Ascending_Aorta",
+    "ascending_aorta": "Ascending_Aorta",
+    "Ascending":       "Ascending_Aorta",
+    "ascending":       "Ascending_Aorta",
+    # Fontan circuit variants
+    "Fontan":          "Fontan_IVC_limb",
+    "Conduit":         "Fontan_conduit",
+}
+
 
 def _load_fonts():
     """Load Calibri regular 16pt; fall back to Arial then PIL default."""
@@ -428,7 +441,8 @@ def annotate_diagram(image_path: str, coords: dict, hemodynamics: dict,
     is_glenn_fontan = anatomy_type in _GLENN_FONTAN_ANATOMY
 
     for loc_name, coord in coords["locations"].items():
-        hemo = hemodynamics.get(loc_name, {})
+        canonical = _COORD_KEY_ALIASES.get(loc_name, loc_name)
+        hemo = hemodynamics.get(canonical, {})
         if not hemo:
             continue
 
