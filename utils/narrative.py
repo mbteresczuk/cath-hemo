@@ -334,13 +334,17 @@ def generate_hemodynamic_narrative(hemodynamics, calculations, patient_data, ste
     if rv_sys is not None:
         rv_s = f"The RV systolic pressure was {int(rv_sys)} mmHg"
 
-        # RVOT gradient: RV systolic − PA systolic (only report named severity)
-        pa_sys_for_rvot = mpa_sys or rpa_sys or lpa_sys
-        if pa_sys_for_rvot is not None:
-            rvot_grad = int(round(rv_sys - pa_sys_for_rvot))
-            severity = _rvot_severity(rvot_grad)
-            if severity:
-                rv_s += f" with a {severity} RVOT gradient of {rvot_grad} mmHg"
+        # RVOT gradient severity (only when no MPA — when MPA present the
+        # RV→MPA gradient below already conveys the outflow gradient)
+        rvot_severity_reported = False
+        if mpa_sys is None and mpa_mean is None:
+            pa_sys_for_rvot = rpa_sys or lpa_sys
+            if pa_sys_for_rvot is not None:
+                rvot_grad = int(round(rv_sys - pa_sys_for_rvot))
+                severity = _rvot_severity(rvot_grad)
+                if severity:
+                    rv_s += f" with a {severity} RVOT gradient of {rvot_grad} mmHg"
+                    rvot_severity_reported = True
 
         # Gradient flow: RV → MPA → branch PAs (when MPA present)
         if mpa_sys is not None or mpa_mean is not None:
@@ -351,7 +355,7 @@ def generate_hemodynamic_narrative(hemodynamics, calculations, patient_data, ste
                     rv_s += f" with {mpa_grad} to MPA pressure {mpa_str} mmHg"
                 else:
                     rv_s += f" with MPA pressure {mpa_str} mmHg"
-            # Branch PA gradients measured from MPA when MPA is present
+            # Branch PA gradients measured from MPA
             mpa_ref = mpa_sys or mpa_mean
             if rpa_sys is not None or rpa_mean is not None:
                 rpa_str = _fmt_press(rpa_sys, rpa_dia, rpa_mean)
@@ -371,17 +375,26 @@ def generate_hemodynamic_narrative(hemodynamics, calculations, patient_data, ste
                         rv_s += f" and {lpa_diff} mmHg gradient to LPA pressure {lpa_str} mmHg"
                     else:
                         rv_s += f" and LPA pressure {lpa_str} mmHg"
+
         elif rpa_sys is not None or rpa_mean is not None:
-            # No MPA — report branch PA gradients directly from RV
-            rpa_str  = _fmt_press(rpa_sys, rpa_dia, rpa_mean)
-            rpa_grad = _grad_str(rv_sys, rpa_sys)
-            if rpa_str and rpa_grad:
-                rv_s += f" with {rpa_grad} to RPA pressure {rpa_str} mmHg"
+            # No MPA — RV → RPA and RV → LPA gradients
+            rpa_str = _fmt_press(rpa_sys, rpa_dia, rpa_mean)
+            if rpa_str:
+                if rvot_severity_reported:
+                    # RVOT severity already stated using RPA as reference — just append pressure
+                    rv_s += f" to RPA pressure {rpa_str} mmHg"
+                else:
+                    rpa_grad = _grad_str(rv_sys, rpa_sys)
+                    if rpa_grad:
+                        rv_s += f" with {rpa_grad} to RPA pressure {rpa_str} mmHg"
             if lpa_sys is not None or lpa_mean is not None:
-                lpa_str  = _fmt_press(lpa_sys, lpa_dia, lpa_mean)
-                lpa_grad = _grad_str(rv_sys, lpa_sys)
-                if lpa_str and lpa_grad:
-                    rv_s += f" and {lpa_grad} to LPA pressure {lpa_str} mmHg"
+                lpa_str = _fmt_press(lpa_sys, lpa_dia, lpa_mean)
+                if lpa_str:
+                    lpa_diff = int(round(rv_sys - (lpa_sys or lpa_mean)))
+                    if lpa_diff > 0:
+                        rv_s += f" and a {lpa_diff} mmHg gradient to LPA pressure {lpa_str} mmHg"
+                    else:
+                        rv_s += f" and LPA pressure {lpa_str} mmHg"
 
         rv_s += "."
         pres_sentences.append(rv_s)
