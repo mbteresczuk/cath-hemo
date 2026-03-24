@@ -174,10 +174,16 @@ def calculate_all(hemodynamics, patient_data):
     if pvri is not None and svri and svri > 0:
         rp_rs = pvri / svri
 
-    # Transpulmonary gradient
+    # Transpulmonary gradients (right, left, and combined)
     tpg = None
+    rtpg = None
+    ltpg = None
     if mean_mpa is not None and mean_pcwp is not None:
         tpg = mean_mpa - mean_pcwp
+    if mean_mpa is not None and mean_rpcwp is not None:
+        rtpg = mean_mpa - mean_rpcwp
+    if mean_mpa is not None and mean_lpcwp is not None:
+        ltpg = mean_mpa - mean_lpcwp
 
     return {
         "mixed_venous_sat": round(mv_sat, 1) if mv_sat else None,
@@ -188,6 +194,8 @@ def calculate_all(hemodynamics, patient_data):
         "svri": round(svri, 2) if svri is not None else None,
         "rp_rs": round(rp_rs, 3) if rp_rs is not None else None,
         "tpg": round(tpg, 1) if tpg is not None else None,
+        "rtpg": round(rtpg, 1) if rtpg is not None else None,
+        "ltpg": round(ltpg, 1) if ltpg is not None else None,
         "mean_pcwp": round(mean_pcwp, 1) if mean_pcwp is not None else None,
         "method": "fick",
         "warnings": warnings,
