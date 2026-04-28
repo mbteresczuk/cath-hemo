@@ -13,6 +13,7 @@ from utils.coordinator import load_coords
 from utils.annotator import (
     annotate_diagram,
     image_to_bytes, pil_to_bytes, safe_open_image,
+    build_share_image,
 )
 from utils.hemodynamics import calculate_all, detect_step_ups
 from utils.narrative import generate_hemodynamic_narrative
@@ -41,6 +42,7 @@ _defaults = {
     "step_ups": [],
     "narrative": "",
     "annotated_image": None,
+    "share_image": None,
     "docx_bytes": None,
 }
 for k, v in _defaults.items():
@@ -67,36 +69,30 @@ st.markdown("---")
 # ═══════════════════════════════════════════════════════════════════════════
 # STEP 1: Diagnosis + Diagram  |  STEP 2: Hemodynamic Entry
 # ═══════════════════════════════════════════════════════════════════════════
+
+# Locate the blank normal diagram for quick-start option
+_blank_matches = match_diagrams("Normal", library, top_n=5)
+_blank_diag = next(
+    (d for d in _blank_matches if d.get("id") == "Normal"),
+    _blank_matches[0] if _blank_matches else None,
+)
+
 col_diag, col_hemo = st.columns([1, 1], gap="large")
 
 with col_diag:
     st.subheader("1. Diagnosis & Anatomy")
-    diagnosis_input = st.text_input(
-        "Type the diagnosis:",
-        placeholder="e.g.  TOF   |   HLHS s/p Norwood   |   ASD with LSVC",
-        key="diagnosis_input",
+
+    _use_blank = st.checkbox(
+        "Use blank normal diagram",
+        key="use_blank_diagram",
+        help="Skip diagnosis search and start with a blank normal heart diagram",
     )
 
-    if diagnosis_input:
-        matches = match_diagrams(diagnosis_input, library, top_n=12)
-        st.session_state.matched_diagrams = matches
-    else:
-        matches = st.session_state.matched_diagrams
-
     chosen_diag = None
-    if matches:
-        st.markdown("**Best matching diagrams:**")
-        options = [m["display_name"] for m in matches]
-        choice = st.radio(
-            "Select anatomy:",
-            options,
-            index=0,
-            key="diagram_choice",
-            label_visibility="collapsed",
-        )
-        chosen_diag = next((m for m in matches if m["display_name"] == choice), matches[0])
-        st.session_state.selected_diagram = chosen_diag
 
+    if _use_blank and _blank_diag:
+        chosen_diag = _blank_diag
+        st.session_state.selected_diagram = chosen_diag
         img_path = BASE_DIR / chosen_diag["path"]
         try:
             thumb = safe_open_image(img_path)
@@ -105,46 +101,80 @@ with col_diag:
                      use_container_width=True)
         except Exception:
             st.warning("Could not load diagram image.")
-
-        if not chosen_diag.get("has_coords"):
-            st.warning(
-                "⚠️ Annotation positions not set up for this diagram. "
-                "The diagram will show without annotations."
-            )
-            if st.button("⚙️ Set up annotation positions", use_container_width=True):
-                st.session_state["setup_target_diagram"] = chosen_diag["id"]
-                st.switch_page("pages/4_Setup_Coordinates.py")
-
-        # ── Delete diagram ────────────────────────────────────────────────────
-        _del_key = f"_del_armed_{chosen_diag['id']}"
-        if st.button("🗑️ Delete diagram", use_container_width=True, key="del_diag_btn"):
-            st.session_state[_del_key] = True
-
-        if st.session_state.get(_del_key):
-            st.warning(
-                f"⚠️ Permanently delete **{chosen_diag['display_name']}** "
-                "and all its annotation positions? This cannot be undone."
-            )
-            _dc1, _dc2 = st.columns(2)
-            with _dc1:
-                if st.button("✅ Yes, delete", type="primary",
-                             use_container_width=True, key="confirm_del_btn"):
-                    delete_diagram(chosen_diag)
-                    for _k in ["library", "selected_diagram", "annotated_image",
-                               "matched_diagrams", "hemodynamics", "calculations",
-                               "narrative", "step_ups", "docx_bytes"]:
-                        st.session_state[_k] = None
-                    st.session_state.matched_diagrams = []
-                    st.session_state.pop(_del_key, None)
-                    st.rerun()
-            with _dc2:
-                if st.button("Cancel", use_container_width=True, key="cancel_del_btn"):
-                    st.session_state.pop(_del_key, None)
-                    st.rerun()
     else:
+        diagnosis_input = st.text_input(
+            "Type the diagnosis:",
+            placeholder="e.g.  TOF   |   HLHS s/p Norwood   |   ASD with LSVC",
+            key="diagnosis_input",
+        )
+
         if diagnosis_input:
-            st.info("No matching diagrams found. Try different keywords.")
-        st.session_state.selected_diagram = None
+            matches = match_diagrams(diagnosis_input, library, top_n=12)
+            st.session_state.matched_diagrams = matches
+        else:
+            matches = st.session_state.matched_diagrams
+
+        if matches:
+            st.markdown("**Best matching diagrams:**")
+            options = [m["display_name"] for m in matches]
+            choice = st.radio(
+                "Select anatomy:",
+                options,
+                index=0,
+                key="diagram_choice",
+                label_visibility="collapsed",
+            )
+            chosen_diag = next((m for m in matches if m["display_name"] == choice), matches[0])
+            st.session_state.selected_diagram = chosen_diag
+
+            img_path = BASE_DIR / chosen_diag["path"]
+            try:
+                thumb = safe_open_image(img_path)
+                thumb.thumbnail((400, 340), Image.LANCZOS)
+                st.image(thumb.convert("RGB"), caption=chosen_diag["display_name"],
+                         use_container_width=True)
+            except Exception:
+                st.warning("Could not load diagram image.")
+
+            if not chosen_diag.get("has_coords"):
+                st.warning(
+                    "⚠️ Annotation positions not set up for this diagram. "
+                    "The diagram will show without annotations."
+                )
+                if st.button("⚙️ Set up annotation positions", use_container_width=True):
+                    st.session_state["setup_target_diagram"] = chosen_diag["id"]
+                    st.switch_page("pages/4_Setup_Coordinates.py")
+
+            # ── Delete diagram ────────────────────────────────────────────────────
+            _del_key = f"_del_armed_{chosen_diag['id']}"
+            if st.button("🗑️ Delete diagram", use_container_width=True, key="del_diag_btn"):
+                st.session_state[_del_key] = True
+
+            if st.session_state.get(_del_key):
+                st.warning(
+                    f"⚠️ Permanently delete **{chosen_diag['display_name']}** "
+                    "and all its annotation positions? This cannot be undone."
+                )
+                _dc1, _dc2 = st.columns(2)
+                with _dc1:
+                    if st.button("✅ Yes, delete", type="primary",
+                                 use_container_width=True, key="confirm_del_btn"):
+                        delete_diagram(chosen_diag)
+                        for _k in ["library", "selected_diagram", "annotated_image",
+                                   "matched_diagrams", "hemodynamics", "calculations",
+                                   "narrative", "step_ups", "docx_bytes"]:
+                            st.session_state[_k] = None
+                        st.session_state.matched_diagrams = []
+                        st.session_state.pop(_del_key, None)
+                        st.rerun()
+                with _dc2:
+                    if st.button("Cancel", use_container_width=True, key="cancel_del_btn"):
+                        st.session_state.pop(_del_key, None)
+                        st.rerun()
+        else:
+            if diagnosis_input:
+                st.info("No matching diagrams found. Try different keywords.")
+            st.session_state.selected_diagram = None
 
 # Collect custom location names (those added manually in Setup Coordinates
 # and not built into the standard alias map).  These are passed to the parser
@@ -335,6 +365,12 @@ if generate_clicked and can_generate:
                                  anatomy_type=chosen_diag.get("anatomy_type", "biventricle"))
     st.session_state.annotated_image = annotated
 
+    # Build combined share image (diagram + narrative side-by-side)
+    try:
+        st.session_state.share_image = build_share_image(annotated, narrative, patient_data)
+    except Exception:
+        st.session_state.share_image = None
+
 
 # ═══════════════════════════════════════════════════════════════════════════
 # OUTPUT (shown after generation)
@@ -350,23 +386,43 @@ if st.session_state.annotated_image is not None:
     diag = st.session_state.selected_diagram or chosen_diag
 
     img_bytes = image_to_bytes(annotated_img, fmt="PNG")
+    share_img = st.session_state.get("share_image")
+    share_img_bytes = image_to_bytes(share_img, fmt="PNG") if share_img else None
 
     # ── Action buttons ───────────────────────────────────────────────────────
-    ab1, ab2, ab3, ab4, ab5 = st.columns(5)
+    ab1, ab2, ab3, ab4, ab5, ab6 = st.columns(6)
     with ab1:
+        if share_img_bytes:
+            st.download_button(
+                "📤 Download Combined",
+                data=share_img_bytes,
+                file_name=f"cath_report_{diag['id']}.png",
+                mime="image/png",
+                use_container_width=True,
+                help="Download diagram + narrative as a single image",
+            )
+        else:
+            st.download_button(
+                "⬇️ Download Diagram",
+                data=img_bytes,
+                file_name=f"cath_{diag['id']}.png",
+                mime="image/png",
+                use_container_width=True,
+            )
+    with ab2:
         st.download_button(
-            "⬇️ Download Diagram",
+            "⬇️ Diagram Only",
             data=img_bytes,
             file_name=f"cath_{diag['id']}.png",
             mime="image/png",
             use_container_width=True,
         )
-    with ab2:
+    with ab3:
         if st.button("📋 Copy Diagram", use_container_width=True):
             ok, msg = copy_image_to_clipboard(annotated_img)
             st.success(msg) if ok else st.info(get_clipboard_help())
 
-    with ab3:
+    with ab4:
         if st.button("📄 Generate Word Report", use_container_width=True):
             with st.spinner("Building document…"):
                 try:
@@ -389,59 +445,62 @@ if st.session_state.annotated_image is not None:
                 use_container_width=True,
             )
 
-    with ab4:
+    with ab5:
         if st.button("🔧 Fix Positions", use_container_width=True,
                      help="Annotation circles in wrong spots? Click to manually reposition them."):
             st.session_state["setup_target_diagram"] = diag["id"]
             st.switch_page("pages/4_Setup_Coordinates.py")
 
-    with ab5:
+    with ab6:
         if st.button("🔄 New Report", use_container_width=True):
-            for key in ["annotated_image", "hemodynamics", "calculations",
+            for key in ["annotated_image", "share_image", "hemodynamics", "calculations",
                         "narrative", "step_ups", "docx_bytes"]:
                 st.session_state[key] = (
-                    None if key == "annotated_image" else
+                    None if key in ("annotated_image", "share_image") else
                     {} if key in ("hemodynamics", "calculations") else
                     [] if key == "step_ups" else
                     "" if key == "narrative" else None
                 )
             st.rerun()
 
-    # ── Main output columns ──────────────────────────────────────────────────
-    out_img_col, out_text_col = st.columns([3, 2], gap="large")
-
-    with out_img_col:
+    # ── Combined diagram + narrative view ────────────────────────────────────
+    if share_img:
+        st.markdown(f"**Diagram + Narrative — {diag['display_name']}**")
+        st.image(share_img.convert("RGB"), use_container_width=True)
+    else:
         st.markdown(f"**Annotated Diagram — {diag['display_name']}**")
         st.image(annotated_img.convert("RGB"), use_container_width=True)
 
-    with out_text_col:
-        # Narrative — shown first
-        st.markdown("**Hemodynamic Narrative**")
-        if narrative:
-            st.text_area(
-                "Copy and paste into your cath report:",
-                value=narrative,
-                height=220,
-                key="narrative_out",
-            )
-            st.components.v1.html(
-                """<button onclick="
-                    var ta=document.querySelectorAll('textarea');
-                    var t=Array.from(ta).find(x=>x.value && x.value.length>30);
-                    if(t){t.select();document.execCommand('copy');
-                    this.textContent='✓ Copied!';
-                    setTimeout(()=>{this.textContent='📋 Copy Narrative'},2000)}"
-                  style="background:#0068c9;color:white;border:none;padding:7px 14px;
-                         border-radius:4px;cursor:pointer;font-size:13px;
-                         width:100%;margin-top:2px">
-                  📋 Copy Narrative
-                </button>""",
-                height=45,
-            )
-        else:
-            st.info("No narrative generated — check that hemodynamic values were entered.")
+    # ── Narrative text for copy-paste ────────────────────────────────────────
+    if narrative:
+        st.markdown("**Copy Narrative**")
+        st.text_area(
+            "Copy and paste into your cath report:",
+            value=narrative,
+            height=180,
+            key="narrative_out",
+        )
+        st.components.v1.html(
+            """<button onclick="
+                var ta=document.querySelectorAll('textarea');
+                var t=Array.from(ta).find(x=>x.value && x.value.length>30);
+                if(t){t.select();document.execCommand('copy');
+                this.textContent='✓ Copied!';
+                setTimeout(()=>{this.textContent='📋 Copy Narrative'},2000)}"
+              style="background:#0068c9;color:white;border:none;padding:7px 14px;
+                     border-radius:4px;cursor:pointer;font-size:13px;
+                     width:100%;margin-top:2px">
+              📋 Copy Narrative
+            </button>""",
+            height=45,
+        )
+    else:
+        st.info("No narrative generated — check that hemodynamic values were entered.")
 
-        # Step-ups
+    # ── Step-ups and calculations ────────────────────────────────────────────
+    calc_col, stepup_col = st.columns([1, 1], gap="large")
+
+    with stepup_col:
         if step_ups:
             st.markdown("**Step-Up Detection**")
             for su in step_ups:
@@ -451,7 +510,7 @@ if st.session_state.annotated_image is not None:
                     f"{su['to']} {int(su['to_sat'])}% (Δ {su['delta']}%)"
                 )
 
-        # Calculated hemodynamics
+    with calc_col:
         st.markdown("**Calculated Hemodynamics**")
         if calcs and not calcs.get("error"):
             import pandas as pd
