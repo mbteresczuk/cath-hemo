@@ -95,6 +95,8 @@ textarea:focus,input:focus{outline:none;border-color:var(--crimson)}
   background:transparent;color:var(--crimson);font-size:14px;font-weight:600;cursor:pointer;
   margin-top:6px;margin-bottom:20px;transition:border-color .15s}
 .show-more-btn:active{border-color:var(--crimson);background:#FFF5F5}
+.divider{display:flex;align-items:center;gap:10px;margin:8px 0 12px;color:var(--muted);font-size:13px}
+.divider::before,.divider::after{content:'';flex:1;height:1px;background:var(--border)}
 table{width:100%;border-collapse:collapse;font-size:14px}
 th{text-align:left;padding:8px 6px;font-size:12px;font-weight:700;color:var(--muted);
   border-bottom:1.5px solid var(--border)}
@@ -169,6 +171,37 @@ td:last-child{text-align:right;font-weight:600;font-family:monospace}
     <button class="btn btn-primary" id="btn-next" onclick="goToSelector()" disabled>
       Select Diagram →
     </button>
+    <div class="divider">or</div>
+    <button class="btn btn-outline" onclick="goToBrowse()">🗂 View Diagrams</button>
+  </div>
+</div>
+
+<!-- ── SCREEN: BROWSE DIAGRAMS ─────────────────────── -->
+<div id="s-browse" class="screen">
+  <div class="nav">
+    <button class="back-btn" onclick="goTo('s-entry')">← Back</button>
+    <h2 style="margin:0">Diagrams</h2>
+    <div style="width:60px"></div>
+  </div>
+  <p class="sub">Browse and save blank diagrams for other uses.</p>
+
+  <div class="search-wrap">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+      <circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/>
+    </svg>
+    <input type="text" class="search-input" id="browse-search-input"
+           placeholder="Search diagnosis (e.g. TOF, ASD, Fontan)"
+           oninput="onBrowseSearch(this.value)"/>
+  </div>
+
+  <div id="browse-grid"></div>
+
+  <div id="browse-actions" style="display:none;margin-top:8px">
+    <p id="browse-sel-name" style="text-align:center;font-size:14px;font-weight:600;color:var(--navy);margin-bottom:10px"></p>
+    <div style="display:flex;gap:8px">
+      <button class="btn btn-primary" style="margin-bottom:0" onclick="saveBrowseDiagram()">⬇ Save Diagram</button>
+      <button class="btn btn-outline" style="margin-bottom:0" onclick="shareBrowseDiagram()">Share</button>
+    </div>
   </div>
 </div>
 
@@ -213,13 +246,24 @@ td:last-child{text-align:right;font-weight:600;font-family:monospace}
   </div>
 
   <div id="output-result" style="display:none">
-    <div class="img-wrap">
-      <img id="result-img" src="" alt="Annotated diagram"/>
+    <!-- Combined diagram + narrative card -->
+    <div class="card" style="padding:0;overflow:hidden;margin-bottom:14px">
+      <div class="img-wrap" style="margin-bottom:0;border:none;border-radius:0;border-bottom:1px solid var(--border)">
+        <img id="result-img" src="" alt="Annotated diagram"/>
+      </div>
+      <div style="padding:14px">
+        <div class="section-label" style="margin-top:0">Hemodynamics Narrative</div>
+        <p class="narrative" id="narrative-text"></p>
+      </div>
     </div>
-    <div style="display:flex;gap:8px;margin-bottom:20px">
+
+    <div style="display:flex;gap:8px;margin-bottom:10px">
       <button class="btn btn-outline" style="margin-bottom:0" onclick="saveImage()">Save Image</button>
       <button class="btn btn-secondary" style="margin-bottom:0" onclick="shareReport()">Share</button>
     </div>
+    <button class="btn btn-outline" onclick="copyNarrative()" id="copy-btn">
+      Copy Narrative
+    </button>
 
     <div id="stepup-section"></div>
 
@@ -230,14 +274,6 @@ td:last-child{text-align:right;font-weight:600;font-family:monospace}
         <tbody id="calcs-body"></tbody>
       </table>
     </div>
-
-    <div class="section-label">Hemodynamics Narrative</div>
-    <div class="card">
-      <p class="narrative" id="narrative-text"></p>
-    </div>
-    <button class="btn btn-outline" onclick="copyNarrative()" id="copy-btn">
-      Copy Narrative
-    </button>
 
     <div id="warnings-section" style="margin-top:8px"></div>
 
@@ -747,6 +783,119 @@ async function shareReport() {
 }
 
 function cap(s) { return s ? s.charAt(0).toUpperCase() + s.slice(1) : '' }
+
+// ── Browse Diagrams (no hemo required) ────────────────────────────────
+let browseSelected = null
+let browseDiagramList = []
+let browseSearchDebounce = null
+
+async function goToBrowse() {
+  goTo('s-browse')
+  document.getElementById('browse-search-input').value = ''
+  document.getElementById('browse-actions').style.display = 'none'
+  browseSelected = null
+  await loadBrowseGrid('')
+}
+
+function onBrowseSearch(q) {
+  clearTimeout(browseSearchDebounce)
+  browseSearchDebounce = setTimeout(() => loadBrowseGrid(q), 350)
+}
+
+async function loadBrowseGrid(q) {
+  const grid = document.getElementById('browse-grid')
+  grid.innerHTML = '<div style="text-align:center;padding:32px"><div class="spinner"></div></div>'
+  try {
+    await _ensureCache()
+    if (q.trim()) {
+      renderBrowseSearch(q.trim(), grid)
+    } else {
+      renderBrowseBrowse(grid)
+    }
+  } catch (e) {
+    grid.innerHTML = `<div class="alert error-alert">Could not load diagrams: ${e.message}</div>`
+  }
+}
+
+function renderBrowseBrowse(grid) {
+  browseDiagramList = _categoriesCache.flatMap(c => c.diagrams)
+  grid.innerHTML = _categoriesCache.map((cat, ci) => `
+    <div class="folder" id="bfolder-${ci}">
+      <div class="folder-hdr" onclick="toggleBrowseFolder(${ci})">
+        <span class="folder-title">${cat.display_name}</span>
+        <span class="folder-meta">
+          <span class="folder-count">${cat.diagrams.length} diagrams</span>
+          <svg class="folder-chevron" id="bchevron-${ci}" viewBox="0 0 24 24" fill="none"
+               stroke="currentColor" stroke-width="2.5">
+            <polyline points="6 9 12 15 18 9"/>
+          </svg>
+        </span>
+      </div>
+      <div class="folder-body" id="bfolder-body-${ci}">
+        <div class="diagram-grid" style="margin-bottom:0">
+          ${cat.diagrams.map(d => dcardBrowse(d)).join('')}
+        </div>
+      </div>
+    </div>`).join('')
+}
+
+function toggleBrowseFolder(ci) {
+  const body = document.getElementById(`bfolder-body-${ci}`)
+  const chev = document.getElementById(`bchevron-${ci}`)
+  const open = body.classList.toggle('open')
+  chev.classList.toggle('open', open)
+}
+
+function renderBrowseSearch(q, grid) {
+  const allDiagrams = _categoriesCache.flatMap(c => c.diagrams)
+  const withScores = allDiagrams.map(d => ({ d, score: _scoreMatch(q, d) }))
+  const matched = withScores.filter(x => x.score > 0).sort((a, b) => b.score - a.score).map(x => x.d)
+  const results = matched.length > 0 ? matched : allDiagrams
+  browseDiagramList = results
+  grid.innerHTML = `
+    <div class="results-label">${matched.length > 0 ? 'Best Matches' : `No exact match for "${q}" — showing all`}</div>
+    <div class="diagram-grid">${results.slice(0, 10).map(d => dcardBrowse(d)).join('')}</div>`
+}
+
+function dcardBrowse(d) {
+  const sel = browseSelected?.id === d.id ? ' sel' : ''
+  return `
+    <div class="dcard${sel}" data-browse-id="${d.id}" onclick="selectBrowseDiagram('${d.id}')">
+      <img src="${d.thumbnail_url}" alt="${d.display_name}"
+           onerror="this.src='';this.style.display='none'"/>
+      <div class="dcard-name">${d.display_name}</div>
+    </div>`
+}
+
+function selectBrowseDiagram(id) {
+  browseSelected = browseDiagramList.find(d => d.id === id) || null
+  document.querySelectorAll('[data-browse-id]').forEach(el => {
+    el.classList.toggle('sel', el.dataset.browseId === id)
+  })
+  if (browseSelected) {
+    document.getElementById('browse-sel-name').textContent = browseSelected.display_name + ' — selected'
+    document.getElementById('browse-actions').style.display = 'block'
+  }
+}
+
+async function saveBrowseDiagram() {
+  if (!browseSelected) return
+  const res = await fetch(browseSelected.thumbnail_url)
+  const blob = await res.blob()
+  const a = document.createElement('a')
+  a.href = URL.createObjectURL(blob)
+  a.download = `${browseSelected.id}.png`
+  a.click()
+}
+
+async function shareBrowseDiagram() {
+  if (!browseSelected) return
+  if (navigator.share) {
+    try { await navigator.share({ title: browseSelected.display_name, url: browseSelected.thumbnail_url }) } catch {}
+  } else {
+    saveBrowseDiagram()
+  }
+}
 </script>
 </body>
 </html>
