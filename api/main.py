@@ -9,7 +9,6 @@ Start locally:
     uvicorn api.main:app --reload --port 8000
 """
 import os
-import shutil
 import sys
 from pathlib import Path
 from typing import List, Optional
@@ -120,19 +119,7 @@ def _get_library() -> dict:
 
 @app.on_event("startup")
 def _startup():
-    """Seed persistent disk from bundled coords (first deploy / new diagrams), then load library."""
-    bundled = BASE_DIR / "config" / "annotation_coords"
-    persistent = Path("/mnt/render-coords")
-    if persistent.exists() and bundled.exists():
-        seeded = 0
-        for src in bundled.glob("*.json"):
-            dst = persistent / src.name
-            if not dst.exists():
-                shutil.copy2(src, dst)
-                seeded += 1
-        if seeded:
-            print(f"[startup] Seeded {seeded} coord file(s) to persistent disk.")
-
+    """Pre-load the library at startup and log the diagram count."""
     lib = _get_library()
     all_diags = get_all_diagrams(lib)
     print(f"[startup] Library loaded: {len(all_diags)} diagrams across "
