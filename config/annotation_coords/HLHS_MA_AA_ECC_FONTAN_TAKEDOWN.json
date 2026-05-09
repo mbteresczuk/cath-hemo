@@ -88,13 +88,6 @@
       "pressure_x": 538,
       "pressure_y": 247
     },
-    "Ascending_aorta": {
-      "side": "right",
-      "annotation_type": "pressure_only",
-      "custom": true,
-      "pressure_x": 315,
-      "pressure_y": 152
-    },
     "IVC": {
       "side": "right",
       "annotation_type": "saturation_and_pressure",
@@ -121,6 +114,13 @@
       "sat_y": 368,
       "pressure_x": 429,
       "pressure_y": 411
+    },
+    "Ascending_Aorta": {
+      "side": "left",
+      "annotation_type": "pressure_only",
+      "custom": true,
+      "pressure_x": 315,
+      "pressure_y": 152
     }
   }
 }

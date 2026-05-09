@@ -97,15 +97,6 @@
       "pressure_x": 418,
       "pressure_y": 388
     },
-    "Ascending_aorta": {
-      "side": "left",
-      "annotation_type": "saturation_and_pressure",
-      "custom": true,
-      "sat_x": 317,
-      "sat_y": 210,
-      "pressure_x": 302,
-      "pressure_y": 166
-    },
     "Fontan": {
       "side": "left",
       "annotation_type": "saturation_and_pressure",
@@ -132,6 +123,15 @@
       "sat_y": 72,
       "pressure_x": 156,
       "pressure_y": 74
+    },
+    "Ascending_Aorta": {
+      "side": "left",
+      "annotation_type": "saturation_and_pressure",
+      "custom": true,
+      "sat_x": 317,
+      "sat_y": 210,
+      "pressure_x": 302,
+      "pressure_y": 166
     }
   }
 }

@@ -87,6 +87,15 @@ _COORD_KEY_ALIASES = {
     "SVC_limb":        "Fontan_IVC_limb",
 }
 
+# When a coord is configured for one aorta location but hemo data was entered
+# under the other (e.g. "Aorta" → Descending_Aorta, but only Ascending_Aorta
+# coord is placed), fall back to the paired key before skipping.
+_AORTA_FALLBACKS = {
+    "Ascending_Aorta":  "Descending_Aorta",
+    "Descending_Aorta": "Ascending_Aorta",
+    "Neoaorta":         "Ascending_Aorta",
+}
+
 
 def _load_fonts():
     """Load Calibri regular 16pt; fall back to Arial then PIL default."""
@@ -450,6 +459,8 @@ def annotate_diagram(image_path: str, coords: dict, hemodynamics: dict,
     for loc_name, coord in coords["locations"].items():
         canonical = _COORD_KEY_ALIASES.get(loc_name, loc_name)
         hemo = hemodynamics.get(canonical, {})
+        if not hemo and canonical in _AORTA_FALLBACKS:
+            hemo = hemodynamics.get(_AORTA_FALLBACKS[canonical], {})
         if not hemo:
             continue
 

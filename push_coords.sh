@@ -31,6 +31,13 @@ echo ""
 
 git add config/ diagrams/
 git commit -m "Update annotation positions and diagrams"
+
+# Pull any remote changes first so we don't get rejected for being behind
+git pull --rebase origin main 2>&1 || {
+  echo "Pull/rebase failed — resolve conflicts manually and re-run."
+  exit 1
+}
+
 git push
 
 # Trigger Render deploy via deploy hook URL (set RENDER_DEPLOY_HOOK_URL env var in Render dashboard)
