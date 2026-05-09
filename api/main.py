@@ -8,13 +8,11 @@ so the React PWA can consume them from a phone.
 Start locally:
     uvicorn api.main:app --reload --port 8000
 """
-import base64
-import json
 import os
+import shutil
 import sys
 from pathlib import Path
 from typing import List, Optional
-import urllib.request
 
 # Ensure the project root is on the path so utils.* imports resolve.
 BASE_DIR = Path(__file__).parent.parent
@@ -120,60 +118,21 @@ def _get_library() -> dict:
     return _library_cache
 
 
-def _push_coord_to_github(diagram_id: str, coords: dict) -> None:
-    """
-    Write a coord JSON file directly to GitHub via the Contents API.
-    Requires GITHUB_TOKEN and GITHUB_REPO env vars (e.g. "username/repo").
-    Silently skips if either is missing (i.e. running locally).
-    """
-    token = os.environ.get("GITHUB_TOKEN")
-    repo = os.environ.get("GITHUB_REPO")
-    if not token or not repo:
-        return
-
-    file_path = f"config/annotation_coords/{diagram_id}.json"
-    api_url = f"https://api.github.com/repos/{repo}/contents/{file_path}"
-    content_bytes = json.dumps(coords, indent=2).encode()
-    content_b64 = base64.b64encode(content_bytes).decode()
-
-    headers = {
-        "Authorization": f"Bearer {token}",
-        "Accept": "application/vnd.github+json",
-        "Content-Type": "application/json",
-        "X-GitHub-Api-Version": "2022-11-28",
-    }
-
-    # Get current SHA (needed to update an existing file)
-    sha = None
-    try:
-        req = urllib.request.Request(api_url, headers=headers)
-        with urllib.request.urlopen(req) as resp:
-            existing = json.loads(resp.read())
-            sha = existing.get("sha")
-    except urllib.error.HTTPError as e:
-        if e.code != 404:
-            raise
-
-    body: dict = {
-        "message": f"Update coords: {diagram_id}",
-        "content": content_b64,
-    }
-    if sha:
-        body["sha"] = sha
-
-    put_req = urllib.request.Request(
-        api_url,
-        data=json.dumps(body).encode(),
-        headers=headers,
-        method="PUT",
-    )
-    with urllib.request.urlopen(put_req):
-        pass  # 200/201 means success
-
-
 @app.on_event("startup")
 def _startup():
-    """Pre-load the library at startup and log the diagram count."""
+    """Seed persistent disk from bundled coords (first deploy / new diagrams), then load library."""
+    bundled = BASE_DIR / "config" / "annotation_coords"
+    persistent = Path("/mnt/render-coords")
+    if persistent.exists() and bundled.exists():
+        seeded = 0
+        for src in bundled.glob("*.json"):
+            dst = persistent / src.name
+            if not dst.exists():
+                shutil.copy2(src, dst)
+                seeded += 1
+        if seeded:
+            print(f"[startup] Seeded {seeded} coord file(s) to persistent disk.")
+
     lib = _get_library()
     all_diags = get_all_diagrams(lib)
     print(f"[startup] Library loaded: {len(all_diags)} diagrams across "
@@ -359,17 +318,12 @@ def get_coords(diagram_id: str):
 
 @app.put("/api/coords/{diagram_id}")
 def put_coords(diagram_id: str, payload: dict = Body(...)):
-    """Save annotation coords for a diagram and push to GitHub when running on Render."""
+    """Save annotation coords for a diagram."""
     library = _get_library()
     diagram = get_diagram_by_id(library, diagram_id)
     if diagram is None:
         raise HTTPException(status_code=404, detail=f"Diagram '{diagram_id}' not found.")
     save_coords(diagram_id, payload)
-    try:
-        _push_coord_to_github(diagram_id, payload)
-    except Exception as e:
-        # Log but don't fail the request — local save already succeeded
-        print(f"[warn] GitHub push for {diagram_id} failed: {e}")
     global _library_cache
     _library_cache = None
     return {"ok": True}
@@ -421,10 +375,6 @@ def auto_configure_coords(diagram_id: str):
         image_path=str(img_path),
     )
     save_coords(diagram_id, coords)
-    try:
-        _push_coord_to_github(diagram_id, coords)
-    except Exception as e:
-        print(f"[warn] GitHub push for {diagram_id} failed: {e}")
     global _library_cache
     _library_cache = None
     return coords

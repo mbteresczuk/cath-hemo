@@ -18,7 +18,9 @@ from utils.diagram_library import (
 )
 
 BASE_DIR = Path(__file__).parent.parent
-COORDS_DIR = BASE_DIR / "config" / "annotation_coords"
+_BUNDLED_COORDS = BASE_DIR / "config" / "annotation_coords"
+_PERSISTENT_COORDS = Path("/mnt/render-coords")
+COORDS_DIR = _PERSISTENT_COORDS if _PERSISTENT_COORDS.exists() else _BUNDLED_COORDS
 
 
 # ── helpers ──────────────────────────────────────────────────────────────────

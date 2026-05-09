@@ -8,3 +8,7 @@ services:
       - key: ANTHROPIC_API_KEY
         sync: false
     autoDeploy: true
+    disk:
+      name: coords-disk
+      mountPath: /mnt/render-coords
+      sizeGB: 1
