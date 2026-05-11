@@ -240,7 +240,7 @@ body {
   <select id="diag-select"><option value="">— select a diagram —</option></select>
   <button class="tb-btn" id="auto-btn" onclick="autoConfigureDiagram()" disabled>🤖 Auto-fill</button>
   <button class="tb-btn" id="save-btn" onclick="saveCoords()" disabled>💾 Save</button>
-  <button class="tb-btn" id="push-btn" onclick="pushToGitHub()" disabled>🚀 Push to GitHub</button>
+  <button class="tb-btn" id="push-btn" onclick="pushToRender()" disabled>🚀 Push to Render</button>
   <div id="zoom-wrap">
     <button class="zoom-btn" onclick="adjustZoom(-0.25)">−</button>
     <span id="zoom-label">100%</span>
@@ -768,69 +768,18 @@ async function autoConfigureDiagram() {
   autoBtn.disabled = false;
 }
 
-// ── Push to GitHub (browser-side, no server credentials needed) ────────────────
-async function pushToGitHub() {
-  if (isDirty) await saveCoords();
-  if (!currentDiagram || !coordsData) return;
-
-  let token = localStorage.getItem('gh_pat');
-  if (!token) {
-    token = prompt(
-      'GitHub Personal Access Token required to push coord files to GitHub.\n\n' +
-      'Create one at: github.com → Settings → Developer settings →\n' +
-      'Fine-grained tokens → New token\n' +
-      '(Repository: mbteresczuk/cath-hemo, Permission: Contents → Read & Write)\n\n' +
-      'Your token is stored only in this browser and never sent to the server.'
-    );
-    if (!token) return;
-    localStorage.setItem('gh_pat', token.trim());
-    token = token.trim();
-  }
-
-  const repo     = 'mbteresczuk/cath-hemo';
-  const filePath = `config/annotation_coords/${currentDiagram.id}.json`;
-  const apiUrl   = `https://api.github.com/repos/${repo}/contents/${filePath}`;
-  const headers  = {
-    'Authorization':        `Bearer ${token}`,
-    'Accept':               'application/vnd.github+json',
-    'Content-Type':         'application/json',
-    'X-GitHub-Api-Version': '2022-11-28',
-  };
-
-  setStatus('Pushing to GitHub…', 'saving');
+// ── Push to Render ─────────────────────────────────────────────────────────────
+async function pushToRender() {
+  if (isDirty) { alert("Finish saving first — wait for 'Saved ✓' then push."); return; }
+  if (!confirm("Push all saved positions to Render?\n(~1 minute to redeploy)")) return;
+  setStatus("Pushing…", "saving");
   pushBtn.disabled = true;
-
   try {
-    // Need the current file's SHA to update it
-    let sha = null;
-    const getResp = await fetch(apiUrl, { headers });
-    if (getResp.ok) {
-      sha = (await getResp.json()).sha;
-    } else if (getResp.status === 401) {
-      localStorage.removeItem('gh_pat');
-      throw new Error('Bad token — cleared. Try again.');
-    } else if (getResp.status !== 404) {
-      throw new Error(`GitHub GET ${getResp.status}: ${getResp.statusText}`);
-    }
-
-    const jsonStr  = JSON.stringify(coordsData, null, 2);
-    const content  = btoa(unescape(encodeURIComponent(jsonStr)));
-    const body     = { message: `Update coords: ${currentDiagram.id}`, content };
-    if (sha) body.sha = sha;
-
-    const putResp = await fetch(apiUrl, { method: 'PUT', headers, body: JSON.stringify(body) });
-    if (!putResp.ok) {
-      const err = await putResp.json().catch(() => ({}));
-      if (putResp.status === 401) { localStorage.removeItem('gh_pat'); }
-      throw new Error(err.message || `GitHub PUT ${putResp.status}`);
-    }
-
-    setStatus('Pushed to GitHub ✓ — Render redeploying (~1 min)', 'saved');
-    showToast('Pushed to GitHub ✓');
-  } catch(e) {
-    setStatus(`Push failed: ${e.message}`, 'error');
-    alert(`GitHub push failed:\n${e.message}`);
-  }
+    const res = await fetch("/api/push_coords", { method: "POST" });
+    const data = await res.json();
+    setStatus(data.ok ? "Pushed ✓ — redeploying" : "Push failed", data.ok ? "saved" : "error");
+    if (data.ok) showToast("Pushed to Render ✓");
+  } catch(e) { setStatus("Push failed", "error"); }
   pushBtn.disabled = false;
 }
 
