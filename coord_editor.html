@@ -241,6 +241,7 @@ body {
   <button class="tb-btn" id="auto-btn" onclick="autoConfigureDiagram()" disabled>🤖 Auto-fill</button>
   <button class="tb-btn" id="save-btn" onclick="saveCoords()" disabled>💾 Save</button>
   <button class="tb-btn" id="push-btn" onclick="pushToRender()" disabled>🚀 Push to Render</button>
+  <button class="tb-btn" id="export-btn" onclick="exportAllCoords()" style="background:#0ea5e9;color:#fff;">⬇ Download Coords</button>
   <div id="zoom-wrap">
     <button class="zoom-btn" onclick="adjustZoom(-0.25)">−</button>
     <span id="zoom-label">100%</span>
@@ -781,6 +782,16 @@ async function pushToRender() {
     if (data.ok) showToast("Pushed to Render ✓");
   } catch(e) { setStatus("Push failed", "error"); }
   pushBtn.disabled = false;
+}
+
+// ── Export all coords as ZIP ───────────────────────────────────────────────────
+function exportAllCoords() {
+  if (isDirty) { alert("Finish saving first — wait for 'Saved ✓' then export."); return; }
+  const a = document.createElement("a");
+  a.href = "/api/coords/export";
+  a.download = "annotation_coords.zip";
+  a.click();
+  showToast("Downloading coords ZIP…");
 }
 
 // ── Helpers ────────────────────────────────────────────────────────────────────

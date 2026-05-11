@@ -381,3 +381,26 @@ def push_coords_to_git():
         return {"ok": True, "detail": output}
     from fastapi import HTTPException
     raise HTTPException(status_code=500, detail=output)
+
+
+@app.get("/api/coords/export")
+def export_all_coords():
+    """
+    Download all coord JSON files bundled into a single ZIP archive.
+    Use this to export corrections made in the coord editor so they can
+    be committed to GitHub and survive future redeploys.
+    """
+    import io
+    import zipfile
+    from fastapi.responses import StreamingResponse
+
+    buf = io.BytesIO()
+    with zipfile.ZipFile(buf, "w", zipfile.ZIP_DEFLATED) as zf:
+        for coord_file in sorted(COORDS_DIR.glob("*.json")):
+            zf.write(coord_file, coord_file.name)
+    buf.seek(0)
+    return StreamingResponse(
+        buf,
+        media_type="application/zip",
+        headers={"Content-Disposition": "attachment; filename=annotation_coords.zip"},
+    )

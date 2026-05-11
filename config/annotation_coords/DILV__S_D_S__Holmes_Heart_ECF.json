@@ -111,15 +111,6 @@
       "pressure_x": 67,
       "pressure_y": 78
     },
-    "Ascending_Aorta": {
-      "side": "right",
-      "annotation_type": "saturation_and_pressure",
-      "custom": true,
-      "sat_x": 220,
-      "sat_y": 250,
-      "pressure_x": 198,
-      "pressure_y": 204
-    },
     "Fontan_Limb": {
       "side": "right",
       "annotation_type": "saturation_and_pressure",

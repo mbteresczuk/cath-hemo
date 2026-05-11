@@ -117,15 +117,6 @@
       "sat_y": 232,
       "pressure_x": 465,
       "pressure_y": 225
-    },
-    "Ascending_Aorta": {
-      "side": "left",
-      "annotation_type": "saturation_and_pressure",
-      "custom": true,
-      "sat_x": 246,
-      "sat_y": 85,
-      "pressure_x": 294,
-      "pressure_y": 83
     }
   }
 }

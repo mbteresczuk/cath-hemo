@@ -94,13 +94,6 @@
       "pressure_x": 382,
       "pressure_y": 467
     },
-    "Ascending_Aorta": {
-      "side": "right",
-      "annotation_type": "pressure_only",
-      "custom": true,
-      "pressure_x": 195,
-      "pressure_y": 160
-    },
     "Vertical_Vein": {
       "side": "right",
       "annotation_type": "pressure_only",
