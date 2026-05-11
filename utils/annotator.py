@@ -456,11 +456,17 @@ def annotate_diagram(image_path: str, coords: dict, hemodynamics: dict,
     # On Glenn/Fontan anatomy, PA pressures are mean-only (like wedge/PV)
     is_glenn_fontan = anatomy_type in _GLENN_FONTAN_ANATOMY
 
-    for loc_name, coord in coords["locations"].items():
+    placed_locs = coords["locations"]
+    for loc_name, coord in placed_locs.items():
         canonical = _COORD_KEY_ALIASES.get(loc_name, loc_name)
         hemo = hemodynamics.get(canonical, {})
         if not hemo and canonical in _AORTA_FALLBACKS:
-            hemo = hemodynamics.get(_AORTA_FALLBACKS[canonical], {})
+            fallback_key = _AORTA_FALLBACKS[canonical]
+            # Only fall back when the paired aorta location has no coord in this diagram.
+            # If both Ascending_Aorta and Descending_Aorta coords exist, each should
+            # only annotate its own parser key to avoid drawing the same pressure twice.
+            if fallback_key not in placed_locs:
+                hemo = hemodynamics.get(fallback_key, {})
         if not hemo:
             continue
 
