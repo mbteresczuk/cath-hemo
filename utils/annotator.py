@@ -492,6 +492,10 @@ def annotate_diagram(image_path: str, coords: dict, hemodynamics: dict,
         if ann_type == "saturation":
             if sat_cx is not None:
                 draw_saturation_circle(draw, sat_cx, sat_cy, sat, side, fonts)
+            # Render pressure too if a pressure coord was explicitly placed
+            if press_cx is not None and any(v is not None for v in [systolic, diastolic, mean]):
+                draw_pressure_annotation(draw, press_cx, press_cy,
+                                         systolic, diastolic, mean, side, fonts)
 
         elif ann_type == "saturation_and_pressure":
             is_ventricular = loc_name in _VENTRICULAR_LOCS

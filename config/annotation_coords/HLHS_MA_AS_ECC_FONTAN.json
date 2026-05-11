@@ -14,7 +14,7 @@
     },
     "SVC": {
       "side": "right",
-      "annotation_type": "saturation",
+      "annotation_type": "saturation_and_pressure",
       "sat_x": -827,
       "sat_y": -310
     },

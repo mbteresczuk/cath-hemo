@@ -121,7 +121,7 @@ LOCATION_SETS = {
 
 # Location annotation types
 LOCATION_ANNOTATION_TYPES = {
-    "SVC": "saturation",
+    "SVC": "saturation_and_pressure",
     "IVC": "saturation",
     "RA": "saturation_and_pressure",
     "RV": "saturation_and_pressure",
@@ -146,7 +146,7 @@ LOCATION_ANNOTATION_TYPES = {
     "BTS": "saturation",
     "Sano_conduit": "saturation_and_pressure",
     "Fontan_conduit": "saturation_and_pressure",
-    "LSVC": "saturation",
+    "LSVC": "saturation_and_pressure",
     "Coronary_sinus": "saturation",
     "Innominate_vein": "saturation",
     "Hepatic_vein": "saturation",
