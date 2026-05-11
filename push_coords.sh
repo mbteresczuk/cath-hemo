@@ -5,6 +5,17 @@
 
 cd "$(dirname "$0")"
 
+# If GIT_TOKEN is set (Render env var), configure the remote URL to include it
+# so that git push works from the server without interactive credentials.
+if [ -n "$GIT_TOKEN" ]; then
+  REPO_URL=$(git remote get-url origin)
+  # Strip any existing credentials from the URL
+  REPO_URL=$(echo "$REPO_URL" | sed 's|https://[^@]*@|https://|')
+  # Inject the token
+  AUTH_URL=$(echo "$REPO_URL" | sed "s|https://|https://x-token-auth:${GIT_TOKEN}@|")
+  git remote set-url origin "$AUTH_URL"
+fi
+
 # Rebuild the diagram library so newly-uploaded images are registered
 python3 -c "
 import sys
