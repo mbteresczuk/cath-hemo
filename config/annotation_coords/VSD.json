@@ -132,6 +132,13 @@
       "custom": true,
       "pressure_x": 188,
       "pressure_y": 193
+    },
+    "Ascending_Aorta": {
+      "side": "left",
+      "annotation_type": "pressure_only",
+      "custom": true,
+      "pressure_x": 383,
+      "pressure_y": 186
     }
   }
 }
