@@ -8,7 +8,9 @@
       "side": "right",
       "annotation_type": "saturation_and_pressure",
       "sat_x": 125,
-      "sat_y": 200
+      "sat_y": 200,
+      "pressure_x": 78,
+      "pressure_y": 200
     },
     "IVC": {
       "side": "right",

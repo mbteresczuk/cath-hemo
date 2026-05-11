@@ -8,7 +8,9 @@
       "side": "right",
       "annotation_type": "saturation_and_pressure",
       "sat_x": 51,
-      "sat_y": 190
+      "sat_y": 190,
+      "pressure_x": 4,
+      "pressure_y": 190
     },
     "IVC": {
       "side": "right",
@@ -129,7 +131,9 @@
       "annotation_type": "saturation_and_pressure",
       "custom": true,
       "sat_x": 297,
-      "sat_y": 83
+      "sat_y": 83,
+      "pressure_x": 250,
+      "pressure_y": 83
     },
     "Ascending_Aorta": {
       "side": "right",
