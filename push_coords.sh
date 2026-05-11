@@ -40,6 +40,29 @@ echo "Changed files:"
 echo "$CHANGED"
 echo ""
 
+# Find the main worktree. The server may be running from a Claude worktree
+# (a side branch), but Render only deploys from main. If we detect that the
+# current directory is not the main-branch worktree, copy the changed files
+# there and push from there instead.
+CURRENT_BRANCH=$(git rev-parse --abbrev-ref HEAD)
+MAIN_WORKTREE=$(git worktree list --porcelain 2>/dev/null | awk '
+/^worktree / { wt=$2 }
+/^branch refs\/heads\/main$/ { print wt; exit }
+')
+
+if [ -n "$MAIN_WORKTREE" ] && [ "$MAIN_WORKTREE" != "$(pwd)" ]; then
+  echo "Server is running from a worktree branch ($CURRENT_BRANCH)."
+  echo "Syncing changed files to main worktree: $MAIN_WORKTREE"
+  for f in $CHANGED; do
+    dir=$(dirname "$MAIN_WORKTREE/$f")
+    mkdir -p "$dir"
+    cp "$f" "$MAIN_WORKTREE/$f"
+    echo "  copied $f"
+  done
+  cd "$MAIN_WORKTREE"
+  echo "Now pushing from main worktree..."
+fi
+
 git add config/ diagrams/
 git commit -m "Update annotation positions and diagrams"
 
