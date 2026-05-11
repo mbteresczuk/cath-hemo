@@ -4,14 +4,6 @@
   "image_height": 525,
   "auto_configured": true,
   "locations": {
-    "SVC": {
-      "side": "right",
-      "annotation_type": "saturation_and_pressure",
-      "sat_x": 142,
-      "sat_y": 107,
-      "pressure_x": 95,
-      "pressure_y": 107
-    },
     "IVC": {
       "side": "right",
       "annotation_type": "saturation",
@@ -31,8 +23,8 @@
       "annotation_type": "saturation_and_pressure",
       "sat_x": 144,
       "sat_y": 76,
-      "pressure_x": 82,
-      "pressure_y": 84
+      "pressure_x": 87,
+      "pressure_y": 68
     },
     "RPA": {
       "side": "right",
@@ -119,13 +111,22 @@
       "pressure_y": 235
     },
     "Ascending_Aorta": {
-      "side": "left",
+      "side": "right",
       "annotation_type": "saturation_and_pressure",
       "custom": true,
-      "pressure_x": 390,
-      "pressure_y": 248,
-      "sat_x": 355,
-      "sat_y": 248
+      "sat_x": 284,
+      "sat_y": 263,
+      "pressure_x": 258,
+      "pressure_y": 226
+    },
+    "SVC": {
+      "side": "right",
+      "annotation_type": "saturation_and_pressure",
+      "custom": true,
+      "sat_x": 141,
+      "sat_y": 105,
+      "pressure_x": 92,
+      "pressure_y": 98
     }
   }
 }

@@ -6,11 +6,9 @@
   "locations": {
     "SVC": {
       "side": "right",
-      "annotation_type": "saturation_and_pressure",
+      "annotation_type": "saturation",
       "sat_x": 87,
-      "sat_y": 171,
-      "pressure_x": 40,
-      "pressure_y": 171
+      "sat_y": 171
     },
     "IVC": {
       "side": "right",
@@ -127,13 +125,13 @@
       "pressure_y": 222
     },
     "Ascending_Aorta": {
-      "side": "left",
+      "side": "right",
       "annotation_type": "saturation_and_pressure",
       "custom": true,
-      "pressure_x": 370,
-      "pressure_y": 178,
-      "sat_x": 335,
-      "sat_y": 178
+      "sat_x": 262,
+      "sat_y": 255,
+      "pressure_x": 187,
+      "pressure_y": 193
     }
   }
 }
