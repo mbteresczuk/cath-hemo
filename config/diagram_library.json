@@ -1860,7 +1860,7 @@
           "category_id": "DILV_Single_Ventricle",
           "anatomy_type": "post_glenn",
           "location_set": "post_glenn",
-          "has_coords": false,
+          "has_coords": true,
           "coord_file": "config/annotation_coords/DILV__S_L_L__Glenn.json",
           "image_width": 615,
           "image_height": 521
