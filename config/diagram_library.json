@@ -39,7 +39,7 @@
           "category_id": "Normal",
           "anatomy_type": "biventricle",
           "location_set": "standard_biventricle",
-          "has_coords": false,
+          "has_coords": true,
           "coord_file": "config/annotation_coords/Normal_PDA_1.json",
           "image_width": 606,
           "image_height": 500
@@ -1834,7 +1834,7 @@
           "category_id": "DILV_Single_Ventricle",
           "anatomy_type": "biventricle",
           "location_set": "standard_biventricle",
-          "has_coords": false,
+          "has_coords": true,
           "coord_file": "config/annotation_coords/DILV__S_L_L__ECF.json",
           "image_width": 713,
           "image_height": 519
@@ -1847,7 +1847,7 @@
           "category_id": "DILV_Single_Ventricle",
           "anatomy_type": "post_glenn",
           "location_set": "post_glenn",
-          "has_coords": false,
+          "has_coords": true,
           "coord_file": "config/annotation_coords/DILV__S_L_L__Glenn_PS_sub_PS.json",
           "image_width": 662,
           "image_height": 518
@@ -1873,7 +1873,7 @@
           "category_id": "DILV_Single_Ventricle",
           "anatomy_type": "biventricle",
           "location_set": "standard_biventricle",
-          "has_coords": false,
+          "has_coords": true,
           "coord_file": "config/annotation_coords/Dextrocardia__I__L__X__unbalanced_AVC_to_R_RV_to_Aorta_central_shunt_TAPVC_to_vertical_vein_to_RA.json",
           "image_width": 562,
           "image_height": 504

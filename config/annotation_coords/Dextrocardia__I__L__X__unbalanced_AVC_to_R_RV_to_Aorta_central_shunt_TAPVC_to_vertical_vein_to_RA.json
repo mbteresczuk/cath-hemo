@@ -1,0 +1,85 @@
+{
+  "diagram_id": "Dextrocardia__I__L__X__unbalanced_AVC_to_R_RV_to_Aorta_central_shunt_TAPVC_to_vertical_vein_to_RA",
+  "image_width": 562,
+  "image_height": 504,
+  "auto_configured": true,
+  "locations": {
+    "RA": {
+      "side": "right",
+      "annotation_type": "saturation_and_pressure",
+      "sat_x": 315,
+      "sat_y": 239,
+      "pressure_x": 314,
+      "pressure_y": 296
+    },
+    "RV": {
+      "side": "right",
+      "annotation_type": "saturation_and_pressure",
+      "sat_x": 220,
+      "sat_y": 337,
+      "pressure_x": 144,
+      "pressure_y": 347
+    },
+    "RPA": {
+      "side": "right",
+      "annotation_type": "saturation_and_pressure",
+      "sat_x": 178,
+      "sat_y": 102,
+      "pressure_x": 102,
+      "pressure_y": 106
+    },
+    "LPA": {
+      "side": "right",
+      "annotation_type": "saturation_and_pressure",
+      "sat_x": 433,
+      "sat_y": 122,
+      "pressure_x": 513,
+      "pressure_y": 124
+    },
+    "RPCWP": {
+      "side": "left",
+      "annotation_type": "pcwp",
+      "pressure_x": 64,
+      "pressure_y": 185
+    },
+    "LPCWP": {
+      "side": "left",
+      "annotation_type": "pcwp",
+      "pressure_x": 467,
+      "pressure_y": 253
+    },
+    "LA": {
+      "side": "left",
+      "annotation_type": "saturation_and_pressure",
+      "sat_x": 178,
+      "sat_y": 179,
+      "pressure_x": 184,
+      "pressure_y": 231
+    },
+    "LV": {
+      "side": "left",
+      "annotation_type": "saturation_and_pressure",
+      "sat_x": 131,
+      "sat_y": 282,
+      "pressure_x": 91,
+      "pressure_y": 298
+    },
+    "Descending_Aorta": {
+      "side": "left",
+      "annotation_type": "saturation_and_pressure",
+      "sat_x": 283,
+      "sat_y": 424,
+      "pressure_x": 342,
+      "pressure_y": 425
+    },
+    "Ascending_Aorta": {
+      "side": "right",
+      "annotation_type": "saturation_and_pressure",
+      "custom": true,
+      "sat_x": 279,
+      "sat_y": 211,
+      "pressure_x": 295,
+      "pressure_y": 180
+    }
+  }
+}
