@@ -85,6 +85,8 @@ _COORD_KEY_ALIASES = {
     "Conduit":         "Fontan_conduit",
     "IVC_limb":        "Fontan_IVC_limb",
     "SVC_limb":        "Fontan_IVC_limb",
+    # LSVC hyphenated variant (coord files may store as "L-SVC")
+    "L-SVC":           "LSVC",
 }
 
 # When a coord is configured for one aorta location but hemo data was entered
