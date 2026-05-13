@@ -7,10 +7,10 @@
     "SVC": {
       "side": "right",
       "annotation_type": "saturation_and_pressure",
-      "sat_x": 145,
-      "sat_y": 193,
-      "pressure_x": 98,
-      "pressure_y": 193
+      "sat_x": 147,
+      "sat_y": 176,
+      "pressure_x": 148,
+      "pressure_y": 208
     },
     "IVC": {
       "side": "right",
@@ -21,9 +21,9 @@
     "RA": {
       "side": "right",
       "annotation_type": "saturation_and_pressure",
-      "sat_x": 177,
-      "sat_y": 273,
-      "pressure_x": 205,
+      "sat_x": 176,
+      "sat_y": 275,
+      "pressure_x": 207,
       "pressure_y": 307
     },
     "RV": {
@@ -61,22 +61,22 @@
     "RPCWP": {
       "side": "left",
       "annotation_type": "pcwp",
-      "pressure_x": 67,
-      "pressure_y": 188
+      "pressure_x": 49,
+      "pressure_y": 190
     },
     "LPCWP": {
       "side": "left",
       "annotation_type": "pcwp",
-      "pressure_x": 497,
-      "pressure_y": 197
+      "pressure_x": 498,
+      "pressure_y": 191
     },
     "LA": {
       "side": "left",
       "annotation_type": "saturation_and_pressure",
-      "sat_x": 351,
-      "sat_y": 234,
-      "pressure_x": 380,
-      "pressure_y": 250
+      "sat_x": 325,
+      "sat_y": 206,
+      "pressure_x": 367,
+      "pressure_y": 240
     },
     "LV": {
       "side": "left",
@@ -123,26 +123,26 @@
       "annotation_type": "saturation_and_pressure",
       "sat_x": 426,
       "sat_y": 223,
-      "pressure_x": 459,
+      "pressure_x": 462,
       "pressure_y": 220
     },
     "L-SVC": {
       "side": "right",
       "annotation_type": "saturation_and_pressure",
       "custom": true,
-      "sat_x": 392,
+      "sat_x": 393,
       "sat_y": 97,
-      "pressure_x": 436,
-      "pressure_y": 98
+      "pressure_x": 438,
+      "pressure_y": 96
     },
     "Ascending_Aorta": {
       "side": "left",
       "annotation_type": "saturation_and_pressure",
       "custom": true,
-      "pressure_x": 418,
-      "pressure_y": 176,
-      "sat_x": 383,
-      "sat_y": 176
+      "pressure_x": 242,
+      "pressure_y": 192,
+      "sat_x": 321,
+      "sat_y": 265
     }
   }
 }

@@ -59,7 +59,7 @@
     "RPCWP": {
       "side": "left",
       "annotation_type": "pcwp",
-      "pressure_x": 25,
+      "pressure_x": 17,
       "pressure_y": 177
     },
     "LPCWP": {

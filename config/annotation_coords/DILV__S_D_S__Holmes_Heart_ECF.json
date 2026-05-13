@@ -23,16 +23,16 @@
       "annotation_type": "saturation_and_pressure",
       "sat_x": 85,
       "sat_y": 125,
-      "pressure_x": 32,
-      "pressure_y": 129
+      "pressure_x": 27,
+      "pressure_y": 127
     },
     "LPA": {
       "side": "right",
       "annotation_type": "saturation_and_pressure",
       "sat_x": 316,
       "sat_y": 155,
-      "pressure_x": 379,
-      "pressure_y": 153
+      "pressure_x": 388,
+      "pressure_y": 155
     },
     "RPCWP": {
       "side": "left",
@@ -81,10 +81,10 @@
     "LUPV": {
       "side": "left",
       "annotation_type": "saturation_and_pressure",
-      "sat_x": 360,
+      "sat_x": 363,
       "sat_y": 206,
-      "pressure_x": 397,
-      "pressure_y": 187
+      "pressure_x": 411,
+      "pressure_y": 196
     },
     "RLPV": {
       "side": "left",
@@ -106,8 +106,8 @@
       "side": "right",
       "annotation_type": "saturation_and_pressure",
       "custom": true,
-      "sat_x": 108,
-      "sat_y": 83,
+      "sat_x": 112,
+      "sat_y": 80,
       "pressure_x": 67,
       "pressure_y": 78
     },
@@ -124,10 +124,10 @@
       "side": "left",
       "annotation_type": "saturation_and_pressure",
       "custom": true,
-      "pressure_x": 362,
-      "pressure_y": 202,
-      "sat_x": 327,
-      "sat_y": 202
+      "pressure_x": 211,
+      "pressure_y": 229,
+      "sat_x": 234,
+      "sat_y": 261
     }
   }
 }
