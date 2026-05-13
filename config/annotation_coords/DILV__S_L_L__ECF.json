@@ -59,10 +59,10 @@
     "LV": {
       "side": "left",
       "annotation_type": "saturation_and_pressure",
-      "sat_x": 386,
-      "sat_y": 357,
-      "pressure_x": 381,
-      "pressure_y": 317
+      "sat_x": 335,
+      "sat_y": 368,
+      "pressure_x": 391,
+      "pressure_y": 382
     },
     "Descending_Aorta": {
       "side": "left",
