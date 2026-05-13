@@ -29,10 +29,10 @@
     "Glenn_anastomosis": {
       "side": "right",
       "annotation_type": "saturation_and_pressure",
-      "sat_x": 113,
-      "sat_y": 51,
-      "pressure_x": 76,
-      "pressure_y": 75
+      "sat_x": 629,
+      "sat_y": 54,
+      "pressure_x": 633,
+      "pressure_y": 102
     },
     "RPA": {
       "side": "right",
@@ -47,20 +47,20 @@
       "annotation_type": "saturation_and_pressure",
       "sat_x": 324,
       "sat_y": 141,
-      "pressure_x": 385,
+      "pressure_x": 388,
       "pressure_y": 146
     },
     "RPCWP": {
       "side": "left",
       "annotation_type": "pcwp",
-      "pressure_x": 49,
-      "pressure_y": 185
+      "pressure_x": 27,
+      "pressure_y": 182
     },
     "LPCWP": {
       "side": "left",
       "annotation_type": "pcwp",
-      "pressure_x": 439,
-      "pressure_y": 206
+      "pressure_x": 452,
+      "pressure_y": 209
     },
     "LA": {
       "side": "left",
@@ -122,10 +122,10 @@
       "side": "left",
       "annotation_type": "saturation_and_pressure",
       "custom": true,
-      "pressure_x": 322,
-      "pressure_y": 245,
-      "sat_x": 287,
-      "sat_y": 245
+      "pressure_x": 207,
+      "pressure_y": 200,
+      "sat_x": 283,
+      "sat_y": 265
     }
   }
 }
