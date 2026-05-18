@@ -224,8 +224,12 @@ def draw_pressure_annotation(draw, x, y, systolic, diastolic, mean, side, fonts,
         return
 
     if ventricular:
+        # 3 numbers (sys/dia/mean): mean = EDP (3rd number)
+        # 2 numbers (sys/dia): diastolic = EDP (2nd number)
         if systolic is not None and mean is not None:
             line1 = f"{int(systolic)}/{int(mean)}"
+        elif systolic is not None and diastolic is not None:
+            line1 = f"{int(systolic)}/{int(diastolic)}"
         elif systolic is not None:
             line1 = str(int(systolic))
         elif mean is not None:
@@ -489,11 +493,6 @@ def annotate_diagram(image_path: str, coords: dict, hemodynamics: dict,
                 mean = systolic   # treat lone value as mean
             systolic = None
             diastolic = None
-
-        # Atrial locations (RA, LA): paper stores A-wave as systolic and
-        # V-wave as diastolic, but the diagram displays V/A (V on top).
-        if loc_name in _ATRIAL_LOCS:
-            systolic, diastolic = diastolic, systolic
 
         sat_cx, sat_cy, press_cx, press_cy = _resolve_coords(coord)
 

@@ -31,6 +31,76 @@ st.set_page_config(
 )
 inject_styles()
 
+# ── How-to-use popup ─────────────────────────────────────────────────────────
+@st.dialog("How to Use — Cath Report Dashboard", width="large")
+def show_how_to_use():
+    st.markdown("""
+**Welcome to the Cardiac Catheterization Report Dashboard!**
+Follow these steps to generate an annotated hemodynamic diagram and narrative report.
+
+---
+
+### Step 1 · Select an Anatomy Diagram
+- **Type a diagnosis** in the search box (e.g. *TOF*, *HLHS s/p Norwood*, *ASD with LSVC*).
+  The best-matching anatomy diagrams appear as a selectable list.
+- Or check **"Use blank normal diagram"** to start with a standard biventricular template.
+- Click **"⚙️ Set up annotation positions"** if a new diagram needs coordinate setup.
+
+---
+
+### Step 2 · Enter Hemodynamic Data
+Enter one location per line in the text area. Supported format:
+```
+Location  Saturation  Systolic/Diastolic  Mean
+```
+**Examples:**
+```
+SVC  79
+RA   75  8/10  9
+RV   75  50/5
+MPA  75  50/30  38
+RPCWP  12
+LV   98  95/10
+Aorta  98  95/55  72
+```
+- Oxygen saturations are automatically recognized as numbers between 40–100.
+- Optionally enter **Hgb** and **aVO₂** to enable Fick calculations (Qp, Qs, PVRi, SVRi).
+
+---
+
+### Step 3 · Generate the Report
+Click **⚡ Generate Report**. The dashboard will:
+1. Parse and validate your hemodynamic values (conflicts are flagged for review).
+2. Annotate the anatomy diagram with saturation circles and pressure labels.
+3. Generate a prose **hemodynamic narrative** ready to paste into your cath report.
+4. Calculate **Fick-derived flows and resistances** (if Hgb and aVO₂ are provided).
+5. Detect **saturation step-ups** across cardiac chambers.
+
+---
+
+### Step 4 · Export
+| Button | Action |
+|--------|--------|
+| 📤 Download Combined | Download diagram + narrative as a single PNG |
+| ⬇️ Diagram Only | Download the annotated diagram alone |
+| 📋 Copy Diagram | Copy diagram to clipboard |
+| 📄 Generate Word Report | Build a formatted .docx report |
+| 🔧 Fix Positions | Reopen the coord editor to adjust annotation placement |
+| 🔄 New Report | Clear and start a new case |
+
+---
+
+### Tips
+- **Scanning (mobile app):** Take a photo of a cath sheet — the AI extracts values automatically and converts atrial pressures to V/A format.
+- **Coordinate setup:** Use the **⚙️ Setup Annotation Positions** sidebar button to drag annotation dots to the correct locations on any diagram.
+- **Custom locations:** In the coord editor you can add non-standard locations (e.g. *Glenn anastomosis*, *Sano conduit*) and then type them by name in the hemodynamics text area.
+""")
+
+col_howto, _ = st.columns([1, 5])
+with col_howto:
+    if st.button("How to Use", use_container_width=True):
+        show_how_to_use()
+
 # ── Session state defaults ───────────────────────────────────────────────────
 _defaults = {
     "library": None,
@@ -496,6 +566,9 @@ if st.session_state.annotated_image is not None:
         )
     else:
         st.info("No narrative generated — check that hemodynamic values were entered.")
+
+    st.markdown("---")
+    st.caption("© 2026 Cath Hemo Report Dashboard. All rights reserved.")
 
     # ── Step-ups and calculations ────────────────────────────────────────────
     calc_col, stepup_col = st.columns([1, 1], gap="large")

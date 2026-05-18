@@ -28,16 +28,19 @@ Output ONLY a plain text block, one location per line, in this exact format:
 Rules:
 1. Use ONLY these exact location names: SVC IVC RA RV MPA RPA LPA RPCWP LPCWP LA LV Aorta
 2. Omit any field that is not clearly written on the sheet for that location
-3. Write mean as a bare number at the end of the line (e.g. "RA 75 10/8 9")
+3. Write mean as a bare number at the end of the line (e.g. "RA 75 8/10 9")
 4. No units, no labels, no punctuation, no blank lines
 5. Do NOT guess or infer values that are not clearly visible
 6. If a location appears multiple times (e.g. pullback), use the last value
 7. If you cannot read a value confidently, omit it
+8. ATRIAL PRESSURES (RA and LA): Cath sheets record these as A-wave/V-wave. Output them in V/A format
+   (V-wave first, A-wave second). V-wave is the lower value, A-wave is the higher value.
+   Example: if the sheet shows RA "10/8" (A=10, V=8), output "RA 75 8/10 9" (V first, then A).
 
 Example output:
 SVC 79
 IVC 81
-RA 75 10/8 9
+RA 75 8/10 9
 RV 75 50/5
 MPA 75 50/30 38
 RPCWP 12

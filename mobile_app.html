@@ -112,9 +112,74 @@ td:last-child{text-align:right;font-weight:600;font-family:monospace}
 .img-wrap{border-radius:12px;overflow:hidden;border:1px solid var(--border);
   margin-bottom:14px;background:#fff;touch-action:pinch-zoom}
 .img-wrap img{width:100%;display:block}
+
+/* ── How-to modal ── */
+.modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.55);
+  z-index:200;overflow-y:auto;-webkit-overflow-scrolling:touch}
+.modal-overlay.open{display:flex;align-items:flex-start;justify-content:center;padding:24px 12px 40px}
+.modal-box{background:#fff;border-radius:16px;max-width:520px;width:100%;padding:24px 20px;
+  box-shadow:0 8px 40px rgba(0,0,0,.3)}
+.modal-hdr{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px}
+.modal-hdr h2{font-size:17px;font-weight:700;color:var(--navy);margin:0}
+.modal-close{background:none;border:none;font-size:22px;color:var(--muted);cursor:pointer;
+  line-height:1;padding:0 4px}
+.modal-close:active{color:var(--crimson)}
+.modal-body{font-size:14px;line-height:1.65;color:var(--navy)}
+.modal-body h3{font-size:14px;font-weight:700;color:var(--crimson);margin:18px 0 6px}
+.modal-body h3:first-child{margin-top:0}
+.modal-body p{margin:0 0 8px}
+.modal-body code{background:#F0EDE8;border-radius:4px;padding:1px 5px;font-size:12px;
+  font-family:monospace;color:var(--navy)}
+.modal-body pre{background:#F0EDE8;border-radius:8px;padding:10px 12px;font-size:12px;
+  font-family:monospace;overflow-x:auto;margin:6px 0 10px;line-height:1.5}
+.modal-body ul{margin:0 0 8px;padding-left:18px}
+.modal-body li{margin-bottom:4px}
+.modal-body .tip{background:#FFF8F0;border-left:3px solid var(--crimson);
+  border-radius:0 6px 6px 0;padding:8px 12px;margin:8px 0;font-size:13px}
+/* Copyright footer */
+.copyright{text-align:center;color:var(--muted);font-size:11px;padding:18px 0 8px}
 </style>
 </head>
 <body>
+
+<!-- ── HOW-TO MODAL ──────────────────────────────────── -->
+<div class="modal-overlay" id="howto-modal" onclick="closeHowTo(event)">
+  <div class="modal-box">
+    <div class="modal-hdr">
+      <h2>How to Use</h2>
+      <button class="modal-close" onclick="document.getElementById('howto-modal').classList.remove('open')">✕</button>
+    </div>
+    <div class="modal-body">
+      <h3>Step 1 · Enter Data</h3>
+      <p><strong>Scan:</strong> Tap "Take Photo" to photograph a cath sheet — values are extracted automatically. Atrial pressures (RA, LA) are converted to V/A format.</p>
+      <p><strong>Type:</strong> Enter one location per line:</p>
+      <pre>Location  Saturation  Systolic/Diastolic  Mean
+
+SVC  79
+RA   75  8/10  9
+RV   75  50/5
+MPA  75  50/30  38
+RPCWP  12
+LV   98  95/10
+Aorta  98  95/55  72</pre>
+
+      <h3>Step 2 · Select a Diagram</h3>
+      <p>Tap <strong>Select Diagram →</strong> then search by diagnosis (e.g. <em>TOF</em>, <em>ASD</em>, <em>HLHS Norwood</em>). Tap a card to select it.</p>
+
+      <h3>Step 3 · Generate Report</h3>
+      <p>Tap <strong>Generate Report →</strong> to annotate the diagram, produce a hemodynamic narrative, and calculate Fick-derived values.</p>
+
+      <h3>Step 4 · Export</h3>
+      <ul>
+        <li><strong>Save Image</strong> — download the annotated diagram as PNG</li>
+        <li><strong>Share</strong> — share via the system share sheet</li>
+        <li><strong>Copy Narrative</strong> — copy the prose report to clipboard</li>
+      </ul>
+
+      <div class="tip">Browse diagrams without entering data using <strong>View Diagrams</strong>.</div>
+    </div>
+  </div>
+</div>
 
 <!-- ── SCREEN 1: DATA ENTRY ─────────────────────────── -->
 <div id="s-entry" class="screen active">
@@ -172,8 +237,10 @@ td:last-child{text-align:right;font-weight:600;font-family:monospace}
       Select Diagram →
     </button>
     <div class="divider">or</div>
-    <button class="btn btn-outline" onclick="goToBrowse()">🗂 View Diagrams</button>
+    <button class="btn btn-outline" onclick="goToBrowse()">View Diagrams</button>
+    <button class="btn btn-outline" onclick="document.getElementById('howto-modal').classList.add('open')" style="margin-top:6px">How to Use</button>
   </div>
+  <div class="copyright">© 2026 Cath Hemo Report Dashboard. All rights reserved.</div>
 </div>
 
 <!-- ── SCREEN: BROWSE DIAGRAMS ─────────────────────── -->
@@ -282,6 +349,12 @@ td:last-child{text-align:right;font-weight:600;font-family:monospace}
 </div>
 
 <script>
+// ── How-to modal ──────────────────────────────────────────────────────
+function closeHowTo(e) {
+  if (e.target === document.getElementById('howto-modal'))
+    document.getElementById('howto-modal').classList.remove('open')
+}
+
 // ── State ──────────────────────────────────────────────────────────────
 let hemoText = ''
 let selectedDiagram = null
