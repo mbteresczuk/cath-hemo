@@ -33,9 +33,12 @@ Rules:
 5. Do NOT guess or infer values that are not clearly visible
 6. If a location appears multiple times (e.g. pullback), use the first value
 7. If you cannot read a value confidently, omit it
-8. ATRIAL PRESSURES (RA and LA): Cath sheets record these as A-wave/V-wave. Output them in V/A format
-   (V-wave first, A-wave second). V-wave is the lower value, A-wave is the higher value.
-   Example: if the sheet shows RA "10/8" (A=10, V=8), output "RA 75 8/10 9" (V first, then A).
+8. ATRIAL PRESSURES (RA and LA): The diagram requires V-wave/A-wave order (V first, A second).
+   - Look for "v" and "a" wave labels on the sheet and output V first, then A.
+   - If waves are not labeled, cath sheets typically record the a-wave before the v-wave in time.
+     The a-wave is usually the higher of the two values in a normal heart.
+     So if you see two unlabeled atrial values, put the lower value first (V) and the higher value second (A).
+   - Example: sheet shows RA "10/6" or "a=10 v=6" → output "RA 75 6/10 9" (V=6 first, A=10 second).
 
 Example output:
 SVC 79
