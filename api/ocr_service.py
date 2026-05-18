@@ -31,7 +31,7 @@ Rules:
 3. Write mean as a bare number at the end of the line (e.g. "RA 75 8/10 9")
 4. No units, no labels, no punctuation, no blank lines
 5. Do NOT guess or infer values that are not clearly visible
-6. If a location appears multiple times (e.g. pullback), use the last value
+6. If a location appears multiple times (e.g. pullback), use the first value
 7. If you cannot read a value confidently, omit it
 8. ATRIAL PRESSURES (RA and LA): Cath sheets record these as A-wave/V-wave. Output them in V/A format
    (V-wave first, A-wave second). V-wave is the lower value, A-wave is the higher value.
