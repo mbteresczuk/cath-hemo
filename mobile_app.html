@@ -1054,7 +1054,7 @@ const DEVICE_BOUNDS = {
   stent:        { hw: 42, hh: 13 },
   asd_device:   { hw: 30, hh: 17 },
   vsd_device:   { hw: 24, hh: 14 },
-  pda_closure:  { hw: 19, hh: 20 },
+  pda_closure:  { hw: 17, hh: 13 },
   btt_shunt:    { hw: 30, hh: 42 },
   rvpa_conduit: { hw: 44, hh: 15 },
 }
@@ -1116,18 +1116,25 @@ function deviceGlyphSVG(type, stretch = 1) {
   if (type === 'vsd_device')
     return `<g stroke="#000" stroke-width="1.6" fill="none">${_occluderSVG(44)}</g>`
   if (type === 'pda_closure') {
-    // duct occluder: retention skirt disc + tapered hatched plug
-    return `<g stroke="#000" stroke-width="1.7" fill="none">
-      <polygon points="-12,-11 12,-11 9,14 -9,14" fill="#fff"/>
-      <line x1="-11.5" y1="-6" x2="10" y2="9"/>
-      <line x1="11.5" y1="-6" x2="-10" y2="9"/>
-      <line x1="-10.5" y1="3" x2="9.3" y2="13"/>
-      <line x1="10.5" y1="3" x2="-9.3" y2="13"/>
-      <ellipse cx="0" cy="-14" rx="17" ry="4.5" fill="#fff"/>
-      <line x1="-11" y1="-16.5" x2="-5" y2="-11.5"/>
-      <line x1="-3" y1="-17.5" x2="3" y2="-10.5"/>
-      <line x1="5" y1="-11.5" x2="11" y2="-16.5"/>
-    </g>`
+    // Piccolo-style occluder: low-profile mesh spool — central cylinder
+    // with two slightly wider retention discs at the ends
+    const spool = 'M -16 -12 L -11 -12 L -11 -8.5 L 11 -8.5 L 11 -12 L 16 -12 ' +
+                  'L 16 12 L 11 12 L 11 8.5 L -11 8.5 L -11 12 L -16 12 Z'
+    let mesh = ''
+    // crosshatch over the central waist
+    for (let x = -11; x < 11; x += 5.5) {
+      mesh += `<line x1="${x}" y1="-8.5" x2="${x + 5.5}" y2="8.5"/>
+               <line x1="${x}" y1="8.5" x2="${x + 5.5}" y2="-8.5"/>`
+    }
+    // hatch on each retention disc
+    for (const sx of [-1, 1]) {
+      mesh += `<line x1="${sx * 16}" y1="-9" x2="${sx * 11}" y2="-3"/>
+               <line x1="${sx * 16}" y1="0" x2="${sx * 11}" y2="6"/>
+               <line x1="${sx * 16}" y1="-4.5" x2="${sx * 11}" y2="1.5"/>
+               <line x1="${sx * 16}" y1="4" x2="${sx * 11}" y2="10"/>`
+    }
+    return `<g stroke="#000" stroke-width="1.5" fill="none">
+      <path d="${spool}" fill="#fff" stroke-width="2.2"/>${mesh}</g>`
   }
   if (type === 'btt_shunt') {
     // curved Gore-Tex tube: black rim, open white lumen, drawn as double stroke
