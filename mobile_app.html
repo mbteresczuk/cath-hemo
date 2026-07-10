@@ -136,6 +136,18 @@ td:last-child{text-align:right;font-weight:600;font-family:monospace}
 .modal-body li{margin-bottom:4px}
 .modal-body .tip{background:#FFF8F0;border-left:3px solid var(--crimson);
   border-radius:0 6px 6px 0;padding:8px 12px;margin:8px 0;font-size:13px}
+/* ── Device editor ── */
+.device-toolbar{background:var(--surface);border:1px solid var(--border);border-radius:12px;
+  padding:12px;margin-bottom:14px}
+.device-toolbar .drow{display:flex;gap:8px;align-items:center;margin-bottom:10px}
+.device-select{flex:1;padding:10px 12px;border:1.5px solid var(--border);border-radius:8px;
+  font-size:14px;background:var(--bg);color:var(--navy);font-family:inherit;-webkit-appearance:none}
+.device-add-btn{padding:10px 16px;border-radius:8px;border:none;background:var(--crimson);
+  color:#fff;font-weight:600;font-size:14px;cursor:pointer;white-space:nowrap}
+.device-hint{font-size:12px;color:var(--muted);line-height:1.5}
+#device-overlay{position:absolute;inset:0;width:100%;height:100%;touch-action:none;display:none}
+.dev-body{cursor:grab}
+.dev-handle{cursor:pointer}
 /* Copyright footer */
 .copyright{text-align:center;color:var(--muted);font-size:11px;padding:18px 0 8px}
 </style>
@@ -169,7 +181,10 @@ Aorta  98  95/55  72</pre>
       <h3>Step 3 · Generate Report</h3>
       <p>Tap <strong>Generate Report →</strong> to annotate the diagram, produce a hemodynamic narrative, and calculate Fick-derived values.</p>
 
-      <h3>Step 4 · Export</h3>
+      <h3>Step 4 · Edit Diagram (optional)</h3>
+      <p>Tap <strong>✏️ Edit Diagram</strong> to add devices: stent, ASD device, VSD device, PDA closure, or BTT shunt. Drag to position, use <strong>↻</strong> to rotate, <strong>⤡</strong> to resize, <strong>✕</strong> to delete. Tap <strong>Apply</strong> to bake devices into the image (Reset restores the original).</p>
+
+      <h3>Step 5 · Export</h3>
       <ul>
         <li><strong>Save Image</strong> — download the annotated diagram as PNG</li>
         <li><strong>Share</strong> — share via the system share sheet</li>
@@ -315,8 +330,9 @@ Aorta  98  95/55  72</pre>
   <div id="output-result" style="display:none">
     <!-- Combined diagram + narrative card -->
     <div class="card" style="padding:0;overflow:hidden;margin-bottom:14px">
-      <div class="img-wrap" style="margin-bottom:0;border:none;border-radius:0;border-bottom:1px solid var(--border)">
+      <div class="img-wrap" id="result-img-wrap" style="margin-bottom:0;border:none;border-radius:0;border-bottom:1px solid var(--border);position:relative">
         <img id="result-img" src="" alt="Annotated diagram"/>
+        <svg id="device-overlay" xmlns="http://www.w3.org/2000/svg"></svg>
       </div>
       <div style="padding:14px">
         <div class="section-label" style="margin-top:0">Hemodynamics Narrative</div>
@@ -324,6 +340,27 @@ Aorta  98  95/55  72</pre>
       </div>
     </div>
 
+    <!-- Device editor toolbar (hidden until Edit Diagram is tapped) -->
+    <div class="device-toolbar" id="device-toolbar" style="display:none">
+      <div class="drow">
+        <select class="device-select" id="device-select">
+          <option value="stent">Stent</option>
+          <option value="asd_device">ASD device</option>
+          <option value="vsd_device">VSD device</option>
+          <option value="pda_closure">PDA closure</option>
+          <option value="btt_shunt">BTT shunt</option>
+        </select>
+        <button class="device-add-btn" onclick="addDevice()">＋ Add</button>
+      </div>
+      <div class="drow">
+        <button class="btn btn-primary" style="margin-bottom:0;padding:11px" onclick="applyDevices()">✓ Apply</button>
+        <button class="btn btn-outline" style="margin-bottom:0;padding:11px" onclick="cancelDeviceEdit()">Cancel</button>
+        <button class="btn btn-outline" style="margin-bottom:0;padding:11px" onclick="resetDevices()">Reset</button>
+      </div>
+      <p class="device-hint">Tap a device to select it · drag to move · <b>↻</b> rotate · <b>⤡</b> resize · <b>✕</b> delete. Apply bakes devices into the image.</p>
+    </div>
+
+    <button class="btn btn-outline" id="edit-devices-btn" onclick="startDeviceEdit()">✏️ Edit Diagram (Add Devices)</button>
     <div style="display:flex;gap:8px;margin-bottom:10px">
       <button class="btn btn-outline" style="margin-bottom:0" onclick="saveImage()">Save Image</button>
       <button class="btn btn-secondary" style="margin-bottom:0" onclick="shareReport()">Share</button>
@@ -792,6 +829,12 @@ function renderOutput(data) {
   document.getElementById('output-loading').style.display = 'none'
   document.getElementById('output-result').style.display = 'block'
 
+  // Fresh report → clear any device-editing state from a previous run
+  devEdit.devices = []
+  devEdit.originalB64 = null
+  _exitDeviceEdit()
+  renderDevices()
+
   // Image
   document.getElementById('result-img').src = 'data:image/png;base64,' + data.annotated_image_b64
 
@@ -969,6 +1012,282 @@ async function shareBrowseDiagram() {
     saveBrowseDiagram()
   }
 }
+
+// ── Device editor (stents, occluders, shunts) ──────────────────────────
+// Devices are placed as SVG glyphs over the annotated image, then baked
+// into the PNG on Apply so Save/Share include them.
+let devEdit = {
+  active: false, devices: [], sel: null, nextId: 1,
+  imgW: 0, imgH: 0, originalB64: null, drag: null,
+}
+
+// Glyph half-extents in local units (for selection box + handle placement)
+const DEVICE_BOUNDS = {
+  stent:       { hw: 42, hh: 13 },
+  asd_device:  { hw: 30, hh: 17 },
+  vsd_device:  { hw: 24, hh: 14 },
+  pda_closure: { hw: 19, hh: 20 },
+  btt_shunt:   { hw: 30, hh: 42 },
+}
+
+function _occluderSVG(len) {
+  // Amplatzer-style double disc seen edge-on: two thin hatched discs + waist
+  const hl = len / 2, hw = len * 0.09, off = len * 0.20, ww = len * 0.14
+  let g = ''
+  for (const s of [-1, 1]) {
+    const oy = s * off
+    g += `<ellipse cx="0" cy="${oy}" rx="${hl}" ry="${hw}" fill="#fff"/>`
+    const n = 8, step = len / n
+    for (let i = 1; i < n; i++) {
+      const x = -hl + i * step
+      const h = hw * Math.sqrt(Math.max(0, 1 - (x / hl) ** 2))
+      const x2 = Math.min(hl, x + step * 0.7)
+      const h2 = hw * Math.sqrt(Math.max(0, 1 - (x2 / hl) ** 2))
+      g += `<line x1="${x}" y1="${oy + h}" x2="${x2}" y2="${oy - h2}"/>`
+    }
+  }
+  g += `<rect x="${-ww}" y="${-off}" width="${2 * ww}" height="${2 * off}" fill="#fff" stroke="none"/>
+        <line x1="${-ww}" y1="${-off}" x2="${-ww}" y2="${off}"/>
+        <line x1="${ww}" y1="${-off}" x2="${ww}" y2="${off}"/>
+        <line x1="${-ww}" y1="${-off}" x2="${ww}" y2="${off}"/>
+        <line x1="${-ww}" y1="${off}" x2="${ww}" y2="${-off}"/>`
+  return g
+}
+
+function deviceGlyphSVG(type) {
+  if (type === 'stent') {
+    const L = 80, W = 22, hl = L / 2, hw = W / 2, n = 6, step = L / n
+    let hatch = ''
+    for (let i = 0; i < n; i++) {
+      const x = -hl + i * step
+      hatch += `<line x1="${x}" y1="${-hw}" x2="${x + step}" y2="${hw}"/>
+                <line x1="${x}" y1="${hw}" x2="${x + step}" y2="${-hw}"/>`
+    }
+    return `<g stroke="#000" stroke-width="1.6" fill="none">
+      <rect x="${-hl}" y="${-hw}" width="${L}" height="${W}" fill="#fff" stroke-width="2.4"/>${hatch}</g>`
+  }
+  if (type === 'asd_device')
+    return `<g stroke="#000" stroke-width="1.7" fill="none">${_occluderSVG(56)}</g>`
+  if (type === 'vsd_device')
+    return `<g stroke="#000" stroke-width="1.6" fill="none">${_occluderSVG(44)}</g>`
+  if (type === 'pda_closure') {
+    // duct occluder: retention skirt disc + tapered hatched plug
+    return `<g stroke="#000" stroke-width="1.7" fill="none">
+      <polygon points="-12,-11 12,-11 9,14 -9,14" fill="#fff"/>
+      <line x1="-11.5" y1="-6" x2="10" y2="9"/>
+      <line x1="11.5" y1="-6" x2="-10" y2="9"/>
+      <line x1="-10.5" y1="3" x2="9.3" y2="13"/>
+      <line x1="10.5" y1="3" x2="-9.3" y2="13"/>
+      <ellipse cx="0" cy="-14" rx="17" ry="4.5" fill="#fff"/>
+      <line x1="-11" y1="-16.5" x2="-5" y2="-11.5"/>
+      <line x1="-3" y1="-17.5" x2="3" y2="-10.5"/>
+      <line x1="5" y1="-11.5" x2="11" y2="-16.5"/>
+    </g>`
+  }
+  if (type === 'btt_shunt') {
+    // curved Gore-Tex tube: black rim, open white lumen, drawn as double stroke
+    const p = 'M -22 -36 Q 16 -20 14 36'
+    return `<g fill="none">
+      <path d="${p}" stroke="#000" stroke-width="18" stroke-linecap="butt"/>
+      <path d="${p}" stroke="#fff" stroke-width="11" stroke-linecap="butt"/>
+    </g>`
+  }
+  return ''
+}
+
+function _overlayEl() { return document.getElementById('device-overlay') }
+
+function _uiScale() {
+  const ov = _overlayEl()
+  const r = ov.getBoundingClientRect()
+  return r.width > 0 ? devEdit.imgW / r.width : 1
+}
+
+function startDeviceEdit() {
+  const img = document.getElementById('result-img')
+  if (!lastResult || !img.naturalWidth) return
+  devEdit.active = true
+  devEdit.imgW = img.naturalWidth
+  devEdit.imgH = img.naturalHeight
+  if (devEdit.originalB64 == null) devEdit.originalB64 = lastResult.annotated_image_b64
+  const ov = _overlayEl()
+  ov.setAttribute('viewBox', `0 0 ${devEdit.imgW} ${devEdit.imgH}`)
+  ov.style.display = 'block'
+  document.getElementById('device-toolbar').style.display = 'block'
+  document.getElementById('edit-devices-btn').style.display = 'none'
+  renderDevices()
+}
+
+function addDevice() {
+  const type = document.getElementById('device-select').value
+  const d = {
+    id: devEdit.nextId++, type,
+    x: devEdit.imgW / 2, y: devEdit.imgH / 2,
+    scale: Math.max(0.6, devEdit.imgW / 480), angle: 0,
+  }
+  devEdit.devices.push(d)
+  devEdit.sel = d.id
+  renderDevices()
+}
+
+function _deviceGroup(d, selected, withHandles) {
+  const b = DEVICE_BOUNDS[d.type]
+  const u = withHandles ? _uiScale() : 1
+  const hwS = b.hw * d.scale, hhS = b.hh * d.scale
+  let handles = ''
+  if (selected && withHandles) {
+    const hr = 12 * u, pad = 8 * u
+    handles = `
+      <rect x="${-hwS - pad}" y="${-hhS - pad}" width="${2 * (hwS + pad)}" height="${2 * (hhS + pad)}"
+            fill="none" stroke="#0068c9" stroke-width="${1.5 * u}" stroke-dasharray="${5 * u} ${4 * u}"/>
+      <line x1="0" y1="${-hhS - pad}" x2="0" y2="${-hhS - pad - 20 * u}" stroke="#0068c9" stroke-width="${1.5 * u}"/>
+      <g class="dev-handle" data-role="rotate" data-did="${d.id}">
+        <circle cx="0" cy="${-hhS - pad - 20 * u - hr}" r="${hr}" fill="#0068c9"/>
+        <text x="0" y="${-hhS - pad - 20 * u - hr}" fill="#fff" font-size="${15 * u}"
+              text-anchor="middle" dominant-baseline="central" pointer-events="none">↻</text>
+      </g>
+      <g class="dev-handle" data-role="resize" data-did="${d.id}">
+        <circle cx="${hwS + pad + hr}" cy="${hhS + pad + hr}" r="${hr}" fill="#0068c9"/>
+        <text x="${hwS + pad + hr}" y="${hhS + pad + hr}" fill="#fff" font-size="${13 * u}"
+              text-anchor="middle" dominant-baseline="central" pointer-events="none">⤡</text>
+      </g>
+      <g class="dev-handle" data-role="delete" data-did="${d.id}">
+        <circle cx="${-hwS - pad - hr}" cy="${-hhS - pad - hr}" r="${hr}" fill="#B91C1C"/>
+        <text x="${-hwS - pad - hr}" y="${-hhS - pad - hr}" fill="#fff" font-size="${13 * u}"
+              text-anchor="middle" dominant-baseline="central" pointer-events="none">✕</text>
+      </g>`
+  }
+  return `
+    <g transform="translate(${d.x} ${d.y}) rotate(${d.angle})">
+      <g class="dev-body" data-role="body" data-did="${d.id}" transform="scale(${d.scale})">
+        ${deviceGlyphSVG(d.type)}
+      </g>
+      ${handles}
+    </g>`
+}
+
+function renderDevices() {
+  _overlayEl().innerHTML = devEdit.devices
+    .map(d => _deviceGroup(d, d.id === devEdit.sel, true)).join('')
+}
+
+function _toImgCoords(e) {
+  const r = _overlayEl().getBoundingClientRect()
+  return [
+    (e.clientX - r.left) * devEdit.imgW / r.width,
+    (e.clientY - r.top) * devEdit.imgH / r.height,
+  ]
+}
+
+function _devicePointerDown(e) {
+  if (!devEdit.active) return
+  const roleEl = e.target.closest('[data-role]')
+  if (!roleEl) { devEdit.sel = null; renderDevices(); return }
+  e.preventDefault()
+  const did = parseInt(roleEl.dataset.did, 10)
+  const d = devEdit.devices.find(x => x.id === did)
+  if (!d) return
+  const role = roleEl.dataset.role
+
+  if (role === 'delete') {
+    devEdit.devices = devEdit.devices.filter(x => x.id !== did)
+    if (devEdit.sel === did) devEdit.sel = null
+    renderDevices()
+    return
+  }
+
+  devEdit.sel = did
+  const [px, py] = _toImgCoords(e)
+  devEdit.drag = {
+    role, did, px, py,
+    x0: d.x, y0: d.y, scale0: d.scale, angle0: d.angle,
+    a0: Math.atan2(py - d.y, px - d.x),
+    r0: Math.hypot(px - d.x, py - d.y) || 1,
+  }
+  renderDevices()
+}
+
+function _devicePointerMove(e) {
+  const g = devEdit.drag
+  if (!g) return
+  e.preventDefault()
+  const d = devEdit.devices.find(x => x.id === g.did)
+  if (!d) { devEdit.drag = null; return }
+  const [px, py] = _toImgCoords(e)
+  if (g.role === 'body') {
+    d.x = g.x0 + (px - g.px)
+    d.y = g.y0 + (py - g.py)
+  } else if (g.role === 'rotate') {
+    const a = Math.atan2(py - d.y, px - d.x)
+    d.angle = g.angle0 + (a - g.a0) * 180 / Math.PI
+  } else if (g.role === 'resize') {
+    const r = Math.hypot(px - d.x, py - d.y)
+    d.scale = Math.min(5, Math.max(0.25, g.scale0 * r / g.r0))
+  }
+  renderDevices()
+}
+
+function _devicePointerUp() { devEdit.drag = null }
+
+function _exitDeviceEdit() {
+  devEdit.active = false
+  devEdit.drag = null
+  devEdit.sel = null
+  _overlayEl().style.display = 'none'
+  document.getElementById('device-toolbar').style.display = 'none'
+  document.getElementById('edit-devices-btn').style.display = 'flex'
+}
+
+function cancelDeviceEdit() {
+  devEdit.devices = []
+  _exitDeviceEdit()
+  renderDevices()
+}
+
+function resetDevices() {
+  devEdit.devices = []
+  devEdit.sel = null
+  if (devEdit.originalB64 != null && lastResult) {
+    lastResult.annotated_image_b64 = devEdit.originalB64
+    document.getElementById('result-img').src = 'data:image/png;base64,' + devEdit.originalB64
+  }
+  renderDevices()
+}
+
+function applyDevices() {
+  if (!devEdit.devices.length) { _exitDeviceEdit(); return }
+  const img = document.getElementById('result-img')
+  const W = devEdit.imgW, H = devEdit.imgH
+  // Bake at 2x for crisp device edges
+  const K = 2
+  const canvas = document.createElement('canvas')
+  canvas.width = W * K
+  canvas.height = H * K
+  const ctx = canvas.getContext('2d')
+  ctx.drawImage(img, 0, 0, W * K, H * K)
+
+  const svgStr =
+    `<svg xmlns="http://www.w3.org/2000/svg" width="${W}" height="${H}" viewBox="0 0 ${W} ${H}">` +
+    devEdit.devices.map(d => _deviceGroup(d, false, false)).join('') +
+    `</svg>`
+  const svgImg = new Image()
+  svgImg.onload = () => {
+    ctx.drawImage(svgImg, 0, 0, W * K, H * K)
+    const b64 = canvas.toDataURL('image/png').split(',')[1]
+    lastResult.annotated_image_b64 = b64
+    img.src = 'data:image/png;base64,' + b64
+    devEdit.devices = []
+    _exitDeviceEdit()
+    renderDevices()
+  }
+  svgImg.onerror = () => alert('Could not render devices — please try again.')
+  svgImg.src = 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(svgStr)
+}
+
+// Global pointer listeners (registered once)
+document.getElementById('device-overlay').addEventListener('pointerdown', _devicePointerDown)
+window.addEventListener('pointermove', _devicePointerMove, { passive: false })
+window.addEventListener('pointerup', _devicePointerUp)
 </script>
 </body>
 </html>
