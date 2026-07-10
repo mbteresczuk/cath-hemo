@@ -179,7 +179,7 @@ Aorta  98  95/55  72</pre>
       <p>Tap <strong>Select Diagram →</strong> then search by diagnosis (e.g. <em>TOF</em>, <em>ASD</em>, <em>HLHS Norwood</em>). Tap a card to select it.</p>
 
       <h3>Step 3 · Edit Diagram (optional)</h3>
-      <p>Tap <strong>✏️ Edit Diagram</strong> to add devices if needed: stent, ASD device, VSD device, PDA closure, BTT shunt, RV–PA conduit, or thickened valve (aortic/pulmonary). Drag to position, use <strong>↻</strong> to rotate, <strong>⤡</strong> to resize, <strong>↔</strong> to lengthen/shorten a stent or conduit, <strong>✕</strong> to delete. Skip this step entirely by tapping <strong>Complete Diagram →</strong> right after selecting a diagram.</p>
+      <p>Tap <strong>✏️ Edit Diagram</strong> to add devices if needed: stent, ASD device, VSD device, PDA closure, BTT shunt, RV–PA conduit, thickened valve (aortic/pulmonary), or SAPIEN valve. Drag to position, use <strong>↻</strong> to rotate, <strong>⤡</strong> to resize, <strong>↔</strong> to lengthen/shorten a stent or conduit, <strong>✕</strong> to delete. Skip this step entirely by tapping <strong>Complete Diagram →</strong> right after selecting a diagram.</p>
 
       <h3>Step 4 · Complete Diagram</h3>
       <p>Tap <strong>Complete Diagram →</strong> to annotate the diagram (devices included), produce a hemodynamic narrative, and calculate Fick-derived values. Use <strong>← Edit Diagram</strong> on the report screen to adjust devices and re-complete.</p>
@@ -336,6 +336,7 @@ Aorta  98  95/55  72</pre>
         <option value="btt_shunt">BTT shunt</option>
         <option value="rvpa_conduit">RV–PA conduit</option>
         <option value="thick_valve">Thickened valve (Ao/PV)</option>
+        <option value="sapien_valve">SAPIEN valve</option>
       </select>
       <button class="device-add-btn" onclick="addDevice()">＋ Add</button>
     </div>
@@ -1058,7 +1059,8 @@ const DEVICE_BOUNDS = {
   pda_closure:  { hw: 17, hh: 13 },
   btt_shunt:    { hw: 30, hh: 42 },
   rvpa_conduit: { hw: 44, hh: 21 },
-  thick_valve:  { hw: 19, hh: 13 },
+  thick_valve:  { hw: 20, hh: 14 },
+  sapien_valve: { hw: 16, hh: 13 },
 }
 
 // Devices whose length can be adjusted independently of overall size
@@ -1114,10 +1116,40 @@ function deviceGlyphSVG(type, stretch = 1) {
     // thickened stenotic valve, styled on the hand-drawn PS valve:
     // bold annular ring with doming leaflets and a narrowed orifice
     return `<g stroke="#000" fill="none">
-      <ellipse cx="0" cy="0" rx="16" ry="10" fill="#fff" stroke-width="5"/>
-      <path d="M -10 -2 Q -1 -6 6 -1" stroke-width="2.6"/>
-      <path d="M -10 3 Q -1 6 6 2" stroke-width="2.6"/>
-      <path d="M 5 -1.5 L 10 0.5 L 5 2.5 Z" fill="#000" stroke-width="0.8"/>
+      <ellipse cx="0" cy="0" rx="16" ry="10" fill="#fff" stroke-width="7"/>
+      <path d="M -10 -2 Q -1 -6 6 -1" stroke-width="3.4"/>
+      <path d="M -10 3 Q -1 6 6 2" stroke-width="3.4"/>
+      <path d="M 4.5 -2 L 10 0.5 L 4.5 3 Z" fill="#000" stroke-width="0.8"/>
+    </g>`
+  }
+  if (type === 'sapien_valve') {
+    // Edwards SAPIEN: short balloon-expandable frame with diamond cells,
+    // fabric skirt band on the inflow half, leaflets visible at the outflow
+    const hw = 15, top = -12, bot = 12, skirtY = 4
+    let mesh = ''
+    const cols = 5, rows = 3
+    const cw = 2 * hw / cols, rh = (skirtY - top) / rows
+    for (let i = 0; i < cols; i++) {
+      for (let r = 0; r < rows; r++) {
+        const x = -hw + i * cw, y = top + r * rh
+        mesh += `<line x1="${x.toFixed(1)}" y1="${y.toFixed(1)}" x2="${(x + cw).toFixed(1)}" y2="${(y + rh).toFixed(1)}"/>
+                 <line x1="${x.toFixed(1)}" y1="${(y + rh).toFixed(1)}" x2="${(x + cw).toFixed(1)}" y2="${y.toFixed(1)}"/>`
+      }
+    }
+    let skirt = ''
+    for (let x = -hw + 2; x < hw; x += 3.2) {
+      skirt += `<line x1="${x.toFixed(1)}" y1="${skirtY}" x2="${(x - 2.2).toFixed(1)}" y2="${bot}"/>`
+    }
+    return `<g stroke="#000" stroke-width="0.8" fill="none">
+      <rect x="${-hw}" y="${top}" width="${2 * hw}" height="${bot - top}" fill="#fff" stroke="none"/>
+      ${mesh}
+      <rect x="${-hw}" y="${skirtY}" width="${2 * hw}" height="${bot - skirtY}" fill="#fff" stroke="none"/>
+      ${skirt}
+      <line x1="${-hw}" y1="${skirtY}" x2="${hw}" y2="${skirtY}" stroke-width="1.2"/>
+      <path d="M ${-hw + 1} -4 Q -4 -11 0 -2.5" stroke-width="1.8"/>
+      <path d="M ${hw - 1} -4 Q 4 -11 0 -2.5" stroke-width="1.8"/>
+      <line x1="${-hw}" y1="${top}" x2="${-hw}" y2="${bot}" stroke-width="1.7"/>
+      <line x1="${hw}" y1="${top}" x2="${hw}" y2="${bot}" stroke-width="1.7"/>
     </g>`
   }
   if (type === 'rvpa_conduit') {
