@@ -1101,12 +1101,12 @@ function deviceGlyphSVG(type, stretch = 1) {
       <rect x="${-hl}" y="${-hw}" width="${L}" height="${W}" fill="#fff" stroke-width="1.6"/>${hatch}</g>`
   }
   if (type === 'rvpa_conduit') {
-    // curved corrugated tube, modeled on the hand-drawn RV-PA conduit:
-    // centerline is a gentle arc, rings follow the curve
+    // accordion-style corrugated tube matching the hand-drawn conduits:
+    // dense shallow rib arcs + scalloped walls (no straight rails)
     const L = 84 * stretch, hl = L / 2, hw = 14, bow = -20
     const P0 = [-hl, 6], P1 = [0, bow + 6], P2 = [hl, 6]
-    const N = 24
-    const pts = [], nrm = []
+    const N = 36
+    const pts = [], nrm = [], tan = []
     for (let i = 0; i <= N; i++) {
       const t = i / N
       const x = (1 - t) ** 2 * P0[0] + 2 * (1 - t) * t * P1[0] + t * t * P2[0]
@@ -1114,31 +1114,43 @@ function deviceGlyphSVG(type, stretch = 1) {
       const dx = 2 * (1 - t) * (P1[0] - P0[0]) + 2 * t * (P2[0] - P1[0])
       const dy = 2 * (1 - t) * (P1[1] - P0[1]) + 2 * t * (P2[1] - P1[1])
       const m = Math.hypot(dx, dy) || 1
-      pts.push([x, y]); nrm.push([-dy / m, dx / m])
+      pts.push([x, y]); nrm.push([-dy / m, dx / m]); tan.push([dx / m, dy / m])
     }
     const left = pts.map((p, i) => [p[0] + nrm[i][0] * hw, p[1] + nrm[i][1] * hw])
     const right = pts.map((p, i) => [p[0] - nrm[i][0] * hw, p[1] - nrm[i][1] * hw])
     const fmt = p => p[0].toFixed(1) + ' ' + p[1].toFixed(1)
-    const pathOf = a => 'M ' + a.map(fmt).join(' L ')
     const poly = [...left, ...right.slice().reverse()]
       .map(p => p[0].toFixed(1) + ',' + p[1].toFixed(1)).join(' ')
-    // corrugation rings, ~7px apart regardless of stretch
+    // rib positions ~4.7px apart regardless of stretch
     const step = Math.max(1, Math.round(2 / stretch))
-    let rings = ''
-    for (let i = step; i <= N - step; i += step) {
+    const idx = []
+    for (let i = 0; i <= N; i += step) idx.push(i)
+    if (idx[idx.length - 1] !== N) idx.push(N)
+    // shallow rib arcs, all bowing the same way (cylinder rings)
+    let ribs = ''
+    for (const i of idx.slice(1, -1)) {
       const l = left[i], r = right[i]
-      const tx = pts[Math.min(N, i + 1)][0] - pts[Math.max(0, i - 1)][0]
-      const ty = pts[Math.min(N, i + 1)][1] - pts[Math.max(0, i - 1)][1]
-      const m = Math.hypot(tx, ty) || 1
-      const qx = (l[0] + r[0]) / 2 + tx / m * 3.5
-      const qy = (l[1] + r[1]) / 2 + ty / m * 3.5
-      rings += `<path d="M ${fmt(l)} Q ${qx.toFixed(1)} ${qy.toFixed(1)} ${fmt(r)}"/>`
+      const qx = (l[0] + r[0]) / 2 + tan[i][0] * 4
+      const qy = (l[1] + r[1]) / 2 + tan[i][1] * 4
+      ribs += `<path d="M ${fmt(l)} Q ${qx.toFixed(1)} ${qy.toFixed(1)} ${fmt(r)}"/>`
     }
-    return `<g stroke="#000" stroke-width="1.1" fill="none">
+    // scalloped walls: a small outward bump between each pair of ribs
+    const wall = (side, sign) => {
+      let dp = 'M ' + fmt(side[idx[0]])
+      for (let k = 1; k < idx.length; k++) {
+        const a = side[idx[k - 1]], b = side[idx[k]]
+        const im = Math.round((idx[k - 1] + idx[k]) / 2)
+        const qx = (a[0] + b[0]) / 2 + nrm[im][0] * sign * 2.6
+        const qy = (a[1] + b[1]) / 2 + nrm[im][1] * sign * 2.6
+        dp += ` Q ${qx.toFixed(1)} ${qy.toFixed(1)} ${fmt(b)}`
+      }
+      return dp
+    }
+    return `<g stroke="#000" stroke-width="0.9" fill="none">
       <polygon points="${poly}" fill="#fff" stroke="none"/>
-      <path d="${pathOf(left)}" stroke-width="1.7"/>
-      <path d="${pathOf(right)}" stroke-width="1.7"/>
-      ${rings}</g>`
+      <path d="${wall(left, 1)}" stroke-width="1.5"/>
+      <path d="${wall(right, -1)}" stroke-width="1.5"/>
+      ${ribs}</g>`
   }
   if (type === 'asd_device')
     return `<g stroke="#000" stroke-width="1.7" fill="none">${_occluderSVG(56)}</g>`
