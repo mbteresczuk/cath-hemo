@@ -178,11 +178,11 @@ Aorta  98  95/55  72</pre>
       <h3>Step 2 · Select a Diagram</h3>
       <p>Tap <strong>Select Diagram →</strong> then search by diagnosis (e.g. <em>TOF</em>, <em>ASD</em>, <em>HLHS Norwood</em>). Tap a card to select it.</p>
 
-      <h3>Step 3 · Generate Report</h3>
-      <p>Tap <strong>Generate Report →</strong> to annotate the diagram, produce a hemodynamic narrative, and calculate Fick-derived values.</p>
+      <h3>Step 3 · Edit Diagram (optional)</h3>
+      <p>Add devices if needed: stent, ASD device, VSD device, PDA closure, or BTT shunt. Drag to position, use <strong>↻</strong> to rotate, <strong>⤡</strong> to resize, <strong>✕</strong> to delete. Or skip straight to completing the diagram.</p>
 
-      <h3>Step 4 · Edit Diagram (optional)</h3>
-      <p>Tap <strong>✏️ Edit Diagram</strong> to add devices: stent, ASD device, VSD device, PDA closure, or BTT shunt. Drag to position, use <strong>↻</strong> to rotate, <strong>⤡</strong> to resize, <strong>✕</strong> to delete. Tap <strong>Apply</strong> to bake devices into the image (Reset restores the original).</p>
+      <h3>Step 4 · Complete Diagram</h3>
+      <p>Tap <strong>Complete Diagram →</strong> to annotate the diagram (devices included), produce a hemodynamic narrative, and calculate Fick-derived values. Use <strong>← Edit Diagram</strong> on the report screen to adjust devices and re-complete.</p>
 
       <h3>Step 5 · Export</h3>
       <ul>
@@ -306,12 +306,46 @@ Aorta  98  95/55  72</pre>
 
   <div id="diagram-grid"></div>
 
-  <button class="btn btn-primary" id="btn-generate" onclick="goToOutput()" disabled>
-    Generate Report →
+  <button class="btn btn-primary" id="btn-generate" onclick="goToEdit()" disabled>
+    Next: Edit Diagram →
   </button>
   <p id="sel-hint" style="text-align:center;color:var(--muted);font-size:13px;margin-top:6px">
     Tap a diagram to select it
   </p>
+</div>
+
+<!-- ── SCREEN 3: EDIT DIAGRAM (devices) ────────────── -->
+<div id="s-edit" class="screen">
+  <div class="nav">
+    <button class="back-btn" onclick="goTo('s-selector')">← Back</button>
+    <h2 style="margin:0">Edit Diagram</h2>
+    <div style="width:60px"></div>
+  </div>
+  <p class="sub">Add devices if needed, then complete the diagram.</p>
+
+  <div class="device-toolbar" id="device-toolbar">
+    <div class="drow">
+      <select class="device-select" id="device-select">
+        <option value="stent">Stent</option>
+        <option value="asd_device">ASD device</option>
+        <option value="vsd_device">VSD device</option>
+        <option value="pda_closure">PDA closure</option>
+        <option value="btt_shunt">BTT shunt</option>
+      </select>
+      <button class="device-add-btn" onclick="addDevice()">＋ Add</button>
+    </div>
+    <p class="device-hint">Tap a device to select it · drag to move · <b>↻</b> rotate · <b>⤡</b> resize · <b>✕</b> delete.</p>
+  </div>
+
+  <div class="card" style="padding:0;overflow:hidden;margin-bottom:14px">
+    <div class="img-wrap" style="margin-bottom:0;border:none;border-radius:0;position:relative">
+      <img id="edit-img" src="" alt="Selected diagram"/>
+      <svg id="device-overlay" xmlns="http://www.w3.org/2000/svg"></svg>
+    </div>
+  </div>
+
+  <button class="btn btn-primary" onclick="completeDiagram()">Complete Diagram →</button>
+  <button class="btn btn-outline" onclick="clearDevices()">Clear All Devices</button>
 </div>
 
 <!-- ── SCREEN 3: OUTPUT ────────────────────────────── -->
@@ -330,9 +364,8 @@ Aorta  98  95/55  72</pre>
   <div id="output-result" style="display:none">
     <!-- Combined diagram + narrative card -->
     <div class="card" style="padding:0;overflow:hidden;margin-bottom:14px">
-      <div class="img-wrap" id="result-img-wrap" style="margin-bottom:0;border:none;border-radius:0;border-bottom:1px solid var(--border);position:relative">
+      <div class="img-wrap" style="margin-bottom:0;border:none;border-radius:0;border-bottom:1px solid var(--border)">
         <img id="result-img" src="" alt="Annotated diagram"/>
-        <svg id="device-overlay" xmlns="http://www.w3.org/2000/svg"></svg>
       </div>
       <div style="padding:14px">
         <div class="section-label" style="margin-top:0">Hemodynamics Narrative</div>
@@ -340,27 +373,7 @@ Aorta  98  95/55  72</pre>
       </div>
     </div>
 
-    <!-- Device editor toolbar (hidden until Edit Diagram is tapped) -->
-    <div class="device-toolbar" id="device-toolbar" style="display:none">
-      <div class="drow">
-        <select class="device-select" id="device-select">
-          <option value="stent">Stent</option>
-          <option value="asd_device">ASD device</option>
-          <option value="vsd_device">VSD device</option>
-          <option value="pda_closure">PDA closure</option>
-          <option value="btt_shunt">BTT shunt</option>
-        </select>
-        <button class="device-add-btn" onclick="addDevice()">＋ Add</button>
-      </div>
-      <div class="drow">
-        <button class="btn btn-primary" style="margin-bottom:0;padding:11px" onclick="applyDevices()">✓ Apply</button>
-        <button class="btn btn-outline" style="margin-bottom:0;padding:11px" onclick="cancelDeviceEdit()">Cancel</button>
-        <button class="btn btn-outline" style="margin-bottom:0;padding:11px" onclick="resetDevices()">Reset</button>
-      </div>
-      <p class="device-hint">Tap a device to select it · drag to move · <b>↻</b> rotate · <b>⤡</b> resize · <b>✕</b> delete. Apply bakes devices into the image.</p>
-    </div>
-
-    <button class="btn btn-outline" id="edit-devices-btn" onclick="startDeviceEdit()">✏️ Edit Diagram (Add Devices)</button>
+    <button class="btn btn-outline" onclick="goToEdit()">← Edit Diagram (Devices)</button>
     <div style="display:flex;gap:8px;margin-bottom:10px">
       <button class="btn btn-outline" style="margin-bottom:0" onclick="saveImage()">Save Image</button>
       <button class="btn btn-secondary" style="margin-bottom:0" onclick="shareReport()">Share</button>
@@ -411,8 +424,9 @@ function goToSelector() {
   loadDiagrams('')
 }
 
-async function goToOutput() {
+async function completeDiagram() {
   if (!selectedDiagram || !hemoText.trim()) return
+  devEdit.sel = null
   goTo('s-output')
   document.getElementById('output-loading').style.display = 'block'
   document.getElementById('output-error').style.display = 'none'
@@ -424,6 +438,8 @@ function reset() {
   hemoText = ''
   selectedDiagram = null
   lastResult = null
+  devEdit.devices = []
+  devEdit.sel = null
   document.getElementById('hemo-text').value = ''
   document.getElementById('parse-preview').innerHTML = ''
   document.getElementById('btn-next').disabled = true
@@ -780,6 +796,11 @@ async function saveDiagramName(e, diagramId) {
 }
 
 function selectDiagram(d) {
+  // Switching to a different diagram invalidates device placements
+  if (!selectedDiagram || selectedDiagram.id !== d.id) {
+    devEdit.devices = []
+    devEdit.sel = null
+  }
   selectedDiagram = d
   document.querySelectorAll('.dcard').forEach(el => {
     el.classList.toggle('sel', el.dataset.id === selectedDiagram.id)
@@ -810,6 +831,12 @@ async function runReport() {
     const data = await res.json()
     if (!res.ok) throw new Error(data.detail || 'Report generation failed')
 
+    // Bake any placed devices onto the annotated image (same pixel space
+    // as the base diagram, so edit-step coordinates land correctly).
+    if (devEdit.devices.length) {
+      try { data.annotated_image_b64 = await bakeDevices(data.annotated_image_b64) } catch {}
+    }
+
     lastResult = data
     renderOutput(data)
   } catch (e) {
@@ -828,12 +855,6 @@ function retryReport() {
 function renderOutput(data) {
   document.getElementById('output-loading').style.display = 'none'
   document.getElementById('output-result').style.display = 'block'
-
-  // Fresh report → clear any device-editing state from a previous run
-  devEdit.devices = []
-  devEdit.originalB64 = null
-  _exitDeviceEdit()
-  renderDevices()
 
   // Image
   document.getElementById('result-img').src = 'data:image/png;base64,' + data.annotated_image_b64
@@ -1018,7 +1039,7 @@ async function shareBrowseDiagram() {
 // into the PNG on Apply so Save/Share include them.
 let devEdit = {
   active: false, devices: [], sel: null, nextId: 1,
-  imgW: 0, imgH: 0, originalB64: null, drag: null,
+  imgW: 0, imgH: 0, drag: null,
 }
 
 // Glyph half-extents in local units (for selection box + handle placement)
@@ -1103,19 +1124,26 @@ function _uiScale() {
   return r.width > 0 ? devEdit.imgW / r.width : 1
 }
 
-function startDeviceEdit() {
-  const img = document.getElementById('result-img')
-  if (!lastResult || !img.naturalWidth) return
-  devEdit.active = true
-  devEdit.imgW = img.naturalWidth
-  devEdit.imgH = img.naturalHeight
-  if (devEdit.originalB64 == null) devEdit.originalB64 = lastResult.annotated_image_b64
-  const ov = _overlayEl()
-  ov.setAttribute('viewBox', `0 0 ${devEdit.imgW} ${devEdit.imgH}`)
-  ov.style.display = 'block'
-  document.getElementById('device-toolbar').style.display = 'block'
-  document.getElementById('edit-devices-btn').style.display = 'none'
-  renderDevices()
+function goToEdit() {
+  if (!selectedDiagram) return
+  goTo('s-edit')
+  const img = document.getElementById('edit-img')
+  const setup = () => {
+    devEdit.active = true
+    devEdit.imgW = img.naturalWidth
+    devEdit.imgH = img.naturalHeight
+    const ov = _overlayEl()
+    ov.setAttribute('viewBox', `0 0 ${devEdit.imgW} ${devEdit.imgH}`)
+    ov.style.display = 'block'
+    renderDevices()
+  }
+  const targetSrc = new URL(selectedDiagram.thumbnail_url, location.href).href
+  if (img.src === targetSrc && img.complete && img.naturalWidth) {
+    setup()
+  } else {
+    img.onload = setup
+    img.src = targetSrc
+  }
 }
 
 function addDevice() {
@@ -1229,59 +1257,41 @@ function _devicePointerMove(e) {
 
 function _devicePointerUp() { devEdit.drag = null }
 
-function _exitDeviceEdit() {
-  devEdit.active = false
-  devEdit.drag = null
-  devEdit.sel = null
-  _overlayEl().style.display = 'none'
-  document.getElementById('device-toolbar').style.display = 'none'
-  document.getElementById('edit-devices-btn').style.display = 'flex'
-}
-
-function cancelDeviceEdit() {
+function clearDevices() {
   devEdit.devices = []
-  _exitDeviceEdit()
+  devEdit.sel = null
   renderDevices()
 }
 
-function resetDevices() {
-  devEdit.devices = []
-  devEdit.sel = null
-  if (devEdit.originalB64 != null && lastResult) {
-    lastResult.annotated_image_b64 = devEdit.originalB64
-    document.getElementById('result-img').src = 'data:image/png;base64,' + devEdit.originalB64
-  }
-  renderDevices()
-}
+// Composite the placed devices onto a base64 PNG (the annotated report image,
+// which has the same pixel dimensions as the base diagram). Returns baked b64.
+function bakeDevices(b64) {
+  return new Promise((resolve, reject) => {
+    const base = new Image()
+    base.onload = () => {
+      const W = base.naturalWidth, H = base.naturalHeight
+      const K = 2  // bake at 2x for crisp device edges
+      const canvas = document.createElement('canvas')
+      canvas.width = W * K
+      canvas.height = H * K
+      const ctx = canvas.getContext('2d')
+      ctx.drawImage(base, 0, 0, W * K, H * K)
 
-function applyDevices() {
-  if (!devEdit.devices.length) { _exitDeviceEdit(); return }
-  const img = document.getElementById('result-img')
-  const W = devEdit.imgW, H = devEdit.imgH
-  // Bake at 2x for crisp device edges
-  const K = 2
-  const canvas = document.createElement('canvas')
-  canvas.width = W * K
-  canvas.height = H * K
-  const ctx = canvas.getContext('2d')
-  ctx.drawImage(img, 0, 0, W * K, H * K)
-
-  const svgStr =
-    `<svg xmlns="http://www.w3.org/2000/svg" width="${W}" height="${H}" viewBox="0 0 ${W} ${H}">` +
-    devEdit.devices.map(d => _deviceGroup(d, false, false)).join('') +
-    `</svg>`
-  const svgImg = new Image()
-  svgImg.onload = () => {
-    ctx.drawImage(svgImg, 0, 0, W * K, H * K)
-    const b64 = canvas.toDataURL('image/png').split(',')[1]
-    lastResult.annotated_image_b64 = b64
-    img.src = 'data:image/png;base64,' + b64
-    devEdit.devices = []
-    _exitDeviceEdit()
-    renderDevices()
-  }
-  svgImg.onerror = () => alert('Could not render devices — please try again.')
-  svgImg.src = 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(svgStr)
+      const svgStr =
+        `<svg xmlns="http://www.w3.org/2000/svg" width="${W}" height="${H}" viewBox="0 0 ${W} ${H}">` +
+        devEdit.devices.map(d => _deviceGroup(d, false, false)).join('') +
+        `</svg>`
+      const svgImg = new Image()
+      svgImg.onload = () => {
+        ctx.drawImage(svgImg, 0, 0, W * K, H * K)
+        resolve(canvas.toDataURL('image/png').split(',')[1])
+      }
+      svgImg.onerror = reject
+      svgImg.src = 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(svgStr)
+    }
+    base.onerror = reject
+    base.src = 'data:image/png;base64,' + b64
+  })
 }
 
 // Global pointer listeners (registered once)
