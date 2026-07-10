@@ -179,7 +179,7 @@ Aorta  98  95/55  72</pre>
       <p>Tap <strong>Select Diagram →</strong> then search by diagnosis (e.g. <em>TOF</em>, <em>ASD</em>, <em>HLHS Norwood</em>). Tap a card to select it.</p>
 
       <h3>Step 3 · Edit Diagram (optional)</h3>
-      <p>Add devices if needed: stent, ASD device, VSD device, PDA closure, or BTT shunt. Drag to position, use <strong>↻</strong> to rotate, <strong>⤡</strong> to resize, <strong>✕</strong> to delete. Or skip straight to completing the diagram.</p>
+      <p>Tap <strong>✏️ Edit Diagram</strong> to add devices if needed: stent, ASD device, VSD device, PDA closure, BTT shunt, or RV–PA conduit. Drag to position, use <strong>↻</strong> to rotate, <strong>⤡</strong> to resize, <strong>↔</strong> to lengthen/shorten a stent or conduit, <strong>✕</strong> to delete. Skip this step entirely by tapping <strong>Complete Diagram →</strong> right after selecting a diagram.</p>
 
       <h3>Step 4 · Complete Diagram</h3>
       <p>Tap <strong>Complete Diagram →</strong> to annotate the diagram (devices included), produce a hemodynamic narrative, and calculate Fick-derived values. Use <strong>← Edit Diagram</strong> on the report screen to adjust devices and re-complete.</p>
@@ -306,8 +306,11 @@ Aorta  98  95/55  72</pre>
 
   <div id="diagram-grid"></div>
 
-  <button class="btn btn-primary" id="btn-generate" onclick="goToEdit()" disabled>
-    Next: Edit Diagram →
+  <button class="btn btn-primary" id="btn-generate" onclick="completeDiagram()" disabled>
+    Complete Diagram →
+  </button>
+  <button class="btn btn-outline" id="btn-edit" onclick="goToEdit()" disabled>
+    ✏️ Edit Diagram (Add Devices)
   </button>
   <p id="sel-hint" style="text-align:center;color:var(--muted);font-size:13px;margin-top:6px">
     Tap a diagram to select it
@@ -331,10 +334,11 @@ Aorta  98  95/55  72</pre>
         <option value="vsd_device">VSD device</option>
         <option value="pda_closure">PDA closure</option>
         <option value="btt_shunt">BTT shunt</option>
+        <option value="rvpa_conduit">RV–PA conduit</option>
       </select>
       <button class="device-add-btn" onclick="addDevice()">＋ Add</button>
     </div>
-    <p class="device-hint">Tap a device to select it · drag to move · <b>↻</b> rotate · <b>⤡</b> resize · <b>✕</b> delete.</p>
+    <p class="device-hint">Tap a device to select it · drag to move · <b>↻</b> rotate · <b>⤡</b> resize · <b>↔</b> length (stent/conduit) · <b>✕</b> delete.</p>
   </div>
 
   <div class="card" style="padding:0;overflow:hidden;margin-bottom:14px">
@@ -443,6 +447,8 @@ function reset() {
   document.getElementById('hemo-text').value = ''
   document.getElementById('parse-preview').innerHTML = ''
   document.getElementById('btn-next').disabled = true
+  document.getElementById('btn-generate').disabled = true
+  document.getElementById('btn-edit').disabled = true
   document.getElementById('scan-idle').style.display = 'block'
   document.getElementById('scan-loading').style.display = 'none'
   document.getElementById('scan-result').style.display = 'none'
@@ -806,6 +812,7 @@ function selectDiagram(d) {
     el.classList.toggle('sel', el.dataset.id === selectedDiagram.id)
   })
   document.getElementById('btn-generate').disabled = false
+  document.getElementById('btn-edit').disabled = false
   document.getElementById('sel-hint').style.display = 'none'
 }
 
@@ -1044,12 +1051,17 @@ let devEdit = {
 
 // Glyph half-extents in local units (for selection box + handle placement)
 const DEVICE_BOUNDS = {
-  stent:       { hw: 42, hh: 13 },
-  asd_device:  { hw: 30, hh: 17 },
-  vsd_device:  { hw: 24, hh: 14 },
-  pda_closure: { hw: 19, hh: 20 },
-  btt_shunt:   { hw: 30, hh: 42 },
+  stent:        { hw: 42, hh: 13 },
+  asd_device:   { hw: 30, hh: 17 },
+  vsd_device:   { hw: 24, hh: 14 },
+  pda_closure:  { hw: 19, hh: 20 },
+  btt_shunt:    { hw: 30, hh: 42 },
+  rvpa_conduit: { hw: 44, hh: 15 },
 }
+
+// Devices whose length can be adjusted independently of overall size
+// (so a stent or conduit can be shortened/lengthened to fit any vessel)
+const STRETCHABLE = new Set(['stent', 'rvpa_conduit'])
 
 function _occluderSVG(len) {
   // Amplatzer-style double disc seen edge-on: two thin hatched discs + waist
@@ -1075,9 +1087,10 @@ function _occluderSVG(len) {
   return g
 }
 
-function deviceGlyphSVG(type) {
+function deviceGlyphSVG(type, stretch = 1) {
   if (type === 'stent') {
-    const L = 80, W = 22, hl = L / 2, hw = W / 2, n = 6, step = L / n
+    const L = 80 * stretch, W = 22, hl = L / 2, hw = W / 2
+    const n = Math.max(2, Math.round(6 * stretch)), step = L / n
     let hatch = ''
     for (let i = 0; i < n; i++) {
       const x = -hl + i * step
@@ -1086,6 +1099,17 @@ function deviceGlyphSVG(type) {
     }
     return `<g stroke="#000" stroke-width="1.6" fill="none">
       <rect x="${-hl}" y="${-hw}" width="${L}" height="${W}" fill="#fff" stroke-width="2.4"/>${hatch}</g>`
+  }
+  if (type === 'rvpa_conduit') {
+    // corrugated ringed tube, matching the hand-drawn conduit style
+    const L = 84 * stretch, W = 28, hl = L / 2, hw = W / 2
+    let rings = ''
+    for (let x = -hl + 7; x < hl - 3; x += 8) {
+      rings += `<path d="M ${x} ${-hw + 1} Q ${x + 3.5} 0 ${x} ${hw - 1}"/>`
+    }
+    return `<g stroke="#000" stroke-width="1.4" fill="none">
+      <rect x="${-hl}" y="${-hw}" width="${L}" height="${W}" rx="4" fill="#fff" stroke-width="2.4"/>
+      ${rings}</g>`
   }
   if (type === 'asd_device')
     return `<g stroke="#000" stroke-width="1.7" fill="none">${_occluderSVG(56)}</g>`
@@ -1151,7 +1175,7 @@ function addDevice() {
   const d = {
     id: devEdit.nextId++, type,
     x: devEdit.imgW / 2, y: devEdit.imgH / 2,
-    scale: Math.max(0.6, devEdit.imgW / 480), angle: 0,
+    scale: Math.max(0.6, devEdit.imgW / 480), angle: 0, stretch: 1,
   }
   devEdit.devices.push(d)
   devEdit.sel = d.id
@@ -1161,11 +1185,18 @@ function addDevice() {
 function _deviceGroup(d, selected, withHandles) {
   const b = DEVICE_BOUNDS[d.type]
   const u = withHandles ? _uiScale() : 1
-  const hwS = b.hw * d.scale, hhS = b.hh * d.scale
+  const st = STRETCHABLE.has(d.type) ? (d.stretch || 1) : 1
+  const hwS = b.hw * d.scale * st, hhS = b.hh * d.scale
   let handles = ''
   if (selected && withHandles) {
     const hr = 12 * u, pad = 8 * u
-    handles = `
+    const stretchHandle = STRETCHABLE.has(d.type) ? `
+      <g class="dev-handle" data-role="stretch" data-did="${d.id}">
+        <circle cx="${hwS + pad + hr}" cy="0" r="${hr}" fill="#0F766E"/>
+        <text x="${hwS + pad + hr}" y="0" fill="#fff" font-size="${13 * u}"
+              text-anchor="middle" dominant-baseline="central" pointer-events="none">↔</text>
+      </g>` : ''
+    handles = stretchHandle + `
       <rect x="${-hwS - pad}" y="${-hhS - pad}" width="${2 * (hwS + pad)}" height="${2 * (hhS + pad)}"
             fill="none" stroke="#0068c9" stroke-width="${1.5 * u}" stroke-dasharray="${5 * u} ${4 * u}"/>
       <line x1="0" y1="${-hhS - pad}" x2="0" y2="${-hhS - pad - 20 * u}" stroke="#0068c9" stroke-width="${1.5 * u}"/>
@@ -1188,7 +1219,7 @@ function _deviceGroup(d, selected, withHandles) {
   return `
     <g transform="translate(${d.x} ${d.y}) rotate(${d.angle})">
       <g class="dev-body" data-role="body" data-did="${d.id}" transform="scale(${d.scale})">
-        ${deviceGlyphSVG(d.type)}
+        ${deviceGlyphSVG(d.type, st)}
       </g>
       ${handles}
     </g>`
@@ -1226,9 +1257,13 @@ function _devicePointerDown(e) {
 
   devEdit.sel = did
   const [px, py] = _toImgCoords(e)
+  const rad = d.angle * Math.PI / 180
+  const lx0 = (px - d.x) * Math.cos(rad) + (py - d.y) * Math.sin(rad)
   devEdit.drag = {
     role, did, px, py,
     x0: d.x, y0: d.y, scale0: d.scale, angle0: d.angle,
+    stretch0: d.stretch || 1,
+    lx0: Math.abs(lx0) > 5 ? lx0 : 5,
     a0: Math.atan2(py - d.y, px - d.x),
     r0: Math.hypot(px - d.x, py - d.y) || 1,
   }
@@ -1251,6 +1286,11 @@ function _devicePointerMove(e) {
   } else if (g.role === 'resize') {
     const r = Math.hypot(px - d.x, py - d.y)
     d.scale = Math.min(5, Math.max(0.25, g.scale0 * r / g.r0))
+  } else if (g.role === 'stretch') {
+    // adjust length only, along the device's own axis
+    const rad = d.angle * Math.PI / 180
+    const lx = (px - d.x) * Math.cos(rad) + (py - d.y) * Math.sin(rad)
+    d.stretch = Math.min(3, Math.max(0.3, g.stretch0 * lx / g.lx0))
   }
   renderDevices()
 }
