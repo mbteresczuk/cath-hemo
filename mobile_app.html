@@ -179,7 +179,7 @@ Aorta  98  95/55  72</pre>
       <p>Tap <strong>Select Diagram →</strong> then search by diagnosis (e.g. <em>TOF</em>, <em>ASD</em>, <em>HLHS Norwood</em>). Tap a card to select it.</p>
 
       <h3>Step 3 · Edit Diagram (optional)</h3>
-      <p>Tap <strong>✏️ Edit Diagram</strong> to add devices if needed: stent, ASD device, VSD device, PDA closure, BTT shunt, RV–PA conduit, thickened valve (aortic/pulmonary), or SAPIEN valve. Drag to position, use <strong>↻</strong> to rotate, <strong>⤡</strong> to resize, <strong>↔</strong> to lengthen/shorten a stent or conduit, <strong>✕</strong> to delete. Skip this step entirely by tapping <strong>Complete Diagram →</strong> right after selecting a diagram.</p>
+      <p>Tap <strong>✏️ Edit Diagram</strong> to add devices if needed: stent, ASD device, VSD device, PDA closure, BTT shunt, RV–PA conduit, thickened valve (aortic/pulmonary), SAPIEN valve, or Melody valve. Drag to position, use <strong>↻</strong> to rotate, <strong>⤡</strong> to resize, <strong>↔</strong> to lengthen/shorten a stent or conduit, <strong>✕</strong> to delete. Skip this step entirely by tapping <strong>Complete Diagram →</strong> right after selecting a diagram.</p>
 
       <h3>Step 4 · Complete Diagram</h3>
       <p>Tap <strong>Complete Diagram →</strong> to annotate the diagram (devices included), produce a hemodynamic narrative, and calculate Fick-derived values. Use <strong>← Edit Diagram</strong> on the report screen to adjust devices and re-complete.</p>
@@ -337,6 +337,7 @@ Aorta  98  95/55  72</pre>
         <option value="rvpa_conduit">RV–PA conduit</option>
         <option value="thick_valve">Thickened valve (Ao/PV)</option>
         <option value="sapien_valve">SAPIEN valve</option>
+        <option value="melody_valve">Melody valve</option>
       </select>
       <button class="device-add-btn" onclick="addDevice()">＋ Add</button>
     </div>
@@ -1060,7 +1061,8 @@ const DEVICE_BOUNDS = {
   btt_shunt:    { hw: 30, hh: 42 },
   rvpa_conduit: { hw: 44, hh: 21 },
   thick_valve:  { hw: 20, hh: 14 },
-  sapien_valve: { hw: 16, hh: 13 },
+  sapien_valve: { hw: 16, hh: 16 },
+  melody_valve: { hw: 12, hh: 18 },
 }
 
 // Devices whose length can be adjusted independently of overall size
@@ -1123,33 +1125,86 @@ function deviceGlyphSVG(type, stretch = 1) {
     </g>`
   }
   if (type === 'sapien_valve') {
-    // Edwards SAPIEN: short balloon-expandable frame with diamond cells,
-    // fabric skirt band on the inflow half, leaflets visible at the outflow
-    const hw = 15, top = -12, bot = 12, skirtY = 4
+    // Edwards SAPIEN 3: chevron crown at the outflow, large open frame
+    // cells, woven fabric skirt with scalloped edge on the inflow half
+    const hw = 15, top = -13, bot = 13, frameTop = -9, skirtY = 7
+    // chevron crown across the top (peaks point up)
+    const np = 4, pw = 2 * hw / np
+    let crown = `M ${-hw} ${frameTop}`
+    for (let i = 0; i < np; i++) {
+      const x = -hw + i * pw
+      crown += ` L ${(x + pw / 2).toFixed(1)} ${top} L ${(x + pw).toFixed(1)} ${frameTop}`
+    }
+    // one row of large open cells under the crown (like the real frame),
+    // then a row of smaller fabric-covered diamonds above the skirt
     let mesh = ''
-    const cols = 5, rows = 3
-    const cw = 2 * hw / cols, rh = (skirtY - top) / rows
+    const midY = 1
+    const cwTop = 2 * hw / 3
+    for (let i = 0; i < 3; i++) {
+      const x = -hw + i * cwTop
+      mesh += `<line x1="${x.toFixed(1)}" y1="${frameTop}" x2="${(x + cwTop).toFixed(1)}" y2="${midY}"/>
+               <line x1="${x.toFixed(1)}" y1="${midY}" x2="${(x + cwTop).toFixed(1)}" y2="${frameTop}"/>`
+    }
+    const cwBot = 2 * hw / 6
+    for (let i = 0; i < 6; i++) {
+      const x = -hw + i * cwBot
+      mesh += `<line x1="${x.toFixed(1)}" y1="${midY}" x2="${(x + cwBot).toFixed(1)}" y2="${skirtY}"/>
+               <line x1="${x.toFixed(1)}" y1="${skirtY}" x2="${(x + cwBot).toFixed(1)}" y2="${midY}"/>`
+    }
+    // woven skirt: light crosshatch + scalloped bottom edge
+    let weave = ''
+    for (let x = -hw; x < hw; x += 3.2) {
+      weave += `<line x1="${x.toFixed(1)}" y1="${skirtY}" x2="${(x + 2.4).toFixed(1)}" y2="${bot}"/>
+                <line x1="${(x + 2.4).toFixed(1)}" y1="${skirtY}" x2="${x.toFixed(1)}" y2="${bot}"/>`
+    }
+    let scallop = `M ${-hw} ${bot}`
+    for (let x = -hw; x < hw; x += 6) {
+      scallop += ` Q ${(x + 3).toFixed(1)} ${bot + 2.4} ${(x + 6).toFixed(1)} ${bot}`
+    }
+    return `<g stroke="#000" stroke-width="1.0" fill="none">
+      <rect x="${-hw}" y="${frameTop}" width="${2 * hw}" height="${bot - frameTop}" fill="#fff" stroke="none"/>
+      ${mesh}
+      <rect x="${-hw}" y="${skirtY}" width="${2 * hw}" height="${bot - skirtY}" fill="#fff" stroke="none"/>
+      <g stroke-width="0.5">${weave}</g>
+      <line x1="${-hw}" y1="${skirtY}" x2="${hw}" y2="${skirtY}" stroke-width="1.2"/>
+      <path d="${scallop}" stroke-width="1.2"/>
+      <path d="M ${-hw + 2} -3 Q -4 -11 0 -2" stroke-width="1.6"/>
+      <path d="M ${hw - 2} -3 Q 4 -11 0 -2" stroke-width="1.6"/>
+      <path d="${crown}" stroke-width="1.4"/>
+      <line x1="${-hw}" y1="${frameTop}" x2="${-hw}" y2="${bot}" stroke-width="1.4"/>
+      <line x1="${hw}" y1="${frameTop}" x2="${hw}" y2="${bot}" stroke-width="1.4"/>
+    </g>`
+  }
+  if (type === 'melody_valve') {
+    // Medtronic Melody: long CP-stent cylinder with big diamond cells,
+    // zigzag crowns at both ends, vein valve leaflets sutured inside
+    const hw = 11, top = -17, bot = 17, bTop = -13.5, bBot = 13.5
+    const np = 3, pw = 2 * hw / np
+    let crownT = `M ${-hw} ${bTop}`, crownB = `M ${-hw} ${bBot}`
+    for (let i = 0; i < np; i++) {
+      const x = -hw + i * pw
+      crownT += ` L ${(x + pw / 2).toFixed(1)} ${top} L ${(x + pw).toFixed(1)} ${bTop}`
+      crownB += ` L ${(x + pw / 2).toFixed(1)} ${bot} L ${(x + pw).toFixed(1)} ${bBot}`
+    }
+    let mesh = ''
+    const cols = 3, rows = 4
+    const cw = 2 * hw / cols, rh = (bBot - bTop) / rows
     for (let i = 0; i < cols; i++) {
       for (let r = 0; r < rows; r++) {
-        const x = -hw + i * cw, y = top + r * rh
+        const x = -hw + i * cw, y = bTop + r * rh
         mesh += `<line x1="${x.toFixed(1)}" y1="${y.toFixed(1)}" x2="${(x + cw).toFixed(1)}" y2="${(y + rh).toFixed(1)}"/>
                  <line x1="${x.toFixed(1)}" y1="${(y + rh).toFixed(1)}" x2="${(x + cw).toFixed(1)}" y2="${y.toFixed(1)}"/>`
       }
     }
-    let skirt = ''
-    for (let x = -hw + 2; x < hw; x += 3.2) {
-      skirt += `<line x1="${x.toFixed(1)}" y1="${skirtY}" x2="${(x - 2.2).toFixed(1)}" y2="${bot}"/>`
-    }
-    return `<g stroke="#000" stroke-width="0.8" fill="none">
-      <rect x="${-hw}" y="${top}" width="${2 * hw}" height="${bot - top}" fill="#fff" stroke="none"/>
+    return `<g stroke="#000" stroke-width="0.9" fill="none">
+      <rect x="${-hw}" y="${bTop}" width="${2 * hw}" height="${bBot - bTop}" fill="#fff" stroke="none"/>
       ${mesh}
-      <rect x="${-hw}" y="${skirtY}" width="${2 * hw}" height="${bot - skirtY}" fill="#fff" stroke="none"/>
-      ${skirt}
-      <line x1="${-hw}" y1="${skirtY}" x2="${hw}" y2="${skirtY}" stroke-width="1.2"/>
-      <path d="M ${-hw + 1} -4 Q -4 -11 0 -2.5" stroke-width="1.8"/>
-      <path d="M ${hw - 1} -4 Q 4 -11 0 -2.5" stroke-width="1.8"/>
-      <line x1="${-hw}" y1="${top}" x2="${-hw}" y2="${bot}" stroke-width="1.7"/>
-      <line x1="${hw}" y1="${top}" x2="${hw}" y2="${bot}" stroke-width="1.7"/>
+      <path d="M ${-hw + 1.5} -1 Q -3 -8 0 -0.5" stroke-width="1.5"/>
+      <path d="M ${hw - 1.5} -1 Q 3 -8 0 -0.5" stroke-width="1.5"/>
+      <path d="${crownT}" stroke-width="1.3"/>
+      <path d="${crownB}" stroke-width="1.3"/>
+      <line x1="${-hw}" y1="${bTop}" x2="${-hw}" y2="${bBot}" stroke-width="1.3"/>
+      <line x1="${hw}" y1="${bTop}" x2="${hw}" y2="${bBot}" stroke-width="1.3"/>
     </g>`
   }
   if (type === 'rvpa_conduit') {
