@@ -179,7 +179,7 @@ Aorta  98  95/55  72</pre>
       <p>Tap <strong>Select Diagram →</strong> then search by diagnosis (e.g. <em>TOF</em>, <em>ASD</em>, <em>HLHS Norwood</em>). Tap a card to select it.</p>
 
       <h3>Step 3 · Edit Diagram (optional)</h3>
-      <p>Tap <strong>✏️ Edit Diagram</strong> to add devices if needed: stent, ASD device, VSD device, PDA closure, BTT shunt, or RV–PA conduit. Drag to position, use <strong>↻</strong> to rotate, <strong>⤡</strong> to resize, <strong>↔</strong> to lengthen/shorten a stent or conduit, <strong>✕</strong> to delete. Skip this step entirely by tapping <strong>Complete Diagram →</strong> right after selecting a diagram.</p>
+      <p>Tap <strong>✏️ Edit Diagram</strong> to add devices if needed: stent, ASD device, VSD device, PDA closure, BTT shunt, RV–PA conduit, or thickened valve (aortic/pulmonary). Drag to position, use <strong>↻</strong> to rotate, <strong>⤡</strong> to resize, <strong>↔</strong> to lengthen/shorten a stent or conduit, <strong>✕</strong> to delete. Skip this step entirely by tapping <strong>Complete Diagram →</strong> right after selecting a diagram.</p>
 
       <h3>Step 4 · Complete Diagram</h3>
       <p>Tap <strong>Complete Diagram →</strong> to annotate the diagram (devices included), produce a hemodynamic narrative, and calculate Fick-derived values. Use <strong>← Edit Diagram</strong> on the report screen to adjust devices and re-complete.</p>
@@ -335,6 +335,7 @@ Aorta  98  95/55  72</pre>
         <option value="pda_closure">PDA closure</option>
         <option value="btt_shunt">BTT shunt</option>
         <option value="rvpa_conduit">RV–PA conduit</option>
+        <option value="thick_valve">Thickened valve (Ao/PV)</option>
       </select>
       <button class="device-add-btn" onclick="addDevice()">＋ Add</button>
     </div>
@@ -1057,6 +1058,7 @@ const DEVICE_BOUNDS = {
   pda_closure:  { hw: 17, hh: 13 },
   btt_shunt:    { hw: 30, hh: 42 },
   rvpa_conduit: { hw: 44, hh: 21 },
+  thick_valve:  { hw: 19, hh: 13 },
 }
 
 // Devices whose length can be adjusted independently of overall size
@@ -1089,16 +1091,34 @@ function _occluderSVG(len) {
 
 function deviceGlyphSVG(type, stretch = 1) {
   if (type === 'stent') {
+    // diamond-cell mesh like a real stent: two rows of crossed struts,
+    // open ends, no enclosing box
     const L = 80 * stretch, W = 22, hl = L / 2, hw = W / 2
-    const n = Math.max(2, Math.round(6 * stretch)), step = L / n
-    let hatch = ''
-    for (let i = 0; i < n; i++) {
-      const x = -hl + i * step
-      hatch += `<line x1="${x}" y1="${-hw}" x2="${x + step}" y2="${hw}"/>
-                <line x1="${x}" y1="${hw}" x2="${x + step}" y2="${-hw}"/>`
+    const cols = Math.max(4, Math.round(L / 9)), rows = 2
+    const cw = L / cols, rh = W / rows
+    let mesh = ''
+    for (let i = 0; i < cols; i++) {
+      for (let r = 0; r < rows; r++) {
+        const x = -hl + i * cw, y = -hw + r * rh
+        mesh += `<line x1="${x.toFixed(1)}" y1="${y.toFixed(1)}" x2="${(x + cw).toFixed(1)}" y2="${(y + rh).toFixed(1)}"/>
+                 <line x1="${x.toFixed(1)}" y1="${(y + rh).toFixed(1)}" x2="${(x + cw).toFixed(1)}" y2="${y.toFixed(1)}"/>`
+      }
     }
-    return `<g stroke="#000" stroke-width="1.0" fill="none">
-      <rect x="${-hl}" y="${-hw}" width="${L}" height="${W}" fill="#fff" stroke-width="1.6"/>${hatch}</g>`
+    return `<g stroke="#000" stroke-width="0.9" fill="none">
+      <rect x="${-hl}" y="${-hw}" width="${L}" height="${W}" fill="#fff" stroke="none"/>
+      <line x1="${-hl}" y1="${-hw}" x2="${hl}" y2="${-hw}" stroke-width="1.3"/>
+      <line x1="${-hl}" y1="${hw}" x2="${hl}" y2="${hw}" stroke-width="1.3"/>
+      ${mesh}</g>`
+  }
+  if (type === 'thick_valve') {
+    // thickened stenotic valve, styled on the hand-drawn PS valve:
+    // bold annular ring with doming leaflets and a narrowed orifice
+    return `<g stroke="#000" fill="none">
+      <ellipse cx="0" cy="0" rx="16" ry="10" fill="#fff" stroke-width="5"/>
+      <path d="M -10 -2 Q -1 -6 6 -1" stroke-width="2.6"/>
+      <path d="M -10 3 Q -1 6 6 2" stroke-width="2.6"/>
+      <path d="M 5 -1.5 L 10 0.5 L 5 2.5 Z" fill="#000" stroke-width="0.8"/>
+    </g>`
   }
   if (type === 'rvpa_conduit') {
     // accordion-style corrugated tube matching the hand-drawn conduits:
