@@ -179,8 +179,8 @@ Aorta  98  95/55  72</pre>
       <p>Tap <strong>Select Diagram →</strong> then search by diagnosis (e.g. <em>TOF</em>, <em>ASD</em>, <em>HLHS Norwood</em>). Tap a card to select it.</p>
 
       <h3>Step 3 · Edit Diagram (optional)</h3>
-      <p>Tap <strong>✏️ Edit Diagram</strong> to add devices if needed: stent, ASD/VSD device, PDA closure, BTT shunt, RV–PA conduit, thickened valve, SAPIEN or Melody valve, vascular plug, PA band, ECMO or VAD cannula, or Fontan baffle. Drag to position, use <strong>↻</strong> to rotate, <strong>⤡</strong> to resize, <strong>↔</strong> to lengthen/shorten, <strong>✕</strong> to delete. Skip this step entirely by tapping <strong>Complete Diagram →</strong> right after selecting a diagram.</p>
-      <p><strong>✏️ Draw</strong> mode lets you sketch freehand on the diagram — each stroke becomes a movable object. <strong>Annotations</strong> mode shows draggable markers for where saturations (red) and pressures (blue) print; drag them to fix positions, which are remembered for that diagram.</p>
+      <p>Tap <strong>✏️ Edit Diagram</strong> to add devices if needed: stent, ASD/VSD device, PDA closure, BTT shunt, RV–PA conduit, thickened valve, SAPIEN or Melody valve, vascular plug, PA band, ECMO or VAD cannula, Fontan baffle, or Fontan fenestration. Drag to position, use <strong>↻</strong> to rotate, <strong>⤡</strong> to resize, <strong>↔</strong> to lengthen/shorten, <strong>✕</strong> to delete. Skip this step entirely by tapping <strong>Complete Diagram →</strong> right after selecting a diagram.</p>
+      <p><strong>✏️ Draw</strong> mode lets you sketch freehand on the diagram — each stroke becomes a movable object. <strong>Move #s</strong> shows draggable markers for where saturations (red) and pressures (blue) print; drag them to fix positions, which are remembered for that diagram. <strong>＋ Sat/Press</strong> lets you type a value the program didn't recognize and drop it on the diagram as a circled saturation or a free-text pressure.</p>
 
       <h3>Step 4 · Complete Diagram</h3>
       <p>Tap <strong>Complete Diagram →</strong> to annotate the diagram (devices included), produce a hemodynamic narrative, and calculate Fick-derived values. Use <strong>← Edit Diagram</strong> on the report screen to adjust devices and re-complete.</p>
@@ -331,7 +331,8 @@ Aorta  98  95/55  72</pre>
     <div class="pills" style="margin-bottom:10px">
       <button class="pill active" id="pill-devices" onclick="setEditMode('devices')">Devices</button>
       <button class="pill" id="pill-draw" onclick="setEditMode('draw')">✏️ Draw</button>
-      <button class="pill" id="pill-annot" onclick="setEditMode('annot')">Annotations</button>
+      <button class="pill" id="pill-annot" onclick="setEditMode('annot')">Move #s</button>
+      <button class="pill" id="pill-labels" onclick="setEditMode('labels')">＋ Sat/Press</button>
     </div>
     <div class="drow" id="device-controls">
       <select class="device-select" id="device-select">
@@ -349,8 +350,15 @@ Aorta  98  95/55  72</pre>
         <option value="ecmo_cannula">ECMO cannula</option>
         <option value="vad_cannula">VAD cannula</option>
         <option value="fontan_baffle">Fontan baffle</option>
+        <option value="fenestration">Fontan fenestration</option>
       </select>
       <button class="device-add-btn" onclick="addDevice()">＋ Add</button>
+    </div>
+    <div class="drow" id="label-controls" style="display:none">
+      <input type="text" id="label-input" class="device-select" style="flex:1"
+             placeholder="Value — e.g. 82 or 50/30" autocomplete="off"/>
+      <button class="device-add-btn" onclick="addLabel('circle')">◯ Sat</button>
+      <button class="device-add-btn" onclick="addLabel('text')" style="background:var(--navy)">Press/Text</button>
     </div>
     <p class="device-hint" id="edit-hint">Tap a device to select it · drag to move · <b>↻</b> rotate · <b>⤡</b> resize · <b>↔</b> length · <b>✕</b> delete.</p>
   </div>
@@ -1090,11 +1098,14 @@ function setEditMode(m) {
   document.getElementById('pill-devices').classList.toggle('active', m === 'devices')
   document.getElementById('pill-draw').classList.toggle('active', m === 'draw')
   document.getElementById('pill-annot').classList.toggle('active', m === 'annot')
+  document.getElementById('pill-labels').classList.toggle('active', m === 'labels')
   document.getElementById('device-controls').style.display = m === 'devices' ? 'flex' : 'none'
+  document.getElementById('label-controls').style.display = m === 'labels' ? 'flex' : 'none'
   const hints = {
     devices: 'Tap a device to select it · drag to move · <b>↻</b> rotate · <b>⤡</b> resize · <b>↔</b> length · <b>✕</b> delete.',
     draw: 'Draw on the diagram with your finger or mouse. Strokes become objects — switch to Devices to move, resize, or delete them.',
     annot: 'Drag the red saturation markers and blue pressure markers to reposition the report numbers. New positions are saved for this diagram when you complete it.',
+    labels: 'Type a value, then tap <b>◯ Sat</b> for a circled number or <b>Press/Text</b> for free text. It drops on the diagram — drag to position, <b>⤡</b> resize, <b>✕</b> delete.',
   }
   document.getElementById('edit-hint').innerHTML = hints[m]
   if (m === 'annot' && !devEdit.annotCoords && selectedDiagram) _loadAnnotCoords()
@@ -1133,6 +1144,9 @@ const DEVICE_BOUNDS = {
   ecmo_cannula: { hw: 36, hh: 6 },
   vad_cannula:  { hw: 31, hh: 10 },
   fontan_baffle: { hw: 41, hh: 16 },
+  fenestration: { hw: 12, hh: 8 },
+  label_circle: { hw: 18, hh: 18 },
+  label_text:   { hw: 16, hh: 12 },
 }
 
 // Devices whose length can be adjusted independently of overall size
@@ -1164,7 +1178,44 @@ function _occluderSVG(len) {
   return g
 }
 
+function svgEscape(s) {
+  return String(s == null ? '' : s)
+    .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+}
+
 function deviceGlyphSVG(type, stretch = 1, dev = null) {
+  if (type === 'label_circle') {
+    // saturation-style circle carrying a manually typed value
+    const t = svgEscape((dev && dev.text) || '')
+    return `<g>
+      <circle cx="0" cy="0" r="16" fill="#fff" stroke="#000" stroke-width="2"/>
+      <text x="0" y="0" text-anchor="middle" dominant-baseline="central"
+            font-family="Calibri, Arial, sans-serif" font-size="15" fill="#000">${t}</text>
+    </g>`
+  }
+  if (type === 'label_text') {
+    // free text (e.g. an unrecognized pressure like 50/30) — supports one
+    // "/" as a stacked systolic/diastolic like the report renderer
+    const raw = (dev && dev.text) || ''
+    if (raw.includes('/')) {
+      const [a, b] = raw.split('/')
+      return `<g font-family="Calibri, Arial, sans-serif" font-size="15" fill="#000" text-anchor="middle">
+        <text x="0" y="-8" dominant-baseline="central">${svgEscape(a)}</text>
+        <line x1="-11" y1="0" x2="11" y2="0" stroke="#000" stroke-width="1"/>
+        <text x="0" y="9" dominant-baseline="central">${svgEscape(b)}</text>
+      </g>`
+    }
+    return `<text x="0" y="0" text-anchor="middle" dominant-baseline="central"
+            font-family="Calibri, Arial, sans-serif" font-size="15" fill="#000">${svgEscape(raw)}</text>`
+  }
+  if (type === 'fenestration') {
+    // Fontan fenestration: small opening in the baffle with a R→L shunt arrow
+    return `<g stroke="#000" fill="none">
+      <ellipse cx="0" cy="0" rx="10" ry="6" fill="#fff" stroke-width="1.8"/>
+      <line x1="7" y1="0" x2="-6" y2="0" stroke-width="1.6"/>
+      <path d="M -6 0 L -1 -3 M -6 0 L -1 3" stroke-width="1.6"/>
+    </g>`
+  }
   if (type === 'freehand') {
     const pts = (dev && dev.points) || []
     if (pts.length < 2) return ''
@@ -1483,6 +1534,22 @@ function addDevice() {
   renderDevices()
 }
 
+function addLabel(kind) {
+  const input = document.getElementById('label-input')
+  const text = input.value.trim()
+  if (!text) { input.focus(); return }
+  devEdit.devices.push({
+    id: devEdit.nextId++,
+    type: kind === 'circle' ? 'label_circle' : 'label_text',
+    x: devEdit.imgW / 2, y: devEdit.imgH / 2,
+    scale: Math.max(0.8, devEdit.imgW / 560), angle: 0, stretch: 1,
+    text,
+  })
+  devEdit.sel = devEdit.devices[devEdit.devices.length - 1].id
+  input.value = ''
+  renderDevices()
+}
+
 function _deviceGroup(d, selected, withHandles) {
   let b = DEVICE_BOUNDS[d.type]
   if (d.type === 'freehand') {
@@ -1492,6 +1559,12 @@ function _deviceGroup(d, selected, withHandles) {
       my = Math.max(my, Math.abs(p[1]))
     }
     b = { hw: mx + 4, hh: my + 4 }
+  } else if (d.type === 'label_text') {
+    const raw = (d.text || '')
+    const longest = raw.includes('/')
+      ? Math.max(...raw.split('/').map(s => s.length))
+      : raw.length
+    b = { hw: Math.max(10, longest * 4.4 + 4), hh: raw.includes('/') ? 16 : 11 }
   }
   const u = withHandles ? _uiScale() : 1
   const st = STRETCHABLE.has(d.type) ? (d.stretch || 1) : 1
@@ -1537,7 +1610,8 @@ function _deviceGroup(d, selected, withHandles) {
 function renderDevices() {
   _overlayEl().innerHTML =
     devEdit.devices
-      .map(d => _deviceGroup(d, d.id === devEdit.sel && devEdit.mode === 'devices', true))
+      .map(d => _deviceGroup(d, d.id === devEdit.sel &&
+        (devEdit.mode === 'devices' || devEdit.mode === 'labels'), true))
       .join('') +
     _drawingSVG() + _annotMarkersSVG()
 }
@@ -1607,7 +1681,7 @@ function _devicePointerDown(e) {
     }
     return
   }
-  if (devEdit.mode !== 'devices') return
+  if (devEdit.mode !== 'devices' && devEdit.mode !== 'labels') return
   const roleEl = e.target.closest('[data-role]')
   if (!roleEl) { devEdit.sel = null; renderDevices(); return }
   e.preventDefault()
