@@ -97,10 +97,10 @@
     "LUPV": {
       "side": "left",
       "annotation_type": "saturation_and_pressure",
-      "sat_x": 363,
-      "sat_y": 190,
-      "pressure_x": 404,
-      "pressure_y": 179
+      "sat_x": 400,
+      "sat_y": 180,
+      "pressure_x": 441,
+      "pressure_y": 169
     },
     "RLPV": {
       "side": "left",
@@ -129,10 +129,10 @@
       "side": "left",
       "annotation_type": "saturation_and_pressure",
       "custom": true,
-      "pressure_x": 398,
-      "pressure_y": 190,
-      "sat_x": 363,
-      "sat_y": 190
+      "pressure_x": 290,
+      "pressure_y": 155,
+      "sat_x": 255,
+      "sat_y": 155
     }
   }
 }

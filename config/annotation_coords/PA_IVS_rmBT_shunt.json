@@ -37,10 +37,10 @@
     "Neoaorta": {
       "side": "left",
       "annotation_type": "saturation_and_pressure",
-      "sat_x": 594,
-      "sat_y": 137,
-      "pressure_x": 590,
-      "pressure_y": 85
+      "sat_x": 288,
+      "sat_y": 140,
+      "pressure_x": 284,
+      "pressure_y": 88
     },
     "MPA": {
       "side": "right",

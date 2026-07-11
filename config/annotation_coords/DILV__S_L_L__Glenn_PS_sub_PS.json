@@ -29,10 +29,10 @@
     "Glenn_anastomosis": {
       "side": "right",
       "annotation_type": "saturation_and_pressure",
-      "sat_x": 568,
-      "sat_y": 104,
-      "pressure_x": 562,
-      "pressure_y": 70
+      "sat_x": 160,
+      "sat_y": 100,
+      "pressure_x": 154,
+      "pressure_y": 66
     },
     "RPA": {
       "side": "right",
