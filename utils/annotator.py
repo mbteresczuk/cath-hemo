@@ -441,7 +441,8 @@ def _resolve_coords(coord: dict) -> tuple:
 
 
 def annotate_diagram(image_path: str, coords: dict, hemodynamics: dict,
-                     anatomy_type: str = "biventricle") -> Image.Image:
+                     anatomy_type: str = "biventricle",
+                     image_override: Image.Image = None) -> Image.Image:
     """
     Main annotation entry point.
 
@@ -451,8 +452,14 @@ def annotate_diagram(image_path: str, coords: dict, hemodynamics: dict,
       Old: single x/y (pressure auto-offset to the right of the circle).
 
     anatomy_type: used to suppress sys/dia for PA locations on Glenn/Fontan diagrams.
+    image_override: annotate this image (e.g. base diagram with devices
+      already composited) instead of loading image_path. Must match the
+      coord file's pixel dimensions.
     """
-    img = load_image_as_rgba(image_path)
+    if image_override is not None:
+        img = image_override.convert("RGBA")
+    else:
+        img = load_image_as_rgba(image_path)
     draw = ImageDraw.Draw(img)
     fonts = get_fonts()
 

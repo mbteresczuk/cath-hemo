@@ -92,6 +92,9 @@ class ReportRequest(BaseModel):
     diagram_id: str
     patient_data: PatientData = PatientData()
     extra_locations: Optional[List[str]] = None
+    # Optional: base diagram with devices already composited (PNG base64).
+    # When provided, annotations are drawn ON TOP of the devices.
+    base_image_b64: Optional[str] = None
 
 
 # ── Helper ────────────────────────────────────────────────────────────────────
@@ -264,10 +267,23 @@ def generate_report(req: ReportRequest):
         _library_cache = None
 
     # --- Annotate ---
+    image_override = None
+    if req.base_image_b64:
+        import base64
+        import io as _io
+        try:
+            from PIL import Image as _PILImage
+            image_override = _PILImage.open(
+                _io.BytesIO(base64.b64decode(req.base_image_b64))
+            )
+        except Exception:
+            image_override = None
+
     try:
         annotated = annotate_diagram(
             str(img_path), coords, hemodynamics,
             anatomy_type=patient_data.get("anatomy_type", "biventricle"),
+            image_override=image_override,
         )
         image_b64 = image_to_base64(annotated)
     except Exception as e:
