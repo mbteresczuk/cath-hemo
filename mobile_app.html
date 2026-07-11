@@ -1086,7 +1086,7 @@ function _editHint(m) {
   const hints = {
     devices: 'Tap a device to select it · drag to move · <b>↻</b> rotate · <b>⤡</b> resize · <b>↔</b> length · <b>✕</b> delete.',
     draw: devEdit.drawTool === 'eraser'
-      ? 'Drag the eraser over a drawn stroke to remove it. Devices and program annotations are not affected.'
+      ? 'The eraser paints white over anything it crosses — pencil strokes AND diagram lines. Each wipe is an object: select it in Devices mode and tap ✕ to undo.'
       : 'Draw on the diagram with your finger or mouse. Strokes become objects — use the eraser or Devices mode to remove them.',
     annot: 'Drag the red saturation markers and blue pressure markers to reposition the report numbers. New positions are saved for this diagram when you complete it.',
     labels: 'Type a value, then tap <b>◯ Sat</b> for a circled saturation, <b>Pressure</b> for a value with a line above it, or <b>Text</b> for plain text. Drag to position, <b>⤡</b> resize, <b>✕</b> delete.',
@@ -1102,20 +1102,6 @@ function setDrawTool(t) {
   document.getElementById('edit-hint').innerHTML = _editHint('draw')
 }
 
-function _eraseAt(px, py) {
-  // remove any freehand stroke within ~14 image px of the pointer
-  const before = devEdit.devices.length
-  devEdit.devices = devEdit.devices.filter(d => {
-    if (d.type !== 'freehand') return true
-    const rad = (-d.angle) * Math.PI / 180
-    const dx = px - d.x, dy = py - d.y
-    const lx = (dx * Math.cos(rad) - dy * Math.sin(rad)) / d.scale
-    const ly = (dx * Math.sin(rad) + dy * Math.cos(rad)) / d.scale
-    const tol = 14 / d.scale
-    return !d.points.some(p => Math.hypot(lx - p[0], ly - p[1]) < tol)
-  })
-  if (devEdit.devices.length !== before) renderDevices()
-}
 
 async function _loadAnnotCoords() {
   try {
@@ -1216,20 +1202,22 @@ function deviceGlyphSVG(type, stretch = 1, dev = null) {
             font-family="Calibri, Arial, sans-serif" font-size="15" fill="#000">${svgEscape(raw)}</text>`
   }
   if (type === 'fenestration') {
-    // Fontan fenestration: small opening in the baffle with a R→L shunt arrow
-    return `<g stroke="#000" fill="none">
-      <ellipse cx="0" cy="0" rx="10" ry="6" fill="#fff" stroke-width="1.8"/>
-      <line x1="7" y1="0" x2="-6" y2="0" stroke-width="1.6"/>
-      <path d="M -6 0 L -1 -3 M -6 0 L -1 3" stroke-width="1.6"/>
+    // Fontan fenestration: two thick parallel lines marking the opening
+    return `<g stroke="#000" fill="none" stroke-linecap="round">
+      <rect x="-9" y="-6" width="18" height="12" fill="#fff" stroke="none"/>
+      <line x1="-8" y1="-4" x2="8" y2="-4" stroke-width="3.4"/>
+      <line x1="-8" y1="4" x2="8" y2="4" stroke-width="3.4"/>
     </g>`
   }
   if (type === 'freehand') {
     const pts = (dev && dev.points) || []
     if (pts.length < 2) return ''
     const dPath = 'M ' + pts.map(p => p[0].toFixed(1) + ' ' + p[1].toFixed(1)).join(' L ')
+    const col = (dev && dev.color) || '#000'
+    const w = (dev && dev.width) || 2.2
     return `<g fill="none" stroke-linecap="round" stroke-linejoin="round">
-      <path d="${dPath}" stroke="rgba(0,0,0,0)" stroke-width="14" pointer-events="stroke"/>
-      <path d="${dPath}" stroke="#000" stroke-width="2.2" pointer-events="none"/>
+      <path d="${dPath}" stroke="rgba(0,0,0,0)" stroke-width="${Math.max(14, w + 4)}" pointer-events="stroke"/>
+      <path d="${dPath}" stroke="${col}" stroke-width="${w}" pointer-events="none"/>
     </g>`
   }
   if (type === 'vascular_plug') {
@@ -1628,6 +1616,13 @@ function _drawingSVG() {
   const s = devEdit.drawing
   if (!s || s.pts.length < 2) return ''
   const dPath = 'M ' + s.pts.map(p => p[0].toFixed(1) + ' ' + p[1].toFixed(1)).join(' L ')
+  if (s.eraser) {
+    // white wipe with a faint dashed outline so it stays visible mid-drag
+    return `<g fill="none" stroke-linecap="round" stroke-linejoin="round">
+      <path d="${dPath}" stroke="#fff" stroke-width="14"/>
+      <path d="${dPath}" stroke="#c9c9c9" stroke-width="1" stroke-dasharray="4 3"/>
+    </g>`
+  }
   return `<path d="${dPath}" fill="none" stroke="#000" stroke-width="2.2"
            stroke-linecap="round" stroke-linejoin="round"/>`
 }
@@ -1672,12 +1667,7 @@ function _devicePointerDown(e) {
   if (devEdit.mode === 'draw') {
     e.preventDefault()
     const [px, py] = _toImgCoords(e)
-    if (devEdit.drawTool === 'eraser') {
-      _eraseAt(px, py)
-      devEdit.drag = { role: 'erase' }
-    } else {
-      devEdit.drawing = { pts: [[px, py]] }
-    }
+    devEdit.drawing = { pts: [[px, py]], eraser: devEdit.drawTool === 'eraser' }
     return
   }
   const annotEl = e.target.closest('[data-role="annot"]')
@@ -1740,11 +1730,6 @@ function _devicePointerMove(e) {
   const g = devEdit.drag
   if (!g) return
   e.preventDefault()
-  if (g.role === 'erase') {
-    const [px, py] = _toImgCoords(e)
-    _eraseAt(px, py)
-    return
-  }
   if (g.role === 'annot') {
     const [px, py] = _toImgCoords(e)
     const c = devEdit.annotCoords.locations[g.loc]
@@ -1780,6 +1765,7 @@ function _devicePointerMove(e) {
 function _devicePointerUp() {
   if (devEdit.drawing) {
     const pts = devEdit.drawing.pts
+    const eraser = devEdit.drawing.eraser
     devEdit.drawing = null
     if (pts.length >= 3) {
       let sx = 0, sy = 0
@@ -1789,6 +1775,8 @@ function _devicePointerUp() {
         id: devEdit.nextId++, type: 'freehand', x: cx, y: cy,
         scale: 1, angle: 0, stretch: 1,
         points: pts.map(p => [p[0] - cx, p[1] - cy]),
+        color: eraser ? '#fff' : '#000',
+        width: eraser ? 14 : 2.2,
       })
     }
     renderDevices()
