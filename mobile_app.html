@@ -179,7 +179,8 @@ Aorta  98  95/55  72</pre>
       <p>Tap <strong>Select Diagram →</strong> then search by diagnosis (e.g. <em>TOF</em>, <em>ASD</em>, <em>HLHS Norwood</em>). Tap a card to select it.</p>
 
       <h3>Step 3 · Edit Diagram (optional)</h3>
-      <p>Tap <strong>✏️ Edit Diagram</strong> to add devices if needed: stent, ASD device, VSD device, PDA closure, BTT shunt, RV–PA conduit, thickened valve (aortic/pulmonary), SAPIEN valve, or Melody valve. Drag to position, use <strong>↻</strong> to rotate, <strong>⤡</strong> to resize, <strong>↔</strong> to lengthen/shorten a stent or conduit, <strong>✕</strong> to delete. Skip this step entirely by tapping <strong>Complete Diagram →</strong> right after selecting a diagram.</p>
+      <p>Tap <strong>✏️ Edit Diagram</strong> to add devices if needed: stent, ASD/VSD device, PDA closure, BTT shunt, RV–PA conduit, thickened valve, SAPIEN or Melody valve, vascular plug, PA band, ECMO or VAD cannula, or Fontan baffle. Drag to position, use <strong>↻</strong> to rotate, <strong>⤡</strong> to resize, <strong>↔</strong> to lengthen/shorten, <strong>✕</strong> to delete. Skip this step entirely by tapping <strong>Complete Diagram →</strong> right after selecting a diagram.</p>
+      <p><strong>✏️ Draw</strong> mode lets you sketch freehand on the diagram — each stroke becomes a movable object. <strong>Annotations</strong> mode shows draggable markers for where saturations (red) and pressures (blue) print; drag them to fix positions, which are remembered for that diagram.</p>
 
       <h3>Step 4 · Complete Diagram</h3>
       <p>Tap <strong>Complete Diagram →</strong> to annotate the diagram (devices included), produce a hemodynamic narrative, and calculate Fick-derived values. Use <strong>← Edit Diagram</strong> on the report screen to adjust devices and re-complete.</p>
@@ -327,7 +328,12 @@ Aorta  98  95/55  72</pre>
   <p class="sub">Add devices if needed, then complete the diagram.</p>
 
   <div class="device-toolbar" id="device-toolbar">
-    <div class="drow">
+    <div class="pills" style="margin-bottom:10px">
+      <button class="pill active" id="pill-devices" onclick="setEditMode('devices')">Devices</button>
+      <button class="pill" id="pill-draw" onclick="setEditMode('draw')">✏️ Draw</button>
+      <button class="pill" id="pill-annot" onclick="setEditMode('annot')">Annotations</button>
+    </div>
+    <div class="drow" id="device-controls">
       <select class="device-select" id="device-select">
         <option value="stent">Stent</option>
         <option value="asd_device">ASD device</option>
@@ -338,10 +344,15 @@ Aorta  98  95/55  72</pre>
         <option value="thick_valve">Thickened valve (Ao/PV)</option>
         <option value="sapien_valve">SAPIEN valve</option>
         <option value="melody_valve">Melody valve</option>
+        <option value="vascular_plug">Vascular plug</option>
+        <option value="pa_band">PA band</option>
+        <option value="ecmo_cannula">ECMO cannula</option>
+        <option value="vad_cannula">VAD cannula</option>
+        <option value="fontan_baffle">Fontan baffle</option>
       </select>
       <button class="device-add-btn" onclick="addDevice()">＋ Add</button>
     </div>
-    <p class="device-hint">Tap a device to select it · drag to move · <b>↻</b> rotate · <b>⤡</b> resize · <b>↔</b> length (stent/conduit) · <b>✕</b> delete.</p>
+    <p class="device-hint" id="edit-hint">Tap a device to select it · drag to move · <b>↻</b> rotate · <b>⤡</b> resize · <b>↔</b> length · <b>✕</b> delete.</p>
   </div>
 
   <div class="card" style="padding:0;overflow:hidden;margin-bottom:14px">
@@ -434,6 +445,17 @@ function goToSelector() {
 async function completeDiagram() {
   if (!selectedDiagram || !hemoText.trim()) return
   devEdit.sel = null
+  // persist repositioned annotation markers so the report uses them
+  if (devEdit.annotDirty && devEdit.annotCoords) {
+    try {
+      await fetch(`/api/coords/${selectedDiagram.id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(devEdit.annotCoords),
+      })
+      devEdit.annotDirty = false
+    } catch {}
+  }
   goTo('s-output')
   document.getElementById('output-loading').style.display = 'block'
   document.getElementById('output-error').style.display = 'none'
@@ -447,6 +469,8 @@ function reset() {
   lastResult = null
   devEdit.devices = []
   devEdit.sel = null
+  devEdit.annotCoords = null
+  devEdit.annotDirty = false
   document.getElementById('hemo-text').value = ''
   document.getElementById('parse-preview').innerHTML = ''
   document.getElementById('btn-next').disabled = true
@@ -809,6 +833,8 @@ function selectDiagram(d) {
   if (!selectedDiagram || selectedDiagram.id !== d.id) {
     devEdit.devices = []
     devEdit.sel = null
+    devEdit.annotCoords = null
+    devEdit.annotDirty = false
   }
   selectedDiagram = d
   document.querySelectorAll('.dcard').forEach(el => {
@@ -1050,6 +1076,45 @@ async function shareBrowseDiagram() {
 let devEdit = {
   active: false, devices: [], sel: null, nextId: 1,
   imgW: 0, imgH: 0, drag: null,
+  mode: 'devices',       // 'devices' | 'draw' | 'annot'
+  drawing: null,         // in-progress freehand stroke
+  annotCoords: null,     // fetched annotation coords doc for this diagram
+  annotDirty: false,     // true when markers were moved (PUT before report)
+}
+
+function setEditMode(m) {
+  devEdit.mode = m
+  devEdit.sel = null
+  devEdit.drag = null
+  devEdit.drawing = null
+  document.getElementById('pill-devices').classList.toggle('active', m === 'devices')
+  document.getElementById('pill-draw').classList.toggle('active', m === 'draw')
+  document.getElementById('pill-annot').classList.toggle('active', m === 'annot')
+  document.getElementById('device-controls').style.display = m === 'devices' ? 'flex' : 'none'
+  const hints = {
+    devices: 'Tap a device to select it · drag to move · <b>↻</b> rotate · <b>⤡</b> resize · <b>↔</b> length · <b>✕</b> delete.',
+    draw: 'Draw on the diagram with your finger or mouse. Strokes become objects — switch to Devices to move, resize, or delete them.',
+    annot: 'Drag the red saturation markers and blue pressure markers to reposition the report numbers. New positions are saved for this diagram when you complete it.',
+  }
+  document.getElementById('edit-hint').innerHTML = hints[m]
+  if (m === 'annot' && !devEdit.annotCoords && selectedDiagram) _loadAnnotCoords()
+  renderDevices()
+}
+
+async function _loadAnnotCoords() {
+  try {
+    let res = await fetch(`/api/coords/${selectedDiagram.id}`)
+    let doc = await res.json()
+    if (!doc.locations || !Object.keys(doc.locations).length) {
+      // not configured yet — auto-configure so there is something to drag
+      res = await fetch(`/api/coords/${selectedDiagram.id}/auto`, { method: 'POST' })
+      doc = await res.json()
+    }
+    devEdit.annotCoords = doc
+  } catch {
+    devEdit.annotCoords = null
+  }
+  renderDevices()
 }
 
 // Glyph half-extents in local units (for selection box + handle placement)
@@ -1063,11 +1128,17 @@ const DEVICE_BOUNDS = {
   thick_valve:  { hw: 20, hh: 14 },
   sapien_valve: { hw: 16, hh: 16 },
   melody_valve: { hw: 12, hh: 18 },
+  vascular_plug: { hw: 10, hh: 8 },
+  pa_band:      { hw: 16, hh: 5 },
+  ecmo_cannula: { hw: 36, hh: 6 },
+  vad_cannula:  { hw: 31, hh: 10 },
+  fontan_baffle: { hw: 41, hh: 16 },
 }
 
 // Devices whose length can be adjusted independently of overall size
 // (so a stent or conduit can be shortened/lengthened to fit any vessel)
-const STRETCHABLE = new Set(['stent', 'rvpa_conduit'])
+const STRETCHABLE = new Set(['stent', 'rvpa_conduit', 'pa_band',
+                             'ecmo_cannula', 'vad_cannula', 'fontan_baffle'])
 
 function _occluderSVG(len) {
   // Amplatzer-style double disc seen edge-on: two thin hatched discs + waist
@@ -1093,7 +1164,82 @@ function _occluderSVG(len) {
   return g
 }
 
-function deviceGlyphSVG(type, stretch = 1) {
+function deviceGlyphSVG(type, stretch = 1, dev = null) {
+  if (type === 'freehand') {
+    const pts = (dev && dev.points) || []
+    if (pts.length < 2) return ''
+    const dPath = 'M ' + pts.map(p => p[0].toFixed(1) + ' ' + p[1].toFixed(1)).join(' L ')
+    return `<g fill="none" stroke-linecap="round" stroke-linejoin="round">
+      <path d="${dPath}" stroke="rgba(0,0,0,0)" stroke-width="14" pointer-events="stroke"/>
+      <path d="${dPath}" stroke="#000" stroke-width="2.2" pointer-events="none"/>
+    </g>`
+  }
+  if (type === 'vascular_plug') {
+    // Amplatzer-style vascular plug: short three-lobed mesh cylinder
+    let mesh = ''
+    for (let x = -8; x < 8; x += 3.2) {
+      mesh += `<line x1="${x.toFixed(1)}" y1="-7" x2="${(x + 3.2).toFixed(1)}" y2="7"/>
+               <line x1="${x.toFixed(1)}" y1="7" x2="${(x + 3.2).toFixed(1)}" y2="-7"/>`
+    }
+    return `<g stroke="#000" stroke-width="0.8" fill="none">
+      <rect x="-9" y="-7" width="18" height="14" rx="5" fill="#fff" stroke="none"/>
+      ${mesh}
+      <rect x="-9" y="-7" width="18" height="14" rx="5" stroke-width="1.5"/>
+      <line x1="-3" y1="-7" x2="-3" y2="7" stroke-width="1.3"/>
+      <line x1="3" y1="-7" x2="3" y2="7" stroke-width="1.3"/>
+    </g>`
+  }
+  if (type === 'pa_band') {
+    // surgical band cinching the vessel: narrow waisted strap
+    const hl = 15 * stretch
+    return `<g stroke="#000" stroke-width="1.4" fill="none">
+      <path d="M ${-hl} -3.5 Q 0 -1 ${hl} -3.5 L ${hl} 3.5 Q 0 1 ${-hl} 3.5 Z" fill="#fff"/>
+    </g>`
+  }
+  if (type === 'ecmo_cannula') {
+    // wire-reinforced cannula: rounded tip, side holes, fine rings
+    const L = 70 * stretch, hl = L / 2, hw = 5
+    let rings = ''
+    for (let x = -hl + 4; x < hl - 8; x += 5) {
+      rings += `<line x1="${x.toFixed(1)}" y1="${-hw}" x2="${x.toFixed(1)}" y2="${hw}"/>`
+    }
+    return `<g stroke="#000" stroke-width="1.4" fill="none">
+      <path d="M ${-hl} ${-hw} L ${(hl - 5).toFixed(1)} ${-hw} Q ${hl} ${-hw} ${hl} 0 Q ${hl} ${hw} ${(hl - 5).toFixed(1)} ${hw} L ${-hl} ${hw}" fill="#fff"/>
+      <g stroke-width="0.5">${rings}</g>
+      <ellipse cx="${(hl - 9).toFixed(1)}" cy="${-hw + 2}" rx="1.6" ry="1" stroke-width="0.9"/>
+      <ellipse cx="${(hl - 14).toFixed(1)}" cy="${hw - 2}" rx="1.6" ry="1" stroke-width="0.9"/>
+      <ellipse cx="${(hl - 19).toFixed(1)}" cy="${-hw + 2}" rx="1.6" ry="1" stroke-width="0.9"/>
+    </g>`
+  }
+  if (type === 'vad_cannula') {
+    // wide-bore VAD cannula: hatched sewing cuff, bevelled open tip
+    const L = 60 * stretch, hl = L / 2, hw = 7
+    let cuff = ''
+    for (let x = -hl + 2; x < -hl + 10; x += 2.4) {
+      cuff += `<line x1="${x.toFixed(1)}" y1="${-hw - 2}" x2="${(x - 1.6).toFixed(1)}" y2="${hw + 2}"/>`
+    }
+    return `<g stroke="#000" stroke-width="1.5" fill="none">
+      <polygon points="${-hl},${-hw} ${hl},${-hw} ${(hl - 4).toFixed(1)},${hw} ${-hl},${hw}" fill="#fff"/>
+      <ellipse cx="${(hl - 2).toFixed(1)}" cy="0" rx="2.2" ry="${hw - 1}" stroke-width="0.9"/>
+      <rect x="${-hl}" y="${-hw - 2}" width="10" height="${2 * hw + 4}" fill="#fff" stroke-width="1.2"/>
+      <g stroke-width="0.6">${cuff}</g>
+    </g>`
+  }
+  if (type === 'fontan_baffle') {
+    // smooth Fontan baffle / extracardiac conduit with suture ticks
+    const L = 80 * stretch, hl = L / 2, hw = 15
+    let ticks = ''
+    for (let x = -hl + 5; x < hl - 2; x += 8) {
+      ticks += `<line x1="${x.toFixed(1)}" y1="${-hw}" x2="${(x + 2.5).toFixed(1)}" y2="${-hw + 2.5}"/>
+                <line x1="${x.toFixed(1)}" y1="${hw}" x2="${(x + 2.5).toFixed(1)}" y2="${hw - 2.5}"/>`
+    }
+    return `<g stroke="#000" stroke-width="1.7" fill="none">
+      <rect x="${-hl}" y="${-hw}" width="${L}" height="${2 * hw}" fill="#fff" stroke="none"/>
+      <line x1="${-hl}" y1="${-hw}" x2="${hl}" y2="${-hw}"/>
+      <line x1="${-hl}" y1="${hw}" x2="${hl}" y2="${hw}"/>
+      <g stroke-width="0.9">${ticks}</g>
+    </g>`
+  }
   if (type === 'stent') {
     // diamond-cell mesh like a real stent: two rows of crossed struts,
     // open ends, no enclosing box
@@ -1314,7 +1460,7 @@ function goToEdit() {
     const ov = _overlayEl()
     ov.setAttribute('viewBox', `0 0 ${devEdit.imgW} ${devEdit.imgH}`)
     ov.style.display = 'block'
-    renderDevices()
+    setEditMode('devices')
   }
   const targetSrc = new URL(selectedDiagram.thumbnail_url, location.href).href
   if (img.src === targetSrc && img.complete && img.naturalWidth) {
@@ -1338,7 +1484,15 @@ function addDevice() {
 }
 
 function _deviceGroup(d, selected, withHandles) {
-  const b = DEVICE_BOUNDS[d.type]
+  let b = DEVICE_BOUNDS[d.type]
+  if (d.type === 'freehand') {
+    let mx = 8, my = 8
+    for (const p of d.points) {
+      mx = Math.max(mx, Math.abs(p[0]))
+      my = Math.max(my, Math.abs(p[1]))
+    }
+    b = { hw: mx + 4, hh: my + 4 }
+  }
   const u = withHandles ? _uiScale() : 1
   const st = STRETCHABLE.has(d.type) ? (d.stretch || 1) : 1
   const hwS = b.hw * d.scale * st, hhS = b.hh * d.scale
@@ -1374,15 +1528,53 @@ function _deviceGroup(d, selected, withHandles) {
   return `
     <g transform="translate(${d.x} ${d.y}) rotate(${d.angle})">
       <g class="dev-body" data-role="body" data-did="${d.id}" transform="scale(${d.scale})">
-        ${deviceGlyphSVG(d.type, st)}
+        ${deviceGlyphSVG(d.type, st, d)}
       </g>
       ${handles}
     </g>`
 }
 
 function renderDevices() {
-  _overlayEl().innerHTML = devEdit.devices
-    .map(d => _deviceGroup(d, d.id === devEdit.sel, true)).join('')
+  _overlayEl().innerHTML =
+    devEdit.devices
+      .map(d => _deviceGroup(d, d.id === devEdit.sel && devEdit.mode === 'devices', true))
+      .join('') +
+    _drawingSVG() + _annotMarkersSVG()
+}
+
+function _drawingSVG() {
+  const s = devEdit.drawing
+  if (!s || s.pts.length < 2) return ''
+  const dPath = 'M ' + s.pts.map(p => p[0].toFixed(1) + ' ' + p[1].toFixed(1)).join(' L ')
+  return `<path d="${dPath}" fill="none" stroke="#000" stroke-width="2.2"
+           stroke-linecap="round" stroke-linejoin="round"/>`
+}
+
+function _annotMarkersSVG() {
+  if (devEdit.mode !== 'annot' || !devEdit.annotCoords) return ''
+  const u = _uiScale()
+  let out = ''
+  for (const [loc, c] of Object.entries(devEdit.annotCoords.locations || {})) {
+    const label = loc.replace(/_/g, ' ')
+    if (c.sat_x != null) {
+      out += `<g class="dev-handle" data-role="annot" data-loc="${loc}" data-kind="sat">
+        <circle cx="${c.sat_x}" cy="${c.sat_y}" r="${10 * u}" fill="rgba(139,26,43,.8)"/>
+        <text x="${c.sat_x}" y="${c.sat_y + 17 * u}" text-anchor="middle" font-size="${8 * u}"
+              fill="#8B1A2B" stroke="#fff" stroke-width="${2.5 * u}" paint-order="stroke"
+              pointer-events="none" font-weight="bold">${label}</text>
+      </g>`
+    }
+    if (c.pressure_x != null) {
+      out += `<g class="dev-handle" data-role="annot" data-loc="${loc}" data-kind="press">
+        <rect x="${c.pressure_x - 8 * u}" y="${c.pressure_y - 8 * u}" width="${16 * u}" height="${16 * u}"
+              rx="${3 * u}" fill="rgba(27,43,58,.8)"/>
+        <text x="${c.pressure_x}" y="${c.pressure_y - 12 * u}" text-anchor="middle" font-size="${8 * u}"
+              fill="#1B2B3A" stroke="#fff" stroke-width="${2.5 * u}" paint-order="stroke"
+              pointer-events="none" font-weight="bold">${label}</text>
+      </g>`
+    }
+  }
+  return out
 }
 
 function _toImgCoords(e) {
@@ -1395,6 +1587,27 @@ function _toImgCoords(e) {
 
 function _devicePointerDown(e) {
   if (!devEdit.active) return
+  if (devEdit.mode === 'draw') {
+    e.preventDefault()
+    const [px, py] = _toImgCoords(e)
+    devEdit.drawing = { pts: [[px, py]] }
+    return
+  }
+  const annotEl = e.target.closest('[data-role="annot"]')
+  if (annotEl && devEdit.annotCoords) {
+    e.preventDefault()
+    const [px, py] = _toImgCoords(e)
+    const loc = annotEl.dataset.loc, kind = annotEl.dataset.kind
+    const c = devEdit.annotCoords.locations[loc]
+    if (!c) return
+    devEdit.drag = {
+      role: 'annot', loc, kind, px, py,
+      x0: kind === 'sat' ? c.sat_x : c.pressure_x,
+      y0: kind === 'sat' ? c.sat_y : c.pressure_y,
+    }
+    return
+  }
+  if (devEdit.mode !== 'devices') return
   const roleEl = e.target.closest('[data-role]')
   if (!roleEl) { devEdit.sel = null; renderDevices(); return }
   e.preventDefault()
@@ -1426,9 +1639,31 @@ function _devicePointerDown(e) {
 }
 
 function _devicePointerMove(e) {
+  if (devEdit.drawing) {
+    e.preventDefault()
+    const [px, py] = _toImgCoords(e)
+    const pts = devEdit.drawing.pts
+    const last = pts[pts.length - 1]
+    if (Math.hypot(px - last[0], py - last[1]) > 1.5) {
+      pts.push([px, py])
+      renderDevices()
+    }
+    return
+  }
   const g = devEdit.drag
   if (!g) return
   e.preventDefault()
+  if (g.role === 'annot') {
+    const [px, py] = _toImgCoords(e)
+    const c = devEdit.annotCoords.locations[g.loc]
+    if (!c) return
+    const nx = Math.round(g.x0 + (px - g.px)), ny = Math.round(g.y0 + (py - g.py))
+    if (g.kind === 'sat') { c.sat_x = nx; c.sat_y = ny }
+    else { c.pressure_x = nx; c.pressure_y = ny }
+    devEdit.annotDirty = true
+    renderDevices()
+    return
+  }
   const d = devEdit.devices.find(x => x.id === g.did)
   if (!d) { devEdit.drag = null; return }
   const [px, py] = _toImgCoords(e)
@@ -1450,7 +1685,24 @@ function _devicePointerMove(e) {
   renderDevices()
 }
 
-function _devicePointerUp() { devEdit.drag = null }
+function _devicePointerUp() {
+  if (devEdit.drawing) {
+    const pts = devEdit.drawing.pts
+    devEdit.drawing = null
+    if (pts.length >= 3) {
+      let sx = 0, sy = 0
+      pts.forEach(p => { sx += p[0]; sy += p[1] })
+      const cx = sx / pts.length, cy = sy / pts.length
+      devEdit.devices.push({
+        id: devEdit.nextId++, type: 'freehand', x: cx, y: cy,
+        scale: 1, angle: 0, stretch: 1,
+        points: pts.map(p => [p[0] - cx, p[1] - cy]),
+      })
+    }
+    renderDevices()
+  }
+  devEdit.drag = null
+}
 
 function clearDevices() {
   devEdit.devices = []
