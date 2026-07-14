@@ -146,7 +146,10 @@ td:last-child{text-align:right;font-weight:600;font-family:monospace}
   color:#fff;font-weight:600;font-size:14px;cursor:pointer;white-space:nowrap}
 .device-hint{font-size:12px;color:var(--muted);line-height:1.5}
 #device-overlay{position:absolute;inset:0;width:100%;height:100%;touch-action:none;display:none}
-#out-overlay{position:absolute;inset:0;width:100%;height:100%;touch-action:none;display:none}
+/* Pass-through overlay on the final image: only the number hit-zones take
+   touches, so the page still scrolls normally everywhere else. */
+#out-overlay{position:absolute;inset:0;width:100%;height:100%;display:none;pointer-events:none}
+#out-overlay [data-role="outmark"]{pointer-events:all;touch-action:none;cursor:grab}
 .dev-body{cursor:grab}
 .dev-handle{cursor:pointer}
 /* Copyright footer */
@@ -180,11 +183,11 @@ Aorta  98  95/55  72</pre>
       <p>Tap <strong>Select Diagram →</strong> then search by diagnosis (e.g. <em>TOF</em>, <em>ASD</em>, <em>HLHS Norwood</em>). Tap a card to select it.</p>
 
       <h3>Step 3 · Edit Diagram (optional)</h3>
-      <p>Tap <strong>✏️ Edit Diagram</strong> to add devices if needed: stent, ASD/VSD device, PDA closure, BTT shunt, RV–PA conduit, thickened valve, SAPIEN or Melody valve, vascular plug, PA band, ECMO or VAD cannula, Fontan baffle, or Fontan fenestration. Drag to position, use <strong>↻</strong> to rotate, <strong>⤡</strong> to resize, <strong>↔</strong> to lengthen/shorten, <strong>✕</strong> to delete. Skip this step entirely by tapping <strong>Complete Diagram →</strong> right after selecting a diagram.</p>
-      <p><strong>✏️ Draw</strong> mode lets you sketch freehand on the diagram — each stroke becomes a movable object. <strong>Move #s</strong> shows draggable markers for where saturations (red) and pressures (blue) print; drag them to fix positions, which are remembered for that diagram. <strong>＋ Sat/Press</strong> lets you type a value the program didn't recognize and drop it on the diagram as a circled saturation, a pressure with a line above it, or plain free text.</p>
+      <p>Tap <strong>Edit Diagram</strong> to add devices if needed: stent, ASD/VSD device, PDA closure, BTT shunt, RV–PA conduit, thickened valve, SAPIEN or Melody valve, vascular plug, PA band, ECMO or VAD cannula, Fontan baffle, or Fontan fenestration. Drag to position, use <strong>↻</strong> to rotate, <strong>⤡</strong> to resize, <strong>↔</strong> to lengthen/shorten, <strong>✕</strong> to delete. Skip this step entirely by tapping <strong>Complete Diagram →</strong> right after selecting a diagram.</p>
+      <p><strong>Draw</strong> mode lets you sketch freehand on the diagram — each stroke becomes a movable object. <strong>Move #s</strong> shows draggable markers for where saturations (red) and pressures (blue) print; drag them to fix positions, which are remembered for that diagram. <strong>Sat/Press</strong> lets you type a value the program didn't recognize and drop it on the diagram as a circled saturation, a pressure with a line above it, or plain free text.</p>
 
       <h3>Step 4 · Complete Diagram</h3>
-      <p>Tap <strong>Complete Diagram →</strong> to annotate the diagram (devices included), produce a hemodynamic narrative, and calculate Fick-derived values. Use <strong>← Edit Diagram</strong> on the report screen to adjust devices and re-complete, or <strong>🎯 Move Sat/Press Numbers</strong> to drag the printed values directly on the final image (it re-prints as a flat picture).</p>
+      <p>Tap <strong>Complete Diagram →</strong> to annotate the diagram (devices included), produce a hemodynamic narrative, and calculate Fick-derived values. Use <strong>← Edit Diagram</strong> on the report screen to adjust devices and re-complete, or simply drag any printed saturation or pressure directly on the final image — it re-prints as a flat picture, and the change applies to that report only.</p>
 
       <h3>Step 5 · Export</h3>
       <ul>
@@ -282,7 +285,7 @@ Aorta  98  95/55  72</pre>
   <div id="browse-actions" style="display:none;margin-top:8px">
     <p id="browse-sel-name" style="text-align:center;font-size:14px;font-weight:600;color:var(--navy);margin-bottom:10px"></p>
     <div style="display:flex;gap:8px">
-      <button class="btn btn-primary" style="margin-bottom:0" onclick="saveBrowseDiagram()">⬇ Save Diagram</button>
+      <button class="btn btn-primary" style="margin-bottom:0" onclick="saveBrowseDiagram()">Save Diagram</button>
       <button class="btn btn-outline" style="margin-bottom:0" onclick="shareBrowseDiagram()">Share</button>
     </div>
   </div>
@@ -311,7 +314,7 @@ Aorta  98  95/55  72</pre>
     Complete Diagram →
   </button>
   <button class="btn btn-outline" id="btn-edit" onclick="goToEdit()" disabled>
-    ✏️ Edit Diagram (Add Devices)
+    Edit Diagram (Add Devices)
   </button>
   <p id="sel-hint" style="text-align:center;color:var(--muted);font-size:13px;margin-top:6px">
     Tap a diagram to select it
@@ -330,9 +333,9 @@ Aorta  98  95/55  72</pre>
   <div class="device-toolbar" id="device-toolbar">
     <div class="pills" style="margin-bottom:10px">
       <button class="pill active" id="pill-devices" onclick="setEditMode('devices')">Devices</button>
-      <button class="pill" id="pill-draw" onclick="setEditMode('draw')">✏️ Draw</button>
+      <button class="pill" id="pill-draw" onclick="setEditMode('draw')">Draw</button>
       <button class="pill" id="pill-annot" onclick="setEditMode('annot')">Move #s</button>
-      <button class="pill" id="pill-labels" onclick="setEditMode('labels')">＋ Sat/Press</button>
+      <button class="pill" id="pill-labels" onclick="setEditMode('labels')">Sat/Press</button>
     </div>
     <div class="drow" id="device-controls">
       <select class="device-select" id="device-select">
@@ -352,18 +355,18 @@ Aorta  98  95/55  72</pre>
         <option value="fontan_baffle">Fontan baffle</option>
         <option value="fenestration">Fontan fenestration</option>
       </select>
-      <button class="device-add-btn" onclick="addDevice()">＋ Add</button>
+      <button class="device-add-btn" onclick="addDevice()">Add</button>
     </div>
     <div class="drow" id="label-controls" style="display:none">
       <input type="text" id="label-input" class="device-select" style="flex:1"
              placeholder="Value — e.g. 82 or 50/30" autocomplete="off"/>
-      <button class="device-add-btn" onclick="addLabel('circle')">◯ Sat</button>
+      <button class="device-add-btn" onclick="addLabel('circle')">Sat</button>
       <button class="device-add-btn" onclick="addLabel('press')" style="background:var(--navy)">Pressure</button>
       <button class="device-add-btn" onclick="addLabel('text')" style="background:#6B7280">Text</button>
     </div>
     <div class="pills" id="draw-controls" style="display:none;margin-bottom:10px">
-      <button class="pill active" id="tool-pencil" onclick="setDrawTool('pencil')">✏️ Pencil</button>
-      <button class="pill" id="tool-eraser" onclick="setDrawTool('eraser')">◻ Eraser</button>
+      <button class="pill active" id="tool-pencil" onclick="setDrawTool('pencil')">Pencil</button>
+      <button class="pill" id="tool-eraser" onclick="setDrawTool('eraser')">Eraser</button>
     </div>
     <p class="device-hint" id="edit-hint">Tap a device to select it · drag to move · <b>↻</b> rotate · <b>⤡</b> resize · <b>↔</b> length · <b>✕</b> delete.</p>
   </div>
@@ -405,13 +408,6 @@ Aorta  98  95/55  72</pre>
       </div>
     </div>
 
-    <button class="btn btn-outline" id="move-nums-btn" onclick="toggleMoveNumbers()">🎯 Move Sat/Press Numbers</button>
-    <p class="device-hint" id="move-nums-hint" style="display:none;margin:-4px 2px 10px">
-      Drag the red (saturation) and blue (pressure) markers where you want the
-      numbers, then tap <b>✓ Apply New Positions</b>. The image re-prints with the
-      numbers there — still a flat picture when saved or shared — and the
-      positions are remembered for this diagram.
-    </p>
     <button class="btn btn-outline" onclick="goToEdit()">← Edit Diagram (Devices)</button>
     <div style="display:flex;gap:8px;margin-bottom:10px">
       <button class="btn btn-outline" style="margin-bottom:0" onclick="saveImage()">Save Image</button>
@@ -478,6 +474,9 @@ function reset() {
   devEdit.sel = null
   devEdit.annotCoords = null
   devEdit.annotDirty = false
+  sessionCoords = null
+  outDrag = null
+  document.getElementById('out-overlay').style.display = 'none'
   document.getElementById('hemo-text').value = ''
   document.getElementById('parse-preview').innerHTML = ''
   document.getElementById('btn-next').disabled = true
@@ -790,7 +789,7 @@ function dcard(d) {
            onclick="selectDiagramByIndex(${idx})"
            onerror="this.src='';this.style.display='none'"/>
       <div class="dcard-name" onclick="selectDiagramByIndex(${idx})">${d.display_name}</div>
-      <button class="dcard-rename-toggle" onclick="toggleRename(event,'${d.id}')">✏️ rename</button>
+      <button class="dcard-rename-toggle" onclick="toggleRename(event,'${d.id}')">rename</button>
       <div class="dcard-rename" id="rename-row-${d.id}" style="display:none;align-items:center;">
         <input type="text" value="${d.display_name.replace(/"/g,'&quot;')}"
                id="rename-input-${d.id}" onclick="event.stopPropagation()"/>
@@ -842,6 +841,7 @@ function selectDiagram(d) {
     devEdit.sel = null
     devEdit.annotCoords = null
     devEdit.annotDirty = false
+    sessionCoords = null
   }
   selectedDiagram = d
   document.querySelectorAll('.dcard').forEach(el => {
@@ -872,6 +872,8 @@ async function runReport() {
     if (devEdit.devices.length) {
       try { reqBody.base_image_b64 = await bakeBaseWithDevices() } catch {}
     }
+    // Session-only number positions from dragging on the final image
+    if (sessionCoords) reqBody.coords_override = sessionCoords
     const res = await fetch('/api/report', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -899,18 +901,11 @@ function renderOutput(data) {
   document.getElementById('output-loading').style.display = 'none'
   document.getElementById('output-result').style.display = 'block'
 
-  // fresh image → exit number-adjust mode
-  outAdjust.active = false
-  outAdjust.drag = null
-  document.getElementById('out-overlay').style.display = 'none'
-  const mvBtn = document.getElementById('move-nums-btn')
-  mvBtn.textContent = '🎯 Move Sat/Press Numbers'
-  mvBtn.classList.add('btn-outline')
-  mvBtn.classList.remove('btn-primary')
-  document.getElementById('move-nums-hint').style.display = 'none'
-
   // Image
-  document.getElementById('result-img').src = 'data:image/png;base64,' + data.annotated_image_b64
+  const resImg = document.getElementById('result-img')
+  resImg.style.opacity = ''
+  resImg.onload = () => { _ensureOutCoords().then(renderOutHitzones) }
+  resImg.src = 'data:image/png;base64,' + data.annotated_image_b64
 
   // Narrative
   document.getElementById('narrative-text').textContent = data.narrative || ''
@@ -967,49 +962,18 @@ async function shareReport() {
   } else { copyNarrative() }
 }
 
-// ── Move numbers directly on the final diagram ─────────────────────────
-// Markers overlay the flat report image; Apply saves the coords and
-// re-renders server-side, so the displayed/saved image stays a plain PNG.
-let outAdjust = { active: false, drag: null }
+// ── Drag printed numbers directly on the final image ──────────────────
+// Invisible hit-zones sit over each printed value. Dragging one updates a
+// SESSION-ONLY copy of the positions and re-renders the flat PNG via
+// coords_override — the diagram's saved coordinates are never changed.
+let sessionCoords = null   // per-report position overrides (never persisted)
+let outDrag = null
 
-async function toggleMoveNumbers() {
-  const btn = document.getElementById('move-nums-btn')
-  const hint = document.getElementById('move-nums-hint')
-  const ov = document.getElementById('out-overlay')
-  if (!outAdjust.active) {
-    if (!lastResult) return
-    if (!devEdit.annotCoords) await _loadAnnotCoords()
-    if (!devEdit.annotCoords) return
-    outAdjust.active = true
-    const img = document.getElementById('result-img')
-    ov.setAttribute('viewBox', `0 0 ${img.naturalWidth} ${img.naturalHeight}`)
-    ov.style.display = 'block'
-    btn.textContent = '✓ Apply New Positions'
-    btn.classList.remove('btn-outline')
-    btn.classList.add('btn-primary')
-    hint.style.display = 'block'
-    renderOutMarkers()
-  } else {
-    outAdjust.active = false
-    outAdjust.drag = null
-    ov.style.display = 'none'
-    btn.textContent = '🎯 Move Sat/Press Numbers'
-    btn.classList.add('btn-outline')
-    btn.classList.remove('btn-primary')
-    hint.style.display = 'none'
-    if (devEdit.annotDirty && devEdit.annotCoords) {
-      try {
-        await fetch(`/api/coords/${selectedDiagram.id}`, {
-          method: 'PUT',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(devEdit.annotCoords),
-        })
-        devEdit.annotDirty = false
-      } catch {}
-      document.getElementById('output-loading').style.display = 'block'
-      document.getElementById('output-result').style.display = 'none'
-      await runReport()
-    }
+async function _ensureOutCoords() {
+  if (sessionCoords) return
+  if (!devEdit.annotCoords) await _loadAnnotCoords()
+  if (devEdit.annotCoords) {
+    sessionCoords = JSON.parse(JSON.stringify(devEdit.annotCoords))
   }
 }
 
@@ -1019,34 +983,34 @@ function _outUiScale() {
   return r.width > 0 ? img.naturalWidth / r.width : 1
 }
 
-function renderOutMarkers() {
+// invisible circles over each printed value; visible ring only while dragging
+function renderOutHitzones() {
   const ov = document.getElementById('out-overlay')
-  if (!outAdjust.active || !devEdit.annotCoords) { ov.innerHTML = ''; return }
+  if (!sessionCoords) { ov.innerHTML = ''; return }
+  const img = document.getElementById('result-img')
+  if (!img.naturalWidth) { ov.innerHTML = ''; return }
+  ov.setAttribute('viewBox', `0 0 ${img.naturalWidth} ${img.naturalHeight}`)
+  ov.style.display = 'block'
   const u = _outUiScale()
   const parsed = (lastResult && lastResult.parsed) || {}
   const hasData = Object.keys(parsed).length > 0
   let out = ''
-  for (const [loc, c] of Object.entries(devEdit.annotCoords.locations || {})) {
-    // only offer markers for values actually printed on this report
+  for (const [loc, c] of Object.entries(sessionCoords.locations || {})) {
     if (hasData && !parsed[loc]) continue
-    const label = loc.replace(/_/g, ' ')
     if (c.sat_x != null && (!hasData || parsed[loc].sat != null)) {
-      out += `<g class="dev-handle" data-role="outmark" data-loc="${loc}" data-kind="sat">
-        <circle cx="${c.sat_x}" cy="${c.sat_y}" r="${13 * u}" fill="rgba(139,26,43,.18)"
-                stroke="#8B1A2B" stroke-width="${2.2 * u}"/>
-        <text x="${c.sat_x}" y="${c.sat_y + 20 * u}" text-anchor="middle" font-size="${8 * u}"
-              fill="#8B1A2B" stroke="#fff" stroke-width="${2.5 * u}" paint-order="stroke"
-              pointer-events="none" font-weight="bold">${label}</text>
+      const live = outDrag && outDrag.loc === loc && outDrag.kind === 'sat'
+      out += `<g data-role="outmark" data-loc="${loc}" data-kind="sat">
+        <circle cx="${c.sat_x}" cy="${c.sat_y}" r="${17 * u}" fill="rgba(0,0,0,0)"
+          ${live ? `stroke="#8B1A2B" stroke-width="${2 * u}" stroke-dasharray="${5 * u} ${4 * u}"` : ''}/>
       </g>`
     }
     const hasPress = !hasData || parsed[loc].systolic != null || parsed[loc].mean != null
     if (c.pressure_x != null && hasPress) {
-      out += `<g class="dev-handle" data-role="outmark" data-loc="${loc}" data-kind="press">
-        <rect x="${c.pressure_x - 11 * u}" y="${c.pressure_y - 11 * u}" width="${22 * u}" height="${22 * u}"
-              rx="${4 * u}" fill="rgba(27,43,58,.18)" stroke="#1B2B3A" stroke-width="${2.2 * u}"/>
-        <text x="${c.pressure_x}" y="${c.pressure_y - 15 * u}" text-anchor="middle" font-size="${8 * u}"
-              fill="#1B2B3A" stroke="#fff" stroke-width="${2.5 * u}" paint-order="stroke"
-              pointer-events="none" font-weight="bold">${label}</text>
+      const live = outDrag && outDrag.loc === loc && outDrag.kind === 'press'
+      out += `<g data-role="outmark" data-loc="${loc}" data-kind="press">
+        <rect x="${c.pressure_x - 16 * u}" y="${c.pressure_y - 14 * u}" width="${32 * u}" height="${28 * u}"
+          rx="${4 * u}" fill="rgba(0,0,0,0)"
+          ${live ? `stroke="#1B2B3A" stroke-width="${2 * u}" stroke-dasharray="${5 * u} ${4 * u}"` : ''}/>
       </g>`
     }
   }
@@ -1063,36 +1027,47 @@ function _outToImg(e) {
 }
 
 function _outPointerDown(e) {
-  if (!outAdjust.active || !devEdit.annotCoords) return
+  if (!sessionCoords) return
   const el = e.target.closest('[data-role="outmark"]')
   if (!el) return
   e.preventDefault()
   const loc = el.dataset.loc, kind = el.dataset.kind
-  const c = devEdit.annotCoords.locations[loc]
+  const c = sessionCoords.locations[loc]
   if (!c) return
   const [px, py] = _outToImg(e)
-  outAdjust.drag = {
-    loc, kind, px, py,
+  outDrag = {
+    loc, kind, px, py, moved: false,
     x0: kind === 'sat' ? c.sat_x : c.pressure_x,
     y0: kind === 'sat' ? c.sat_y : c.pressure_y,
   }
+  renderOutHitzones()
 }
 
 function _outPointerMove(e) {
-  const g = outAdjust.drag
-  if (!g) return
+  if (!outDrag) return
   e.preventDefault()
-  const c = devEdit.annotCoords.locations[g.loc]
+  const c = sessionCoords.locations[outDrag.loc]
   if (!c) return
   const [px, py] = _outToImg(e)
-  const nx = Math.round(g.x0 + (px - g.px)), ny = Math.round(g.y0 + (py - g.py))
-  if (g.kind === 'sat') { c.sat_x = nx; c.sat_y = ny }
+  if (Math.hypot(px - outDrag.px, py - outDrag.py) > 3) outDrag.moved = true
+  const nx = Math.round(outDrag.x0 + (px - outDrag.px))
+  const ny = Math.round(outDrag.y0 + (py - outDrag.py))
+  if (outDrag.kind === 'sat') { c.sat_x = nx; c.sat_y = ny }
   else { c.pressure_x = nx; c.pressure_y = ny }
-  devEdit.annotDirty = true
-  renderOutMarkers()
+  renderOutHitzones()
 }
 
-function _outPointerUp() { outAdjust.drag = null }
+async function _outPointerUp() {
+  if (!outDrag) return
+  const didMove = outDrag.moved
+  outDrag = null
+  renderOutHitzones()
+  if (!didMove) return
+  // re-print the report with the session positions (flat PNG, coords file untouched)
+  const img = document.getElementById('result-img')
+  img.style.opacity = '0.5'
+  await runReport()
+}
 
 document.getElementById('out-overlay').addEventListener('pointerdown', _outPointerDown)
 window.addEventListener('pointermove', _outPointerMove, { passive: false })
@@ -1250,7 +1225,7 @@ function _editHint(m) {
       ? 'The eraser paints white over anything it crosses — pencil strokes AND diagram lines. Each wipe is an object: select it in Devices mode and tap ✕ to undo.'
       : 'Draw on the diagram with your finger or mouse. Strokes become objects — use the eraser or Devices mode to remove them.',
     annot: 'Drag the red saturation markers and blue pressure markers to reposition the report numbers. New positions are saved for this diagram when you complete it.',
-    labels: 'Type a value, then tap <b>◯ Sat</b> for a circled saturation, <b>Pressure</b> for a value with a line above it, or <b>Text</b> for plain text. Drag to position, <b>⤡</b> resize, <b>✕</b> delete.',
+    labels: 'Type a value, then tap <b>Sat</b> for a circled saturation, <b>Pressure</b> for a value with a line above it, or <b>Text</b> for plain text. Drag to position, <b>⤡</b> resize, <b>✕</b> delete.',
   }
   return hints[m]
 }

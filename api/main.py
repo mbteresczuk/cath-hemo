@@ -95,6 +95,9 @@ class ReportRequest(BaseModel):
     # Optional: base diagram with devices already composited (PNG base64).
     # When provided, annotations are drawn ON TOP of the devices.
     base_image_b64: Optional[str] = None
+    # Optional: use these annotation coords for THIS render only (session
+    # repositioning) — nothing is written to the diagram's coord file.
+    coords_override: Optional[dict] = None
 
 
 # ── Helper ────────────────────────────────────────────────────────────────────
@@ -249,9 +252,9 @@ def generate_report(req: ReportRequest):
     step_ups = detect_step_ups(hemodynamics)
     narrative = generate_hemodynamic_narrative(hemodynamics, calcs, patient_data, step_ups)
 
-    # --- Annotation coords (load or auto-configure) ---
+    # --- Annotation coords (override > saved > auto-configure) ---
     img_path = BASE_DIR / diagram["path"]
-    coords = load_coords(diagram["id"])
+    coords = req.coords_override or load_coords(diagram["id"])
     if coords is None:
         coords = auto_configure(
             diagram["id"],
