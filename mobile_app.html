@@ -146,6 +146,7 @@ td:last-child{text-align:right;font-weight:600;font-family:monospace}
   color:#fff;font-weight:600;font-size:14px;cursor:pointer;white-space:nowrap}
 .device-hint{font-size:12px;color:var(--muted);line-height:1.5}
 #device-overlay{position:absolute;inset:0;width:100%;height:100%;touch-action:none;display:none}
+#out-overlay{position:absolute;inset:0;width:100%;height:100%;touch-action:none;display:none}
 .dev-body{cursor:grab}
 .dev-handle{cursor:pointer}
 /* Copyright footer */
@@ -183,7 +184,7 @@ Aorta  98  95/55  72</pre>
       <p><strong>✏️ Draw</strong> mode lets you sketch freehand on the diagram — each stroke becomes a movable object. <strong>Move #s</strong> shows draggable markers for where saturations (red) and pressures (blue) print; drag them to fix positions, which are remembered for that diagram. <strong>＋ Sat/Press</strong> lets you type a value the program didn't recognize and drop it on the diagram as a circled saturation, a pressure with a line above it, or plain free text.</p>
 
       <h3>Step 4 · Complete Diagram</h3>
-      <p>Tap <strong>Complete Diagram →</strong> to annotate the diagram (devices included), produce a hemodynamic narrative, and calculate Fick-derived values. Use <strong>← Edit Diagram</strong> on the report screen to adjust devices and re-complete.</p>
+      <p>Tap <strong>Complete Diagram →</strong> to annotate the diagram (devices included), produce a hemodynamic narrative, and calculate Fick-derived values. Use <strong>← Edit Diagram</strong> on the report screen to adjust devices and re-complete, or <strong>🎯 Move Sat/Press Numbers</strong> to drag the printed values directly on the final image (it re-prints as a flat picture).</p>
 
       <h3>Step 5 · Export</h3>
       <ul>
@@ -394,8 +395,9 @@ Aorta  98  95/55  72</pre>
   <div id="output-result" style="display:none">
     <!-- Combined diagram + narrative card -->
     <div class="card" style="padding:0;overflow:hidden;margin-bottom:14px">
-      <div class="img-wrap" style="margin-bottom:0;border:none;border-radius:0;border-bottom:1px solid var(--border)">
+      <div class="img-wrap" style="margin-bottom:0;border:none;border-radius:0;border-bottom:1px solid var(--border);position:relative">
         <img id="result-img" src="" alt="Annotated diagram"/>
+        <svg id="out-overlay" xmlns="http://www.w3.org/2000/svg"></svg>
       </div>
       <div style="padding:14px">
         <div class="section-label" style="margin-top:0">Hemodynamics Narrative</div>
@@ -403,6 +405,13 @@ Aorta  98  95/55  72</pre>
       </div>
     </div>
 
+    <button class="btn btn-outline" id="move-nums-btn" onclick="toggleMoveNumbers()">🎯 Move Sat/Press Numbers</button>
+    <p class="device-hint" id="move-nums-hint" style="display:none;margin:-4px 2px 10px">
+      Drag the red (saturation) and blue (pressure) markers where you want the
+      numbers, then tap <b>✓ Apply New Positions</b>. The image re-prints with the
+      numbers there — still a flat picture when saved or shared — and the
+      positions are remembered for this diagram.
+    </p>
     <button class="btn btn-outline" onclick="goToEdit()">← Edit Diagram (Devices)</button>
     <div style="display:flex;gap:8px;margin-bottom:10px">
       <button class="btn btn-outline" style="margin-bottom:0" onclick="saveImage()">Save Image</button>
@@ -890,6 +899,16 @@ function renderOutput(data) {
   document.getElementById('output-loading').style.display = 'none'
   document.getElementById('output-result').style.display = 'block'
 
+  // fresh image → exit number-adjust mode
+  outAdjust.active = false
+  outAdjust.drag = null
+  document.getElementById('out-overlay').style.display = 'none'
+  const mvBtn = document.getElementById('move-nums-btn')
+  mvBtn.textContent = '🎯 Move Sat/Press Numbers'
+  mvBtn.classList.add('btn-outline')
+  mvBtn.classList.remove('btn-primary')
+  document.getElementById('move-nums-hint').style.display = 'none'
+
   // Image
   document.getElementById('result-img').src = 'data:image/png;base64,' + data.annotated_image_b64
 
@@ -933,9 +952,151 @@ async function saveImage() {
 async function shareReport() {
   const text = document.getElementById('narrative-text').textContent
   if (navigator.share) {
+    // attach the diagram as an actual picture file when the platform allows
+    if (lastResult && lastResult.annotated_image_b64 && navigator.canShare) {
+      try {
+        const blob = await (await fetch('data:image/png;base64,' + lastResult.annotated_image_b64)).blob()
+        const file = new File([blob], 'cath_diagram.png', { type: 'image/png' })
+        if (navigator.canShare({ files: [file] })) {
+          await navigator.share({ title: 'Hemodynamic Report', text, files: [file] })
+          return
+        }
+      } catch {}
+    }
     try { await navigator.share({ title: 'Hemodynamic Report', text }) } catch {}
   } else { copyNarrative() }
 }
+
+// ── Move numbers directly on the final diagram ─────────────────────────
+// Markers overlay the flat report image; Apply saves the coords and
+// re-renders server-side, so the displayed/saved image stays a plain PNG.
+let outAdjust = { active: false, drag: null }
+
+async function toggleMoveNumbers() {
+  const btn = document.getElementById('move-nums-btn')
+  const hint = document.getElementById('move-nums-hint')
+  const ov = document.getElementById('out-overlay')
+  if (!outAdjust.active) {
+    if (!lastResult) return
+    if (!devEdit.annotCoords) await _loadAnnotCoords()
+    if (!devEdit.annotCoords) return
+    outAdjust.active = true
+    const img = document.getElementById('result-img')
+    ov.setAttribute('viewBox', `0 0 ${img.naturalWidth} ${img.naturalHeight}`)
+    ov.style.display = 'block'
+    btn.textContent = '✓ Apply New Positions'
+    btn.classList.remove('btn-outline')
+    btn.classList.add('btn-primary')
+    hint.style.display = 'block'
+    renderOutMarkers()
+  } else {
+    outAdjust.active = false
+    outAdjust.drag = null
+    ov.style.display = 'none'
+    btn.textContent = '🎯 Move Sat/Press Numbers'
+    btn.classList.add('btn-outline')
+    btn.classList.remove('btn-primary')
+    hint.style.display = 'none'
+    if (devEdit.annotDirty && devEdit.annotCoords) {
+      try {
+        await fetch(`/api/coords/${selectedDiagram.id}`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(devEdit.annotCoords),
+        })
+        devEdit.annotDirty = false
+      } catch {}
+      document.getElementById('output-loading').style.display = 'block'
+      document.getElementById('output-result').style.display = 'none'
+      await runReport()
+    }
+  }
+}
+
+function _outUiScale() {
+  const r = document.getElementById('out-overlay').getBoundingClientRect()
+  const img = document.getElementById('result-img')
+  return r.width > 0 ? img.naturalWidth / r.width : 1
+}
+
+function renderOutMarkers() {
+  const ov = document.getElementById('out-overlay')
+  if (!outAdjust.active || !devEdit.annotCoords) { ov.innerHTML = ''; return }
+  const u = _outUiScale()
+  const parsed = (lastResult && lastResult.parsed) || {}
+  const hasData = Object.keys(parsed).length > 0
+  let out = ''
+  for (const [loc, c] of Object.entries(devEdit.annotCoords.locations || {})) {
+    // only offer markers for values actually printed on this report
+    if (hasData && !parsed[loc]) continue
+    const label = loc.replace(/_/g, ' ')
+    if (c.sat_x != null && (!hasData || parsed[loc].sat != null)) {
+      out += `<g class="dev-handle" data-role="outmark" data-loc="${loc}" data-kind="sat">
+        <circle cx="${c.sat_x}" cy="${c.sat_y}" r="${13 * u}" fill="rgba(139,26,43,.18)"
+                stroke="#8B1A2B" stroke-width="${2.2 * u}"/>
+        <text x="${c.sat_x}" y="${c.sat_y + 20 * u}" text-anchor="middle" font-size="${8 * u}"
+              fill="#8B1A2B" stroke="#fff" stroke-width="${2.5 * u}" paint-order="stroke"
+              pointer-events="none" font-weight="bold">${label}</text>
+      </g>`
+    }
+    const hasPress = !hasData || parsed[loc].systolic != null || parsed[loc].mean != null
+    if (c.pressure_x != null && hasPress) {
+      out += `<g class="dev-handle" data-role="outmark" data-loc="${loc}" data-kind="press">
+        <rect x="${c.pressure_x - 11 * u}" y="${c.pressure_y - 11 * u}" width="${22 * u}" height="${22 * u}"
+              rx="${4 * u}" fill="rgba(27,43,58,.18)" stroke="#1B2B3A" stroke-width="${2.2 * u}"/>
+        <text x="${c.pressure_x}" y="${c.pressure_y - 15 * u}" text-anchor="middle" font-size="${8 * u}"
+              fill="#1B2B3A" stroke="#fff" stroke-width="${2.5 * u}" paint-order="stroke"
+              pointer-events="none" font-weight="bold">${label}</text>
+      </g>`
+    }
+  }
+  ov.innerHTML = out
+}
+
+function _outToImg(e) {
+  const r = document.getElementById('out-overlay').getBoundingClientRect()
+  const img = document.getElementById('result-img')
+  return [
+    (e.clientX - r.left) * img.naturalWidth / r.width,
+    (e.clientY - r.top) * img.naturalHeight / r.height,
+  ]
+}
+
+function _outPointerDown(e) {
+  if (!outAdjust.active || !devEdit.annotCoords) return
+  const el = e.target.closest('[data-role="outmark"]')
+  if (!el) return
+  e.preventDefault()
+  const loc = el.dataset.loc, kind = el.dataset.kind
+  const c = devEdit.annotCoords.locations[loc]
+  if (!c) return
+  const [px, py] = _outToImg(e)
+  outAdjust.drag = {
+    loc, kind, px, py,
+    x0: kind === 'sat' ? c.sat_x : c.pressure_x,
+    y0: kind === 'sat' ? c.sat_y : c.pressure_y,
+  }
+}
+
+function _outPointerMove(e) {
+  const g = outAdjust.drag
+  if (!g) return
+  e.preventDefault()
+  const c = devEdit.annotCoords.locations[g.loc]
+  if (!c) return
+  const [px, py] = _outToImg(e)
+  const nx = Math.round(g.x0 + (px - g.px)), ny = Math.round(g.y0 + (py - g.py))
+  if (g.kind === 'sat') { c.sat_x = nx; c.sat_y = ny }
+  else { c.pressure_x = nx; c.pressure_y = ny }
+  devEdit.annotDirty = true
+  renderOutMarkers()
+}
+
+function _outPointerUp() { outAdjust.drag = null }
+
+document.getElementById('out-overlay').addEventListener('pointerdown', _outPointerDown)
+window.addEventListener('pointermove', _outPointerMove, { passive: false })
+window.addEventListener('pointerup', _outPointerUp)
 
 function cap(s) { return s ? s.charAt(0).toUpperCase() + s.slice(1) : '' }
 
