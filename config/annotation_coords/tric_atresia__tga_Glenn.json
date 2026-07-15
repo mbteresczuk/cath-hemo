@@ -114,10 +114,10 @@
       "side": "right",
       "annotation_type": "saturation_and_pressure",
       "custom": true,
-      "sat_x": 284,
-      "sat_y": 263,
-      "pressure_x": 258,
-      "pressure_y": 226
+      "sat_x": 346,
+      "sat_y": 158,
+      "pressure_x": 338,
+      "pressure_y": 188
     },
     "SVC": {
       "side": "right",

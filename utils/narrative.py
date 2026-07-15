@@ -142,6 +142,204 @@ def _step_up_description(step_ups):
     return f"step-ups at the {joined} levels"
 
 
+def _grad_phrase(hi, lo, further=False):
+    """'a 30 mmHg gradient' / 'a further 5 mmHg gradient' / 'no gradient'."""
+    if hi is None or lo is None:
+        return None
+    d = int(round(hi - lo))
+    pre = "a further" if further else "a"
+    if d > 0:
+        return f"{pre} {d} mmHg gradient"
+    return "no further gradient" if further else "no gradient"
+
+
+def _join_clauses(parts):
+    """['a', 'b', 'c'] → 'a, b, and c'."""
+    if not parts:
+        return ""
+    if len(parts) == 1:
+        return parts[0]
+    if len(parts) == 2:
+        return f"{parts[0]} and {parts[1]}"
+    return ", ".join(parts[:-1]) + ", and " + parts[-1]
+
+
+def _biventricular_paragraphs(hemo):
+    """Saturation + pressure paragraphs in the standard biventricular format.
+
+    Only sentences for which data are present are included.
+    """
+    # ── Saturations ──────────────────────────────────────────────────────
+    sat_parts = []
+    for label, key in [("SVC", "SVC"), ("IVC", "IVC"), ("RA", "RA"),
+                       ("RV", "RV"), ("MPA", "MPA"), ("RPA", "RPA"), ("LPA", "LPA")]:
+        v = _p(key, "sat", hemo)
+        if v is not None:
+            if not sat_parts:
+                sat_parts.append(f"The {label} saturation was {_fmt_sat(v)}")
+            else:
+                sat_parts.append(f"{label} saturation {_fmt_sat(v)}")
+
+    sat_sentences = []
+    if sat_parts:
+        sat_sentences.append(_join_clauses(sat_parts) + ".")
+
+    # LA / LV saturations (admixture) if measured
+    la_sat = _p("LA", "sat", hemo)
+    lv_sat = _p("LV", "sat", hemo)
+    la_parts = []
+    if la_sat is not None:
+        la_parts.append(f"The LA saturation was {_fmt_sat(la_sat)}")
+    if lv_sat is not None and lv_sat != la_sat:
+        la_parts.append(f"LV saturation {_fmt_sat(lv_sat)}"
+                        if la_parts else f"The LV saturation was {_fmt_sat(lv_sat)}")
+    if la_parts:
+        sat_sentences.append(_join_clauses(la_parts) + ".")
+
+    ao_sat = _p("Descending_Aorta", "sat", hemo)
+    if ao_sat is not None:
+        sat_sentences.append(f"The descending aorta saturation was {_fmt_sat(ao_sat)}.")
+
+    para_sat = " ".join(sat_sentences)
+
+    # ── Pressures ────────────────────────────────────────────────────────
+    pres_sentences = []
+
+    ra_sys, ra_dia, ra_mean = (_p("RA", "systolic", hemo), _p("RA", "diastolic", hemo),
+                               _p("RA", "mean", hemo))
+    rvedp = _p("RV", "mean", hemo)  # parser stores RVEDP as the ventricular "mean"
+
+    # Sentence A — right-sided filling pressures
+    if ra_mean is not None or ra_sys is not None or rvedp is not None:
+        elevated = (ra_mean is not None and ra_mean > 7) or (rvedp is not None and rvedp > 10)
+        level = "elevated" if elevated else "normal"
+        parts = []
+        ra_str = _fmt_press(ra_sys, ra_dia, ra_mean)
+        if ra_str:
+            parts.append(f"RA pressure of {ra_str} mmHg")
+        if rvedp is not None:
+            parts.append(f"RVEDP of {int(rvedp)} mmHg")
+        if parts:
+            pres_sentences.append(
+                f"The right-sided filling pressures were {level} with {_join_clauses(parts)}."
+            )
+
+    # Sentence B — RV systolic → MPA → branch PAs
+    rv_sys = _p("RV", "systolic", hemo)
+    mpa_sys, mpa_dia, mpa_mean = (_p("MPA", "systolic", hemo), _p("MPA", "diastolic", hemo),
+                                  _p("MPA", "mean", hemo))
+    rpa_sys, rpa_dia, rpa_mean = (_p("RPA", "systolic", hemo), _p("RPA", "diastolic", hemo),
+                                  _p("RPA", "mean", hemo))
+    lpa_sys, lpa_dia, lpa_mean = (_p("LPA", "systolic", hemo), _p("LPA", "diastolic", hemo),
+                                  _p("LPA", "mean", hemo))
+
+    if rv_sys is not None:
+        s = f"The RV systolic pressure was {int(rv_sys)} mmHg"
+        # reference systolic that branch-PA gradients are measured from
+        ref = None
+        if mpa_sys is not None or mpa_mean is not None:
+            mpa_str = _fmt_press(mpa_sys, mpa_dia, mpa_mean)
+            s += f" with {_grad_phrase(rv_sys, mpa_sys) or 'no gradient'} to {mpa_str} mmHg MPA pressure"
+            ref = mpa_sys if mpa_sys is not None else mpa_mean
+        else:
+            ref = rv_sys  # no MPA: branch gradients come straight off the RV
+        branch = []
+        for label, bsys, bdia, bmean in [("RPA", rpa_sys, rpa_dia, rpa_mean),
+                                         ("LPA", lpa_sys, lpa_dia, lpa_mean)]:
+            if bsys is None and bmean is None:
+                continue
+            bstr = _fmt_press(bsys, bdia, bmean)
+            bref = bsys if bsys is not None else bmean
+            gp = _grad_phrase(ref, bref, further=True)
+            if gp and gp != "no further gradient":
+                branch.append(f"{gp} to {label} pressure of {bstr} mmHg")
+            else:
+                branch.append(f"{label} pressure of {bstr} mmHg")
+        for i, clause in enumerate(branch):
+            s += (" with " if i == 0 else " and ") + clause
+        pres_sentences.append(s + ".")
+
+    # Sentence C — LA pressure + atrial septal gradient
+    la_sys, la_dia, la_mean = (_p("LA", "systolic", hemo), _p("LA", "diastolic", hemo),
+                               _p("LA", "mean", hemo))
+    if la_sys is not None or la_mean is not None:
+        la_str = _fmt_press(la_sys, la_dia, la_mean)
+        s = f"The LA pressure was {la_str} mmHg"
+        if la_mean is not None and ra_mean is not None:
+            d = int(round(abs(la_mean - ra_mean)))
+            s += f" giving a {d} mmHg gradient across the atrial septum"
+        pres_sentences.append(s + ".")
+
+    # Sentence D — LV → ascending aorta → descending aorta
+    lv_sys, lv_dia = _p("LV", "systolic", hemo), _p("LV", "diastolic", hemo)
+    asc_sys, asc_dia, asc_mean = (_p("Ascending_Aorta", "systolic", hemo),
+                                  _p("Ascending_Aorta", "diastolic", hemo),
+                                  _p("Ascending_Aorta", "mean", hemo))
+    desc_sys, desc_dia, desc_mean = (_p("Descending_Aorta", "systolic", hemo),
+                                     _p("Descending_Aorta", "diastolic", hemo),
+                                     _p("Descending_Aorta", "mean", hemo))
+    if lv_sys is not None:
+        s = f"The LV pressure was {_fmt_press(lv_sys, lv_dia, None)} mmHg"
+        if asc_sys is not None:
+            gp = _grad_phrase(lv_sys, asc_sys) or "no gradient"
+            s += f" with {gp} to the ascending aorta pressure of {_fmt_press(asc_sys, asc_dia, asc_mean)} mmHg"
+            if desc_sys is not None:
+                gp2 = _grad_phrase(asc_sys, desc_sys, further=True)
+                if gp2 and gp2 != "no further gradient":
+                    s += f" and {gp2} to the descending aorta pressure of {_fmt_press(desc_sys, desc_dia, desc_mean)} mmHg"
+                else:
+                    s += f" and a descending aorta pressure of {_fmt_press(desc_sys, desc_dia, desc_mean)} mmHg"
+        elif desc_sys is not None:
+            gp = _grad_phrase(lv_sys, desc_sys) or "no gradient"
+            s += f" with {gp} to the descending aorta pressure of {_fmt_press(desc_sys, desc_dia, desc_mean)} mmHg"
+        pres_sentences.append(s + ".")
+
+    para_pres = " ".join(pres_sentences)
+    return para_sat, para_pres
+
+
+def _fick_paragraph(calculations, avo2, hgb):
+    """Fick-derived flows and resistances (shared by all anatomy types)."""
+    calc_sentences = []
+    qs    = calculations.get("qs")
+    qp    = calculations.get("qp")
+    qp_qs = calculations.get("qp_qs")
+    pvri  = calculations.get("pvri")
+    svri  = calculations.get("svri")
+
+    if qs is not None:
+        avo2_str = str(int(avo2)) if avo2 is not None else "?"
+        hgb_str  = (
+            f"{hgb:.1f}".rstrip("0").rstrip(".")
+            if hgb is not None and hgb != int(hgb)
+            else (str(int(hgb)) if hgb is not None else "?")
+        )
+        calc_sentences.append(
+            f"Using Fick and an assumed aVO₂ of {avo2_str} mL/min/m² "
+            f"and hemoglobin of {hgb_str} g/dL, "
+            f"Qs was equal to {qs:.2f} L/min/m²."
+        )
+    if qp is not None:
+        qp_s = f"Qp was {qp:.2f} L/min/m²"
+        if qp_qs is not None:
+            qp_s += f", yielding a Qp:Qs of {qp_qs:.2f}"
+        calc_sentences.append(qp_s + ".")
+    if pvri is not None:
+        pvri_s = f"The PVRi was {pvri:.2f} iWU"
+        if svri is not None:
+            pvri_s += f" and SVRi was {svri:.1f} iWU"
+        calc_sentences.append(pvri_s + ".")
+
+    warnings = [
+        w for w in calculations.get("warnings", [])
+        if "Fick flow calculations skipped" not in w
+    ]
+    if warnings:
+        calc_sentences.append("Note: " + "; ".join(warnings) + ".")
+
+    return " ".join(calc_sentences)
+
+
 # ── Main function ──────────────────────────────────────────────────────────────
 
 def generate_hemodynamic_narrative(hemodynamics, calculations, patient_data, step_ups):
@@ -163,6 +361,15 @@ def generate_hemodynamic_narrative(hemodynamics, calculations, patient_data, ste
     # PARAGRAPH 1 — CONDITIONS
     # ═══════════════════════════════════════════════════════════════════════
     para1 = f"Hemodynamics were measured on FiO2 {fio2}."
+
+    # ═══════════════════════════════════════════════════════════════════════
+    # BIVENTRICULAR: dedicated saturation + pressure format
+    # ═══════════════════════════════════════════════════════════════════════
+    if anatomy_type == "biventricle":
+        bi_sat, bi_pres = _biventricular_paragraphs(hemodynamics)
+        para4 = _fick_paragraph(calculations, avo2, hgb)
+        paragraphs = [p for p in [para1, bi_sat, bi_pres, para4] if p.strip()]
+        return "\n\n".join(paragraphs)
 
     # ═══════════════════════════════════════════════════════════════════════
     # PARAGRAPH 2 — SATURATIONS

@@ -122,10 +122,10 @@
       "side": "left",
       "annotation_type": "saturation_and_pressure",
       "custom": true,
-      "pressure_x": 295,
-      "pressure_y": 170,
-      "sat_x": 260,
-      "sat_y": 170
+      "pressure_x": 257,
+      "pressure_y": 212,
+      "sat_x": 265,
+      "sat_y": 182
     }
   }
 }

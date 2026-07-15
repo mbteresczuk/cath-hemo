@@ -117,10 +117,10 @@
       "side": "right",
       "annotation_type": "saturation_and_pressure",
       "custom": true,
-      "sat_x": 294,
-      "sat_y": 201,
-      "pressure_x": 278,
-      "pressure_y": 154
+      "sat_x": 292,
+      "sat_y": 156,
+      "pressure_x": 284,
+      "pressure_y": 186
     },
     "Fontan": {
       "side": "right",
