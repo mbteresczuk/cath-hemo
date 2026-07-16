@@ -1827,6 +1827,19 @@
           "image_height": 518
         },
         {
+          "id": "DILV__S_D_S__Holmes_Heart",
+          "filename": "DILV (S,D,S) Holmes Heart.bmp",
+          "display_name": "DILV (S,D,S) Holmes Heart",
+          "path": "diagrams/DILV_Single_Ventricle/DILV (S,D,S) Holmes Heart.bmp",
+          "category_id": "DILV_Single_Ventricle",
+          "anatomy_type": "biventricle",
+          "location_set": "standard_biventricle",
+          "has_coords": false,
+          "coord_file": "config/annotation_coords/DILV__S_D_S__Holmes_Heart.json",
+          "image_width": 427,
+          "image_height": 518
+        },
+        {
           "id": "DILV__S_L_L__ECF",
           "filename": "DILV (S,L,L) ECF.bmp",
           "display_name": "DILV (S,L,L) ECF",
