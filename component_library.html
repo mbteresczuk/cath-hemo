@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>Component Library · Cath Hemo</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:#f4f6f8;color:#1a2530;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;font-size:14px}
+header{display:flex;align-items:center;gap:14px;padding:14px 20px;background:#fff;border-bottom:1px solid #e2e8ee;position:sticky;top:0;z-index:5}
+header h1{font-size:17px;font-weight:700}
+header .count{color:#6b7c8c;font-size:14px}
+header a{margin-left:auto;color:#2f6f8f;text-decoration:none;border:1px solid #cfe0ea;padding:7px 12px;border-radius:7px}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:16px;padding:20px}
+.card{background:#fff;border:1px solid #e2e8ee;border-radius:12px;overflow:hidden;display:flex;flex-direction:column}
+.imgbox{position:relative;background:#fff;height:250px;border-bottom:1px solid #eef2f6}
+.imgbox svg{position:absolute;inset:0;width:100%;height:100%}
+.imgbox img{position:absolute;inset:0;width:100%;height:100%;object-fit:contain;padding:8px}
+.meta{padding:11px 13px}
+.meta .id{font-weight:700;font-size:14px;margin-bottom:5px;word-break:break-word}
+.badge{display:inline-block;background:#eaf2f7;color:#22617e;border-radius:20px;padding:2px 10px;font-size:12px;margin-right:4px}
+.tag{display:inline-block;background:#f0edf9;color:#5b4aa8;border-radius:20px;padding:2px 9px;font-size:11px;margin:3px 3px 0 0}
+.anch{margin-top:7px;font-size:12px;color:#6b7c8c}
+.anch b{color:#c0562a}
+.empty{padding:60px;text-align:center;color:#8798a6}
+</style>
+</head>
+<body>
+<header>
+  <h1>Component Library</h1>
+  <span class="count" id="count"></span>
+  <a href="/components">← Back to author</a>
+</header>
+<div class="grid" id="grid"></div>
+
+<script>
+async function load(){
+  const r=await fetch('/api/components'); const d=await r.json();
+  document.getElementById('count').textContent=d.components.length+' components';
+  const grid=document.getElementById('grid');
+  if(!d.components.length){ grid.innerHTML='<div class="empty">No components yet. Author some in the tool → <a href="/components">/components</a></div>'; return; }
+  grid.innerHTML=d.components.map(c=>{
+    const [TW,TH]=c.template_size||[540,640];
+    const anchors=c.anchors||{};
+    // draw anchor dots in template space; SVG viewBox = template so they line up with the image
+    const dots=Object.entries(anchors).map(([n,[x,y]])=>
+      `<circle cx="${x}" cy="${y}" r="9" fill="#f2a13c" stroke="#fff" stroke-width="3"/>
+       <text x="${x+13}" y="${y+4}" font-size="15" fill="#c0562a" font-family="sans-serif">${n}</text>`).join('');
+    const tags=Object.entries(c.tags||{}).map(([k,v])=>`<span class="tag">${k}: ${v}</span>`).join('');
+    return `<div class="card">
+      <div class="imgbox">
+        <img src="${c.image_url}" alt="${c.id}"/>
+        <svg viewBox="0 0 ${TW} ${TH}" preserveAspectRatio="xMidYMid meet">${dots}</svg>
+      </div>
+      <div class="meta">
+        <div class="id">${c.id}</div>
+        ${c.segment?`<span class="badge">${c.segment}</span>`:''}
+        ${tags}
+        <div class="anch">${Object.keys(anchors).length?'<b>anchors:</b> '+Object.keys(anchors).join(', '):'no anchors'}</div>
+        ${c.source_diagram?`<div class="anch">from: ${c.source_diagram}</div>`:''}
+      </div>
+    </div>`;
+  }).join('');
+}
+load();
+</script>
+</body>
+</html>

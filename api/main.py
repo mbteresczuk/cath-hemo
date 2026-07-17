@@ -390,6 +390,17 @@ def serve_component_editor():
     )
 
 
+@app.get("/library")
+def serve_component_library():
+    """Serve the component library gallery viewer."""
+    return FileResponse(
+        str(BASE_DIR / "component_library.html"),
+        media_type="text/html",
+        headers={"Cache-Control": "no-cache, no-store, must-revalidate",
+                 "Pragma": "no-cache", "Expires": "0"},
+    )
+
+
 @app.get("/api/components")
 def list_components():
     """Return every saved component's metadata."""
