@@ -214,7 +214,13 @@ async function loadSaved(){
   const r=await fetch('/api/components'); const d=await r.json();
   document.getElementById('lib-count').textContent='('+d.components.length+')';
   document.getElementById('saved').innerHTML = d.components.length?
-    d.components.map(c=>`<div><span>${c.id}</span><span style="color:#7f93a6">${c.segment||''}</span></div>`).join('')
+    '<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;border:0">'+
+    d.components.map(c=>`<div style="border:0;text-align:center">
+        <div style="background:#fff;border-radius:6px;height:74px;display:flex;align-items:center;justify-content:center;overflow:hidden">
+          <img src="${c.image_url}" style="max-width:96%;max-height:70px"/></div>
+        <div style="font-size:11px;margin-top:3px">${c.id}</div>
+        <div style="font-size:10px;color:#7f93a6">${c.segment||''}</div>
+      </div>`).join('')+'</div>'
     : '<div style="border:0;color:#6f8298">empty</div>';
 }
 

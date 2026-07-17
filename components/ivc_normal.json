@@ -1,0 +1,19 @@
+{
+  "id": "ivc_normal",
+  "image": "ivc_normal.png",
+  "segment": "systemic_vein",
+  "tags": {
+    "vessel": "IVC"
+  },
+  "template_size": [
+    540,
+    640
+  ],
+  "anchors": {
+    "to_ra": [
+      123,
+      453
+    ]
+  },
+  "source_diagram": "Normal"
+}

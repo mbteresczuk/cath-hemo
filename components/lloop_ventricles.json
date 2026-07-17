@@ -1,0 +1,24 @@
+{
+  "id": "lloop_ventricles",
+  "image": "lloop_ventricles.png",
+  "segment": "ventricle",
+  "tags": {
+    "loop": "L",
+    "notes": "L-loop ventricular mass"
+  },
+  "template_size": [
+    540,
+    640
+  ],
+  "anchors": {
+    "outflow": [
+      269,
+      329
+    ],
+    "inflow": [
+      206,
+      352
+    ]
+  },
+  "source_diagram": "DILV (S,L,L) Glenn PS sub PS"
+}

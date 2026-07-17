@@ -1,0 +1,19 @@
+{
+  "id": "svc_normal",
+  "image": "svc_normal.png",
+  "segment": "systemic_vein",
+  "tags": {
+    "vessel": "SVC"
+  },
+  "template_size": [
+    540,
+    640
+  ],
+  "anchors": {
+    "to_ra": [
+      101,
+      231
+    ]
+  },
+  "source_diagram": "Normal"
+}

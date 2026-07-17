@@ -1,0 +1,23 @@
+{
+  "id": "arch_normal",
+  "image": "arch_normal.png",
+  "segment": "arch",
+  "tags": {
+    "kind": "aortic_arch"
+  },
+  "template_size": [
+    540,
+    640
+  ],
+  "anchors": {
+    "asc_root": [
+      244,
+      284
+    ],
+    "arch_top": [
+      262,
+      92
+    ]
+  },
+  "source_diagram": "Normal"
+}

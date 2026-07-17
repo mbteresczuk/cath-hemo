@@ -1,0 +1,28 @@
+{
+  "id": "dorv_outflow",
+  "image": "dorv_outflow.png",
+  "segment": "outflow",
+  "tags": {
+    "va_connection": "dorv",
+    "notes": "both arteries from RV, +PS"
+  },
+  "template_size": [
+    540,
+    640
+  ],
+  "anchors": {
+    "root": [
+      255,
+      368
+    ],
+    "ao_top": [
+      255,
+      188
+    ],
+    "pa_top": [
+      300,
+      200
+    ]
+  },
+  "source_diagram": "DORV_SubpulmonicVSD_PS_RAA"
+}
