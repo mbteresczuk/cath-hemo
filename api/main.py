@@ -8,6 +8,7 @@ so the React PWA can consume them from a phone.
 Start locally:
     uvicorn api.main:app --reload --port 8000
 """
+import json
 import os
 import sys
 from pathlib import Path
@@ -66,6 +67,16 @@ app.mount(
     "/diagrams/static",
     StaticFiles(directory=str(BASE_DIR / "diagrams")),
     name="diagrams",
+)
+
+# Component library (Route A: pieces extracted from existing diagrams,
+# each registered to one shared template with anchors + tags).
+COMPONENTS_DIR = BASE_DIR / "components"
+COMPONENTS_DIR.mkdir(exist_ok=True)
+app.mount(
+    "/components/static",
+    StaticFiles(directory=str(COMPONENTS_DIR)),
+    name="components",
 )
 
 
@@ -362,6 +373,74 @@ def serve_coord_editor():
             "Expires": "0",
         },
     )
+
+
+# ── Component authoring (Route A) ──────────────────────────────────────────
+
+@app.get("/components")
+def serve_component_editor():
+    """Serve the standalone component-authoring tool."""
+    return FileResponse(
+        str(BASE_DIR / "component_editor.html"),
+        media_type="text/html",
+        headers={
+            "Cache-Control": "no-cache, no-store, must-revalidate",
+            "Pragma": "no-cache", "Expires": "0",
+        },
+    )
+
+
+@app.get("/api/components")
+def list_components():
+    """Return every saved component's metadata."""
+    out = []
+    for meta in sorted(COMPONENTS_DIR.glob("*.json")):
+        try:
+            d = json.loads(meta.read_text())
+            d["image_url"] = f"/components/static/{d.get('image', meta.stem + '.png')}"
+            out.append(d)
+        except Exception:
+            continue
+    return {"components": out}
+
+
+@app.post("/api/components")
+def save_component(payload: dict = Body(...)):
+    """Save one component: transparent PNG (base64) + metadata (tags, anchors).
+
+    Everything is authored in the shared template frame, so components
+    registered by different sessions still align.
+    """
+    import base64
+    import io as _io
+    import re as _re
+
+    cid = (payload.get("id") or "").strip()
+    if not cid:
+        raise HTTPException(status_code=422, detail="Component id is required.")
+    cid = _re.sub(r"[^A-Za-z0-9_-]", "_", cid)
+
+    img_b64 = payload.get("image_b64")
+    if not img_b64:
+        raise HTTPException(status_code=422, detail="image_b64 (PNG) is required.")
+    try:
+        from PIL import Image as _PILImage
+        img = _PILImage.open(_io.BytesIO(base64.b64decode(img_b64))).convert("RGBA")
+    except Exception as e:
+        raise HTTPException(status_code=422, detail=f"Bad image data: {e}")
+
+    img.save(COMPONENTS_DIR / f"{cid}.png")
+    meta = {
+        "id": cid,
+        "image": f"{cid}.png",
+        "segment": payload.get("segment", ""),
+        "tags": payload.get("tags", {}),
+        "template_size": payload.get("template_size"),
+        "anchors": payload.get("anchors", {}),
+        "source_diagram": payload.get("source_diagram", ""),
+    }
+    (COMPONENTS_DIR / f"{cid}.json").write_text(json.dumps(meta, indent=2))
+    return {"ok": True, "id": cid, "image_url": f"/components/static/{cid}.png"}
 
 
 @app.post("/api/coords/{diagram_id}/auto")

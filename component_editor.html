@@ -1,0 +1,224 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>Component Author · Cath Hemo</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:#0f1720;color:#e5e9ee;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;font-size:14px}
+header{display:flex;gap:10px;align-items:center;padding:10px 14px;background:#16212e;border-bottom:1px solid #24313f;flex-wrap:wrap}
+header h1{font-size:15px;font-weight:700;margin-right:6px}
+select,input,button{font:inherit}
+select,input[type=text]{background:#0f1720;border:1px solid #33465a;color:#e5e9ee;border-radius:6px;padding:7px 9px}
+button{background:#25384b;border:1px solid #3a516a;color:#e5e9ee;border-radius:6px;padding:7px 12px;cursor:pointer}
+button:hover{background:#2e455c}
+button.pri{background:#2f6f4f;border-color:#3c8a63}button.pri:hover{background:#377f5b}
+button.on{background:#2f5c8a;border-color:#3c74ab}
+.wrap{display:flex;gap:14px;padding:14px}
+.stage{position:relative;background:#0b1119;border:1px solid #24313f;border-radius:10px}
+#cv{display:block;border-radius:10px;cursor:crosshair;touch-action:none}
+.side{width:300px;flex-shrink:0;display:flex;flex-direction:column;gap:12px}
+.card{background:#16212e;border:1px solid #24313f;border-radius:10px;padding:12px}
+.card h2{font-size:12px;text-transform:uppercase;letter-spacing:.06em;color:#8fa3b7;margin-bottom:9px}
+.row{display:flex;gap:8px;margin-bottom:8px;align-items:center}
+.row label{width:76px;color:#9fb0c1;font-size:12px}
+.row select,.row input{flex:1}
+.hint{font-size:12px;color:#8296a9;line-height:1.5}
+.anchor-list,.saved{font-size:12px;color:#b9c7d5}
+.anchor-list div,.saved div{padding:3px 0;border-bottom:1px solid #1e2a37;display:flex;justify-content:space-between}
+.preview{background:#fff;border-radius:8px;min-height:90px;display:flex;align-items:center;justify-content:center}
+.preview img{max-width:100%;max-height:180px}
+.pill{display:inline-block;background:#25384b;border-radius:20px;padding:2px 9px;font-size:11px;margin:2px 2px 0 0}
+.status{margin-left:auto;color:#7fd6a8;font-size:12px}
+</style>
+</head>
+<body>
+<header>
+  <h1>Component Author</h1>
+  <select id="diagram"><option value="">— load a diagram —</option></select>
+  <button id="mode-mask" class="on" onclick="setMode('mask')">1 · Draw mask</button>
+  <button id="mode-anchor" onclick="setMode('anchor')">2 · Anchors</button>
+  <button onclick="undoPoint()">Undo pt</button>
+  <button onclick="clearAll()">Clear</button>
+  <button class="pri" onclick="extract()">Extract →</button>
+  <span class="status" id="status">Pick a diagram</span>
+</header>
+
+<div class="wrap">
+  <div class="stage">
+    <canvas id="cv" width="540" height="640"></canvas>
+  </div>
+
+  <div class="side">
+    <div class="card">
+      <h2>Anchors <span style="color:#6f8298;font-weight:400;text-transform:none">(mode 2 · click canvas)</span></h2>
+      <div class="row">
+        <select id="anchor-name">
+          <option>inflow</option><option>outflow</option><option>outflow_2</option>
+          <option>position</option><option>svc</option><option>ivc</option>
+          <option>pulm_veins</option><option>arch_root</option><option>custom</option>
+        </select>
+      </div>
+      <div class="anchor-list" id="anchor-list"><div style="border:0;color:#6f8298">none yet</div></div>
+    </div>
+
+    <div class="card">
+      <h2>Tags</h2>
+      <div class="row"><label>ID</label><input type="text" id="c-id" placeholder="ventricle_RV_Lloop"/></div>
+      <div class="row"><label>Segment</label>
+        <select id="c-seg">
+          <option value="">—</option><option>atrium</option><option>ventricle</option>
+          <option>av_connection</option><option>outflow</option><option>arch</option>
+          <option>pulmonary_artery</option><option>systemic_vein</option>
+          <option>pulmonary_vein</option><option>lesion</option>
+        </select>
+      </div>
+      <div class="row"><label>Chamber</label><input type="text" id="c-chamber" placeholder="RV / LV / RA…"/></div>
+      <div class="row"><label>Loop</label>
+        <select id="c-loop"><option value="">n/a</option><option>D</option><option>L</option></select>
+      </div>
+      <div class="row"><label>Notes</label><input type="text" id="c-notes" placeholder="e.g. DORV, +PS"/></div>
+    </div>
+
+    <div class="card">
+      <h2>Extracted component</h2>
+      <div class="preview" id="preview"><span style="color:#8a9bad;font-size:12px">extract to preview</span></div>
+      <div style="margin-top:10px"><button class="pri" style="width:100%" onclick="save()">Save component</button></div>
+    </div>
+
+    <div class="card">
+      <h2>Library <span id="lib-count" style="color:#6f8298;font-weight:400"></span></h2>
+      <div class="saved" id="saved"></div>
+    </div>
+  </div>
+</div>
+
+<script>
+const TW=540, TH=640;                 // the shared template frame
+const cv=document.getElementById('cv'), ctx=cv.getContext('2d');
+let srcImg=null, fit={s:1,ox:0,oy:0}; // source placement in the template
+let mode='mask', poly=[], anchors={}, extractedB64=null;
+
+function setStatus(t){document.getElementById('status').textContent=t}
+function setMode(m){
+  mode=m;
+  document.getElementById('mode-mask').classList.toggle('on',m==='mask');
+  document.getElementById('mode-anchor').classList.toggle('on',m==='anchor');
+  redraw();
+}
+
+async function loadDiagramList(){
+  const r=await fetch('/api/diagrams'); const d=await r.json();
+  const sel=document.getElementById('diagram');
+  d.categories.forEach(c=>c.diagrams.forEach(dg=>{
+    const o=document.createElement('option'); o.value=dg.id; o.dataset.url=dg.thumbnail_url;
+    o.textContent=dg.display_name; sel.appendChild(o);
+  }));
+}
+document.getElementById('diagram').onchange=e=>{
+  const opt=e.target.selectedOptions[0]; if(!opt.dataset.url) return;
+  const img=new Image(); img.crossOrigin='anonymous';
+  img.onload=()=>{
+    srcImg=img;
+    // fit source into the template frame, centered
+    const s=Math.min((TW-20)/img.naturalWidth,(TH-20)/img.naturalHeight);
+    fit={s, ox:(TW-img.naturalWidth*s)/2, oy:(TH-img.naturalHeight*s)/2};
+    poly=[]; anchors={}; extractedB64=null; refreshAnchors(); redraw();
+    setStatus('Draw a mask around one structure');
+  };
+  img.src=opt.dataset.url;
+};
+
+cv.onpointerdown=ev=>{
+  const r=cv.getBoundingClientRect();
+  const x=(ev.clientX-r.left)*TW/r.width, y=(ev.clientY-r.top)*TH/r.height;
+  if(mode==='mask'){ poly.push([x,y]); }
+  else { const nm=document.getElementById('anchor-name').value; anchors[nm]=[Math.round(x),Math.round(y)]; refreshAnchors(); }
+  redraw();
+};
+function undoPoint(){ if(mode==='mask') poly.pop(); redraw(); }
+function clearAll(){ poly=[]; anchors={}; extractedB64=null; refreshAnchors();
+  document.getElementById('preview').innerHTML='<span style="color:#8a9bad;font-size:12px">extract to preview</span>'; redraw(); }
+
+function redraw(){
+  ctx.clearRect(0,0,TW,TH);
+  ctx.fillStyle='#0b1119'; ctx.fillRect(0,0,TW,TH);
+  // template guides
+  ctx.strokeStyle='#1b2836'; ctx.lineWidth=1;
+  for(let g=0;g<TW;g+=40){ctx.beginPath();ctx.moveTo(g,0);ctx.lineTo(g,TH);ctx.stroke();}
+  for(let g=0;g<TH;g+=40){ctx.beginPath();ctx.moveTo(0,g);ctx.lineTo(TW,g);ctx.stroke();}
+  if(srcImg) ctx.drawImage(srcImg,fit.ox,fit.oy,srcImg.naturalWidth*fit.s,srcImg.naturalHeight*fit.s);
+  // polygon
+  if(poly.length){
+    ctx.strokeStyle='#4fd1a1'; ctx.fillStyle='rgba(79,209,161,.15)'; ctx.lineWidth=2;
+    ctx.beginPath(); ctx.moveTo(poly[0][0],poly[0][1]);
+    poly.forEach(p=>ctx.lineTo(p[0],p[1])); if(poly.length>2) ctx.closePath();
+    ctx.fill(); ctx.stroke();
+    poly.forEach(p=>{ctx.fillStyle='#4fd1a1';ctx.beginPath();ctx.arc(p[0],p[1],4,0,7);ctx.fill();});
+  }
+  // anchors
+  Object.entries(anchors).forEach(([n,[x,y]])=>{
+    ctx.fillStyle='#f2a13c'; ctx.beginPath(); ctx.arc(x,y,6,0,7); ctx.fill();
+    ctx.fillStyle='#fff'; ctx.font='11px sans-serif'; ctx.fillText(n,x+9,y+3);
+  });
+}
+
+function extract(){
+  if(!srcImg||poly.length<3){ setStatus('Need a diagram and a 3+ point mask'); return; }
+  const off=document.createElement('canvas'); off.width=TW; off.height=TH;
+  const o=off.getContext('2d');
+  o.save(); o.beginPath(); o.moveTo(poly[0][0],poly[0][1]);
+  poly.forEach(p=>o.lineTo(p[0],p[1])); o.closePath(); o.clip();
+  o.drawImage(srcImg,fit.ox,fit.oy,srcImg.naturalWidth*fit.s,srcImg.naturalHeight*fit.s);
+  o.restore();
+  // luminance -> alpha: keep dark ink, drop white; outside clip already transparent
+  const id=o.getImageData(0,0,TW,TH), p=id.data;
+  for(let i=0;i<p.length;i+=4){
+    if(p[i+3]===0) continue;
+    const lum=0.299*p[i]+0.587*p[i+1]+0.114*p[i+2];
+    const a=Math.max(0,Math.min(1,(150-lum)/150));
+    p[i]=17;p[i+1]=17;p[i+2]=17;p[i+3]=Math.round(Math.pow(a,0.8)*255);
+  }
+  o.putImageData(id,0,0);
+  extractedB64=off.toDataURL('image/png').split(',')[1];
+  const prev=document.getElementById('preview');
+  prev.innerHTML=''; const im=new Image(); im.src='data:image/png;base64,'+extractedB64; prev.appendChild(im);
+  setStatus('Extracted — add anchors, tag, save');
+}
+
+function refreshAnchors(){
+  const el=document.getElementById('anchor-list');
+  const keys=Object.keys(anchors);
+  el.innerHTML = keys.length? keys.map(k=>`<div><span>${k}</span><span style="color:#7f93a6">${anchors[k][0]},${anchors[k][1]}</span></div>`).join('')
+    : '<div style="border:0;color:#6f8298">none yet</div>';
+}
+
+async function save(){
+  if(!extractedB64){ setStatus('Extract first'); return; }
+  const id=document.getElementById('c-id').value.trim();
+  if(!id){ setStatus('Give the component an ID'); return; }
+  const tags={};
+  const ch=document.getElementById('c-chamber').value.trim(); if(ch) tags.chamber=ch;
+  const lp=document.getElementById('c-loop').value; if(lp) tags.loop=lp;
+  const nt=document.getElementById('c-notes').value.trim(); if(nt) tags.notes=nt;
+  const body={ id, image_b64:extractedB64, segment:document.getElementById('c-seg').value,
+    tags, template_size:[TW,TH], anchors, source_diagram:document.getElementById('diagram').value };
+  const r=await fetch('/api/components',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});
+  const d=await r.json();
+  if(r.ok){ setStatus('Saved: '+d.id); loadSaved(); }
+  else setStatus('Save failed: '+(d.detail||'error'));
+}
+
+async function loadSaved(){
+  const r=await fetch('/api/components'); const d=await r.json();
+  document.getElementById('lib-count').textContent='('+d.components.length+')';
+  document.getElementById('saved').innerHTML = d.components.length?
+    d.components.map(c=>`<div><span>${c.id}</span><span style="color:#7f93a6">${c.segment||''}</span></div>`).join('')
+    : '<div style="border:0;color:#6f8298">empty</div>';
+}
+
+loadDiagramList(); loadSaved(); redraw();
+</script>
+</body>
+</html>
