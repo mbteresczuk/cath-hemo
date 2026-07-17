@@ -37,11 +37,13 @@ button.on{background:#2f5c8a;border-color:#3c74ab}
 <header>
   <h1>Component Author</h1>
   <select id="diagram"><option value="">— load a diagram —</option></select>
+  <button id="mode-click" onclick="setMode('click')" title="One-click SAM masking">✨ Click-segment</button>
   <button id="mode-mask" class="on" onclick="setMode('mask')">1 · Draw mask</button>
   <button id="mode-anchor" onclick="setMode('anchor')">2 · Anchors</button>
   <button onclick="undoPoint()">Undo pt</button>
   <button onclick="clearAll()">Clear</button>
   <button class="pri" onclick="extract()">Extract →</button>
+  <button onclick="autoTag()">✦ Auto-tag</button>
   <span class="status" id="status">Pick a diagram</span>
 </header>
 
@@ -101,11 +103,22 @@ let srcImg=null, fit={s:1,ox:0,oy:0}; // source placement in the template
 let mode='mask', poly=[], anchors={}, extractedB64=null;
 
 function setStatus(t){document.getElementById('status').textContent=t}
+let samOK=false;
 function setMode(m){
+  if(m==='click' && !samOK){ setStatus('One-click needs SAM — run setup_sam.sh (using manual mask)'); m='mask'; }
   mode=m;
+  document.getElementById('mode-click').classList.toggle('on',m==='click');
   document.getElementById('mode-mask').classList.toggle('on',m==='mask');
   document.getElementById('mode-anchor').classList.toggle('on',m==='anchor');
   redraw();
+}
+async function checkSam(){
+  try{ const r=await fetch('/api/components/sam_status'); const d=await r.json();
+    samOK=d.available;
+    const b=document.getElementById('mode-click');
+    b.style.opacity=samOK?'1':'0.5';
+    b.title=samOK?'One-click SAM masking':(d.detail||'SAM not installed');
+  }catch{ samOK=false; }
 }
 
 async function loadDiagramList(){
@@ -133,10 +146,57 @@ document.getElementById('diagram').onchange=e=>{
 cv.onpointerdown=ev=>{
   const r=cv.getBoundingClientRect();
   const x=(ev.clientX-r.left)*TW/r.width, y=(ev.clientY-r.top)*TH/r.height;
+  if(mode==='click'){ samClick(x,y); return; }
   if(mode==='mask'){ poly.push([x,y]); }
   else { const nm=document.getElementById('anchor-name').value; anchors[nm]=[Math.round(x),Math.round(y)]; refreshAnchors(); }
   redraw();
 };
+
+async function samClick(tx,ty){
+  if(!srcImg){ setStatus('Load a diagram first'); return; }
+  // template -> source coords
+  const sx=Math.round((tx-fit.ox)/fit.s), sy=Math.round((ty-fit.oy)/fit.s);
+  setStatus('Segmenting…');
+  try{
+    const r=await fetch('/api/components/segment',{method:'POST',headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({diagram_id:document.getElementById('diagram').value,x:sx,y:sy})});
+    const d=await r.json();
+    if(!r.ok){ setStatus(d.detail||'Segment failed'); return; }
+    // source polygon -> template coords
+    poly=d.polygon.map(([px,py])=>[fit.ox+px*fit.s, fit.oy+py*fit.s]);
+    redraw(); setStatus('Masked — Extract, or click another structure');
+  }catch(e){ setStatus('Segment error: '+e.message); }
+}
+
+function renderHighlight(){
+  // source diagram + red mask outline (no grid) -> PNG for the vision model
+  const off=document.createElement('canvas'); off.width=TW; off.height=TH;
+  const o=off.getContext('2d'); o.fillStyle='#fff'; o.fillRect(0,0,TW,TH);
+  o.drawImage(srcImg,fit.ox,fit.oy,srcImg.naturalWidth*fit.s,srcImg.naturalHeight*fit.s);
+  if(poly.length>2){ o.strokeStyle='#e0281e'; o.lineWidth=3; o.beginPath();
+    o.moveTo(poly[0][0],poly[0][1]); poly.forEach(p=>o.lineTo(p[0],p[1])); o.closePath(); o.stroke(); }
+  return off.toDataURL('image/png').split(',')[1];
+}
+
+async function autoTag(){
+  if(!srcImg||poly.length<3){ setStatus('Draw or click a mask first, then Auto-tag'); return; }
+  setStatus('Auto-tagging…');
+  const name=document.getElementById('diagram').selectedOptions[0].textContent;
+  try{
+    const r=await fetch('/api/components/suggest_tags',{method:'POST',headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({highlight_b64:renderHighlight(),diagram_name:name})});
+    const d=await r.json();
+    if(!r.ok){ setStatus(d.detail||'Auto-tag failed'); return; }
+    const t=d.tags||{};
+    if(t.segment) document.getElementById('c-seg').value=t.segment;
+    if(t.chamber) document.getElementById('c-chamber').value=t.chamber;
+    if(t.loop) document.getElementById('c-loop').value=t.loop;
+    if(t.notes) document.getElementById('c-notes').value=t.notes;
+    if(!document.getElementById('c-id').value && t.chamber)
+      document.getElementById('c-id').value=(t.chamber+'_'+(t.loop||'')).replace(/_$/,'').toLowerCase();
+    setStatus('Suggested tags filled — review + save');
+  }catch(e){ setStatus('Auto-tag error: '+e.message); }
+}
 function undoPoint(){ if(mode==='mask') poly.pop(); redraw(); }
 function clearAll(){ poly=[]; anchors={}; extractedB64=null; refreshAnchors();
   document.getElementById('preview').innerHTML='<span style="color:#8a9bad;font-size:12px">extract to preview</span>'; redraw(); }
@@ -224,7 +284,7 @@ async function loadSaved(){
     : '<div style="border:0;color:#6f8298">empty</div>';
 }
 
-loadDiagramList(); loadSaved(); redraw();
+loadDiagramList(); loadSaved(); checkSam(); redraw();
 </script>
 </body>
 </html>

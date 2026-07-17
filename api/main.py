@@ -404,6 +404,50 @@ def list_components():
     return {"components": out}
 
 
+@app.post("/api/components/suggest_tags")
+def suggest_component_tags(payload: dict = Body(...)):
+    """LLM auto-tagging: given the source diagram with the masked region
+    highlighted (PNG base64), return suggested {segment, chamber, loop, notes}."""
+    from api.component_ai import suggest_tags
+    b64 = payload.get("highlight_b64")
+    if not b64:
+        raise HTTPException(status_code=422, detail="highlight_b64 required")
+    try:
+        tags = suggest_tags(b64, payload.get("diagram_name", ""))
+        return {"ok": True, "tags": tags}
+    except ValueError as e:
+        raise HTTPException(status_code=500, detail=str(e))
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Auto-tag failed: {e}")
+
+
+@app.get("/api/components/sam_status")
+def sam_status():
+    """Report whether one-click (SAM) masking is available on this host."""
+    from api.component_ai import sam_available, _load_sam
+    ok = sam_available()
+    _, err = _load_sam()
+    return {"available": ok, "detail": None if ok else err}
+
+
+@app.post("/api/components/segment")
+def segment_component(payload: dict = Body(...)):
+    """One-click masking: SAM turns a click on a diagram into a mask polygon
+    (returned in source-image coordinates)."""
+    from api.component_ai import segment_click
+    library = _get_library()
+    diagram = get_diagram_by_id(library, payload.get("diagram_id", ""))
+    if diagram is None:
+        raise HTTPException(status_code=404, detail="Diagram not found")
+    x, y = payload.get("x"), payload.get("y")
+    if x is None or y is None:
+        raise HTTPException(status_code=422, detail="x and y (source coords) required")
+    res = segment_click(str(BASE_DIR / diagram["path"]), int(x), int(y))
+    if not res.get("ok"):
+        raise HTTPException(status_code=503, detail=res.get("error", "SAM unavailable"))
+    return res
+
+
 @app.post("/api/components")
 def save_component(payload: dict = Body(...)):
     """Save one component: transparent PNG (base64) + metadata (tags, anchors).
