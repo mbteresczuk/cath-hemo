@@ -11,3 +11,7 @@ __pycache__/
 mobile/node_modules/
 mobile/dist/
 mobile/.vite/
+
+# Training dataset — regenerate with training/prepare_dataset.py
+training/dataset/images/
+training/dataset/control/
