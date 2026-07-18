@@ -15,3 +15,6 @@ mobile/.vite/
 # Training dataset — regenerate with training/prepare_dataset.py
 training/dataset/images/
 training/dataset/control/
+
+# ControlNet test control maps (regenerate via render_control.py)
+training/control_test/
