@@ -15,40 +15,72 @@ from PIL import Image
 OCR_PROMPT = """You are extracting hemodynamic measurements from a cardiac catheterization lab data sheet.
 
 The sheet may be handwritten or printed. It may contain values for any of these locations:
-SVC, IVC, RA, RV, MPA, RPA, LPA, RPCWP, LPCWP, LA, LV, Aorta
+SVC, IVC, RA, RV, MPA, RPA, LPA, RPCWP, LPCWP, pulmonary veins (RUPV/RLPV/LUPV/LLPV), LA, LV, DAo (descending aorta)
 
 Each location may have:
 - An oxygen saturation percentage (a number 40–100, sometimes written with %)
 - Pressures: systolic/diastolic, sometimes followed by a mean
 - A mean pressure alone (e.g. "m12" or "mean 12")
 
-Output ONLY a plain text block, one location per line, in this exact format:
-  LOCATION  saturation  systolic/diastolic  mean
+Output TWO blocks in this exact structure — a "Sat" block containing only saturations,
+then a "Pressures" block containing only pressures. A location may appear in both blocks.
+
+Sat
+  <LOCATION>  <saturation>          (one location per line, saturation only)
+
+Pressures
+  <LOCATION>  <systolic/diastolic>  <mean>   (one location per line, pressures only)
+
+Emit the lines WITHIN each block in this order (skip any location with no value on the sheet):
+
+Sat block order:
+  SVC, IVC, RA, RV, MPA, RPA, LPA, then each pulmonary vein on its own row
+  (RUPV, RLPV, LUPV, LLPV), LA, LV, DAo
+
+Pressures block order:
+  SVC, IVC, RA, RV, MPA, RPA, LPA, RPCWP, LPCWP, then each pulmonary vein on its
+  own row if a pressure is recorded, LA, LV, DAo
 
 Rules:
-1. Use ONLY these exact location names: SVC IVC RA RV MPA RPA LPA RPCWP LPCWP LA LV Aorta
-2. Omit any field that is not clearly written on the sheet for that location
-3. Write mean as a bare number at the end of the line (e.g. "RA 75 8/10 9")
-4. No units, no labels, no punctuation, no blank lines
-5. Do NOT guess or infer values that are not clearly visible
-6. If a location appears multiple times (e.g. pullback), use the first value
-7. If you cannot read a value confidently, omit it
-8. ATRIAL PRESSURES (RA and LA): The diagram requires V-wave/A-wave order (V first, A second).
-   - Look for "v" and "a" wave labels on the sheet and output V first, then A.
-   - If waves are not labeled, cath sheets typically record the a-wave before the v-wave in time.
-     The a-wave is usually the higher of the two values in a normal heart.
-     So if you see two unlabeled atrial values, put the lower value first (V) and the higher value second (A).
-   - Example: sheet shows RA "10/6" or "a=10 v=6" → output "RA 75 6/10 9" (V=6 first, A=10 second).
+1. Use ONLY these exact location names: SVC IVC RA RV MPA RPA LPA RPCWP LPCWP RUPV RLPV LUPV LLPV LA LV DAo
+2. Print the literal header line "Sat" before the first block and "Pressures" before the second block.
+3. In the Sat block, print ONLY the saturation number (e.g. "RA 75"). No pressures.
+4. In the Pressures block, print ONLY pressures (e.g. "RA 6/10 9"). No saturation.
+5. Omit any field/line that is not clearly written on the sheet for that location.
+6. A lone MEAN pressure (venous locations like SVC/IVC, or the wedges RPCWP/LPCWP)
+   must be written with an "m" prefix so it is read as a mean, e.g. "SVC m8", "RPCWP m12".
+7. No units, no labels, no punctuation. Keep exactly one blank line between the two blocks.
+8. Do NOT guess or infer values that are not clearly visible; if unsure, omit.
+9. If a location appears multiple times (e.g. pullback), use the first value.
+10. ATRIAL PRESSURES (RA and LA): report as "v/a mean" — V-wave first, A-wave second, then mean.
+    - Look for "v" and "a" wave labels on the sheet and output V first, then A.
+    - If waves are not labeled, cath sheets typically record the a-wave before the v-wave in time.
+      The a-wave is usually the higher of the two values in a normal heart.
+      So if you see two unlabeled atrial values, put the lower value first (V) and the higher second (A).
+    - Example: sheet shows RA "10/6" or "a=10 v=6" → output "RA 6/10 9" (V=6 first, A=10 second, mean 9).
 
 Example output:
+Sat
 SVC 79
 IVC 81
-RA 75 8/10 9
-RV 75 50/5
-MPA 75 50/30 38
-RPCWP 12
-LV 98 95/10
-Aorta 98 95/55 72
+RA 75
+RV 75
+MPA 75
+RUPV 98
+LLPV 98
+LA 98
+LV 98
+DAo 98
+
+Pressures
+SVC m8
+RA 6/10 9
+RV 50/5
+MPA 50/30 38
+RPCWP m12
+LA 5/8 8
+LV 95/10
+DAo 95/55 72
 
 Now extract the values from the image:"""
 
