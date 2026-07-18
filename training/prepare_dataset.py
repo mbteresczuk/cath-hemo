@@ -57,6 +57,12 @@ _ABBR = {
     "svc": "superior vena cava", "ivc": "inferior vena cava", "rv": "right ventricle",
     "lv": "left ventricle", "mpa": "main pulmonary artery", "sp": "status post",
     "s/p": "status post", "ebstein": "Ebstein anomaly", "truncus": "truncus arteriosus",
+    "ma": "mitral atresia", "aa": "aortic atresia", "ms": "mitral stenosis",
+    "subpulmonicvsd": "subpulmonic ventricular septal defect",
+    "subaorticvsd": "subaortic ventricular septal defect",
+    "rvtopaconduit": "RV-to-PA conduit", "rvpa": "RV-to-PA",
+    "warden": "Warden procedure", "hemifontan": "hemi-Fontan",
+    "aso": "arterial switch operation",
 }
 
 _SEGMENTAL = {
@@ -76,7 +82,6 @@ def caption_for(display_name: str) -> str:
         key = m.lower().replace(" ", "")
         segs.append(_SEGMENTAL.get(key, m))
     body = re.sub(r"\{[^}]*\}", "", raw)
-    # expand token-by-token
     words = re.split(r"[\s_]+", body)
     out = []
     for w in words:
