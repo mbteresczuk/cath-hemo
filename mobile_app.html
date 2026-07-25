@@ -302,19 +302,13 @@ Aorta  98  95/55  72</pre>
     <div style="width:60px"></div>
   </div>
 
-  <div style="display:flex;gap:8px;align-items:center;margin-bottom:14px">
-    <div class="search-wrap" style="flex:1;margin-bottom:0">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-        <circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/>
-      </svg>
-      <input type="text" class="search-input" id="search-input"
-             placeholder="Search diagnosis (e.g. TOF, ASD, Fontan)"
-             oninput="onSearch(this.value)"/>
-    </div>
-    <button class="btn btn-primary" onclick="goTo('s-mullins')"
-            style="width:auto;margin-bottom:0;padding:11px 14px;white-space:nowrap;font-size:13px">
-      Create a new diagram
-    </button>
+  <div class="search-wrap">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+      <circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/>
+    </svg>
+    <input type="text" class="search-input" id="search-input"
+           placeholder="Search diagnosis (e.g. TOF, ASD, Fontan)"
+           oninput="onSearch(this.value)"/>
   </div>
 
   <div id="diagram-grid"></div>
