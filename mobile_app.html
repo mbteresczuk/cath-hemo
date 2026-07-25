@@ -485,6 +485,7 @@ let searchTimer = null
 
 // ── Mullins diagram generator (Beta) ────────────────────────────────────
 let mullinsResult = null
+let mullinsGen = null   // set once a generated diagram is used for a report
 function showMullins(which) {
   document.getElementById('mullins-input').style.display   = which === 'input'   ? 'block' : 'none'
   document.getElementById('mullins-loading').style.display = which === 'loading' ? 'block' : 'none'
@@ -538,28 +539,57 @@ async function shareMullins() {
     } else { saveMullins() }
   } catch (e) { saveMullins() }
 }
-// Carry the generated diagram into the sats/pressures report flow.
+// Carry the generated diagram into the sats/pressures report flow. This also
+// sets it up as the "selected diagram" so Edit Diagram (devices) works on it.
 async function useMullinsDiagram() {
   if (!mullinsResult) return
   if (!hemoText.trim()) {
     alert('Enter hemodynamic data first (use "Type Values" on the data screen), then generate.')
     return
   }
+  mullinsGen = {
+    base_id: mullinsResult.base_id || '',
+    added_donors: mullinsResult.added_donors || [],
+    anatomy_type: mullinsResult.anatomy_type || 'biventricle',
+    location_set: mullinsResult.location_set || 'standard_biventricle',
+    image_b64: mullinsResult.image_b64,
+  }
+  // treat the generated diagram like a selected one so goToEdit / device baking work
+  selectedDiagram = {
+    id: mullinsResult.base_id || 'generated',
+    thumbnail_url: 'data:image/png;base64,' + mullinsResult.image_b64,
+    anatomy_type: mullinsGen.anatomy_type,
+    display_name: mullinsResult.base_name || 'Generated diagram',
+  }
+  devEdit.devices = []
+  devEdit.sel = null
+  devEdit.annotCoords = null
+  devEdit.annotDirty = false
+  sessionCoords = null
   goTo('s-output')
   document.getElementById('output-loading').style.display = 'block'
   document.getElementById('output-error').style.display = 'none'
   document.getElementById('output-result').style.display = 'none'
+  await runReport()
+}
+// Report for a generated diagram: bake any devices onto it, then annotate via
+// the generated-diagram endpoint (which uses the base's coords).
+async function runGeneratedReport() {
   try {
     const patientData = JSON.parse(localStorage.getItem('patientDefaults') || '{}')
+    let imageB64 = mullinsGen.image_b64
+    if (devEdit.devices.length) {
+      try { imageB64 = await bakeBaseWithDevices() } catch {}
+    }
     const res = await fetch('/api/report_generated', {
       method: 'POST', headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         hemo_text: hemoText,
-        image_b64: mullinsResult.image_b64,
-        base_id: mullinsResult.base_id || '',
-        added_donors: mullinsResult.added_donors || [],
-        anatomy_type: mullinsResult.anatomy_type || 'biventricle',
-        location_set: mullinsResult.location_set || 'standard_biventricle',
+        image_b64: imageB64,
+        base_id: mullinsGen.base_id,
+        added_donors: mullinsGen.added_donors,
+        anatomy_type: mullinsGen.anatomy_type,
+        location_set: mullinsGen.location_set,
         patient_data: {
           hgb: patientData.hgb != null ? patientData.hgb : null,
           avo2: patientData.avo2 != null ? patientData.avo2 : null,
@@ -617,8 +647,9 @@ function goToSelector() {
 async function completeDiagram() {
   if (!selectedDiagram || !hemoText.trim()) return
   devEdit.sel = null
-  // persist repositioned annotation markers so the report uses them
-  if (devEdit.annotDirty && devEdit.annotCoords) {
+  // persist repositioned annotation markers so the report uses them (library
+  // diagrams only — generated diagrams have no server-side coord file to update)
+  if (!mullinsGen && devEdit.annotDirty && devEdit.annotCoords) {
     try {
       await fetch(`/api/coords/${selectedDiagram.id}`, {
         method: 'PUT',
@@ -638,6 +669,7 @@ async function completeDiagram() {
 function reset() {
   hemoText = ''
   selectedDiagram = null
+  mullinsGen = null
   lastResult = null
   devEdit.devices = []
   devEdit.sel = null
@@ -1013,6 +1045,7 @@ function selectDiagram(d) {
     sessionCoords = null
   }
   selectedDiagram = d
+  mullinsGen = null   // picking a library diagram leaves the generated-diagram path
   document.querySelectorAll('.dcard').forEach(el => {
     el.classList.toggle('sel', el.dataset.id === selectedDiagram.id)
   })
@@ -1023,6 +1056,7 @@ function selectDiagram(d) {
 
 // ── Report generation ──────────────────────────────────────────────────
 async function runReport() {
+  if (mullinsGen) return runGeneratedReport()   // generated diagrams use their own path
   try {
     const patientData = JSON.parse(localStorage.getItem('patientDefaults') || '{}')
     const reqBody = {

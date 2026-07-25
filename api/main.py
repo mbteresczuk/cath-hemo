@@ -430,6 +430,20 @@ def generate_report_on_generated(req: GeneratedReportRequest):
     else:
         coords = auto_configure("generated", w, h, req.anatomy_type, req.location_set,
                                 image_path=tmp_path)
+
+    # The base coords are tuned for the base's own pixel size; the generated image
+    # is a different size (e.g. 1024). Scale every x/y so markers land correctly.
+    cw = coords.get("image_width") or w
+    ch = coords.get("image_height") or h
+    if (cw, ch) != (w, h):
+        sx, sy = w / cw, h / ch
+        for loc in coords.get("locations", {}).values():
+            for k, val in list(loc.items()):
+                if isinstance(val, (int, float)) and k.endswith("_x"):
+                    loc[k] = val * sx
+                elif isinstance(val, (int, float)) and k.endswith("_y"):
+                    loc[k] = val * sy
+        coords["image_width"], coords["image_height"] = w, h
     try:
         annotated = annotate_diagram(tmp_path, coords, hemodynamics,
                                      anatomy_type=req.anatomy_type)
