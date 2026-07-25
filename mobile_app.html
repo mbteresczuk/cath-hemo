@@ -106,7 +106,10 @@ td:last-child{text-align:right;font-weight:600;font-family:monospace}
   padding:10px 12px;font-size:13px;margin-bottom:10px}
 .error-alert{background:#FEE2E2;border:1px solid #F87171}
 .narrative{font-size:14px;line-height:1.7;font-family:Georgia,serif;white-space:pre-wrap}
-.nav{display:flex;justify-content:space-between;align-items:center;margin-bottom:18px}
+/* sticky so Back stays reachable however far the diagram list is scrolled */
+.nav{display:flex;justify-content:space-between;align-items:center;margin-bottom:18px;
+  position:sticky;top:0;z-index:20;background:var(--bg);
+  margin-left:-16px;margin-right:-16px;padding:10px 16px}
 .back-btn{background:none;border:1.5px solid var(--crimson);color:var(--crimson);
   padding:8px 14px;border-radius:8px;font-weight:600;font-size:14px;cursor:pointer}
 .img-wrap{border-radius:12px;overflow:hidden;border:1px solid var(--border);
@@ -183,7 +186,7 @@ Aorta  98  95/55  72</pre>
       <p>Tap <strong>Select Diagram →</strong> then search by diagnosis (e.g. <em>TOF</em>, <em>ASD</em>, <em>HLHS Norwood</em>). Tap a card to select it.</p>
 
       <h3>Step 3 · Edit Diagram (optional)</h3>
-      <p>Tap <strong>Edit Diagram</strong> to add devices if needed: stent, ASD/VSD device, PDA closure, BTT shunt, RV–PA conduit, thickened valve, SAPIEN or Melody valve, vascular plug, PA band, ECMO or VAD cannula, Fontan baffle, or Fontan fenestration. Drag to position, use <strong>↻</strong> to rotate, <strong>⤡</strong> to resize, <strong>↔</strong> to lengthen/shorten, <strong>✕</strong> to delete. Skip this step entirely by tapping <strong>Complete Diagram →</strong> right after selecting a diagram.</p>
+      <p>Tap <strong>Edit Diagram</strong> to add devices if needed: stent, ASD/VSD device, PDA closure, BTT shunt, RV–PA conduit, thickened valve, SAPIEN or Melody valve, vascular plug, PA band, ECMO or VAD cannula, Fontan baffle, or Fontan fenestration. Drag to position, use <strong>↻</strong> to rotate, <strong>⤡</strong> to resize, <strong>↔</strong> to lengthen/shorten, <strong>↕</strong> to set the Fontan conduit's height, <strong>✕</strong> to delete. Skip this step entirely by tapping <strong>Complete Diagram →</strong> right after selecting a diagram.</p>
       <p><strong>Draw</strong> mode lets you sketch freehand on the diagram — each stroke becomes a movable object. <strong>Move #s</strong> shows draggable markers for where saturations (red) and pressures (blue) print; drag them to fix positions, which are remembered for that diagram. <strong>Sat/Press</strong> lets you type a value the program didn't recognize and drop it on the diagram as a circled saturation, a pressure with a line above it, or plain free text.</p>
 
       <h3>Step 4 · Complete Diagram</h3>
@@ -368,7 +371,7 @@ Aorta  98  95/55  72</pre>
       <button class="pill active" id="tool-pencil" onclick="setDrawTool('pencil')">Pencil</button>
       <button class="pill" id="tool-eraser" onclick="setDrawTool('eraser')">Eraser</button>
     </div>
-    <p class="device-hint" id="edit-hint">Tap a device to select it · drag to move · <b>↻</b> rotate · <b>⤡</b> resize · <b>↔</b> length · <b>✕</b> delete.</p>
+    <p class="device-hint" id="edit-hint">Tap a device to select it · drag to move · <b>↻</b> rotate · <b>⤡</b> resize · <b>↔</b> length · <b>↕</b> height (Fontan conduit) · <b>✕</b> delete.</p>
   </div>
 
   <div class="card" style="padding:0;overflow:hidden;margin-bottom:14px">
@@ -434,11 +437,34 @@ let parseTimer = null
 let searchTimer = null
 
 // ── Screen navigation ──────────────────────────────────────────────────
-function goTo(id) {
+// Every screen change also pushes a history entry, so the phone's own Back
+// button / swipe-back gesture returns to the previous screen instead of
+// leaving the app entirely.
+const HOME_SCREEN = 's-entry'
+
+function goTo(id, fromHistory) {
+  const target = document.getElementById(id)
+  if (!target) return
   document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'))
-  document.getElementById(id).classList.add('active')
+  target.classList.add('active')
   window.scrollTo(0, 0)
+  if (fromHistory) return
+  if (history.state && history.state.screen === id) return
+  history.pushState({ screen: id }, '')
 }
+
+// Seed the first entry so the very first Back lands on the home screen.
+history.replaceState({ screen: HOME_SCREEN }, '')
+
+window.addEventListener('popstate', e => {
+  // A modal is "on top" of the screen — close that first.
+  const modal = document.getElementById('howto-modal')
+  if (modal && modal.classList.contains('open')) {
+    modal.classList.remove('open')
+    return
+  }
+  goTo((e.state && e.state.screen) || HOME_SCREEN, true)
+})
 
 function goToSelector() {
   goTo('s-selector')
@@ -1250,7 +1276,7 @@ function setEditMode(m) {
 
 function _editHint(m) {
   const hints = {
-    devices: 'Tap a device to select it · drag to move · <b>↻</b> rotate · <b>⤡</b> resize · <b>↔</b> length · <b>✕</b> delete.',
+    devices: 'Tap a device to select it · drag to move · <b>↻</b> rotate · <b>⤡</b> resize · <b>↔</b> length · <b>↕</b> height (Fontan conduit) · <b>✕</b> delete.',
     draw: devEdit.drawTool === 'eraser'
       ? 'The eraser paints white over anything it crosses — pencil strokes AND diagram lines. Each wipe is an object: select it in Devices mode and tap ✕ to undo.'
       : 'Draw on the diagram with your finger or mouse. Strokes become objects — use the eraser or Devices mode to remove them.',
@@ -1311,6 +1337,9 @@ const DEVICE_BOUNDS = {
 // (so a stent or conduit can be shortened/lengthened to fit any vessel)
 const STRETCHABLE = new Set(['stent', 'rvpa_conduit', 'pa_band',
                              'ecmo_cannula', 'vad_cannula', 'fontan_baffle'])
+// Devices whose caliber (height) can be adjusted independently of length,
+// so a Fontan conduit can be sized in both directions.
+const THICKENABLE = new Set(['fontan_baffle'])
 // devices with an adjustable curve (bend handle)
 const BENDABLE = new Set(['rvpa_conduit'])
 
@@ -1440,12 +1469,15 @@ function deviceGlyphSVG(type, stretch = 1, dev = null) {
     </g>`
   }
   if (type === 'fontan_baffle') {
-    // smooth Fontan baffle / extracardiac conduit with suture ticks
-    const L = 80 * stretch, hl = L / 2, hw = 15
+    // smooth Fontan baffle / extracardiac conduit with suture ticks.
+    // ↔ sets the length (stretch), ↕ sets the caliber (thick) — independently.
+    const thick = (dev && dev.thick != null) ? dev.thick : 1
+    const L = 80 * stretch, hl = L / 2, hw = 15 * thick
+    const tick = Math.min(2.5, hw * 0.4)
     let ticks = ''
     for (let x = -hl + 5; x < hl - 2; x += 8) {
-      ticks += `<line x1="${x.toFixed(1)}" y1="${-hw}" x2="${(x + 2.5).toFixed(1)}" y2="${-hw + 2.5}"/>
-                <line x1="${x.toFixed(1)}" y1="${hw}" x2="${(x + 2.5).toFixed(1)}" y2="${hw - 2.5}"/>`
+      ticks += `<line x1="${x.toFixed(1)}" y1="${-hw}" x2="${(x + tick).toFixed(1)}" y2="${(-hw + tick).toFixed(1)}"/>
+                <line x1="${x.toFixed(1)}" y1="${hw}" x2="${(x + tick).toFixed(1)}" y2="${(hw - tick).toFixed(1)}"/>`
     }
     return `<g stroke="#000" stroke-width="1.7" fill="none">
       <rect x="${-hl}" y="${-hw}" width="${L}" height="${2 * hw}" fill="#fff" stroke="none"/>
@@ -1683,6 +1715,7 @@ function addDevice() {
     scale: Math.max(0.6, devEdit.imgW / 480), angle: 0, stretch: 1,
   }
   if (BENDABLE.has(type)) d.bend = 0.5
+  if (THICKENABLE.has(type)) d.thick = 1
   devEdit.devices.push(d)
   devEdit.sel = d.id
   renderDevices()
@@ -1719,6 +1752,8 @@ function _deviceBounds(d) {
     const bend = d.bend != null ? d.bend : 0.5
     const st = d.stretch || 1
     b = { hw: 45, hh: 15 + Math.abs(bend) * 42 * st + 6 }
+  } else if (THICKENABLE.has(d.type)) {
+    b = { hw: b.hw, hh: b.hh * (d.thick || 1) }
   } else if (d.type === 'label_text' || d.type === 'label_press') {
     const raw = (d.text || '')
     b = {
@@ -1743,6 +1778,12 @@ function _deviceGroup(d, selected, withHandles) {
         <text x="${hwS + pad + hr}" y="0" fill="#fff" font-size="${13 * u}"
               text-anchor="middle" dominant-baseline="central" pointer-events="none">↔</text>
       </g>` : ''
+    const thickHandle = THICKENABLE.has(d.type) ? `
+      <g class="dev-handle" data-role="thick" data-did="${d.id}">
+        <circle cx="0" cy="${hhS + pad + hr}" r="${hr}" fill="#7C3AED"/>
+        <text x="0" y="${hhS + pad + hr}" fill="#fff" font-size="${13 * u}"
+              text-anchor="middle" dominant-baseline="central" pointer-events="none">↕</text>
+      </g>` : ''
     let bendHandle = ''
     if (BENDABLE.has(d.type)) {
       // sits at the curve's peak; drag perpendicular to change the bow
@@ -1757,7 +1798,7 @@ function _deviceGroup(d, selected, withHandles) {
                 text-anchor="middle" dominant-baseline="central" pointer-events="none">⌒</text>
         </g>`
     }
-    handles = stretchHandle + bendHandle + `
+    handles = stretchHandle + thickHandle + bendHandle + `
       <rect x="${-hwS - pad}" y="${-hhS - pad}" width="${2 * (hwS + pad)}" height="${2 * (hhS + pad)}"
             fill="none" stroke="#0068c9" stroke-width="${1.5 * u}" stroke-dasharray="${5 * u} ${4 * u}"/>
       <line x1="0" y1="${-hhS - pad}" x2="0" y2="${-hhS - pad - 20 * u}" stroke="#0068c9" stroke-width="${1.5 * u}"/>
@@ -1887,11 +1928,13 @@ function _devicePointerDown(e) {
   const [px, py] = _toImgCoords(e)
   const rad = d.angle * Math.PI / 180
   const lx0 = (px - d.x) * Math.cos(rad) + (py - d.y) * Math.sin(rad)
+  const ly0 = -(px - d.x) * Math.sin(rad) + (py - d.y) * Math.cos(rad)
   devEdit.drag = {
     role, did, px, py,
     x0: d.x, y0: d.y, scale0: d.scale, angle0: d.angle,
-    stretch0: d.stretch || 1,
+    stretch0: d.stretch || 1, thick0: d.thick || 1,
     lx0: Math.abs(lx0) > 5 ? lx0 : 5,
+    ly0: Math.abs(ly0) > 5 ? ly0 : 5,
     a0: Math.atan2(py - d.y, px - d.x),
     r0: Math.hypot(px - d.x, py - d.y) || 1,
   }
@@ -1941,6 +1984,11 @@ function _devicePointerMove(e) {
     const rad = d.angle * Math.PI / 180
     const lx = (px - d.x) * Math.cos(rad) + (py - d.y) * Math.sin(rad)
     d.stretch = Math.min(3, Math.max(0.3, g.stretch0 * lx / g.lx0))
+  } else if (g.role === 'thick') {
+    // adjust caliber (height) only, perpendicular to the device's own axis
+    const rad = d.angle * Math.PI / 180
+    const ly = -(px - d.x) * Math.sin(rad) + (py - d.y) * Math.cos(rad)
+    d.thick = Math.min(3, Math.max(0.3, g.thick0 * ly / g.ly0))
   } else if (g.role === 'bend') {
     // perpendicular (local-y) offset of the pointer sets the bow
     const rad = d.angle * Math.PI / 180
