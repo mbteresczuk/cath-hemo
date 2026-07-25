@@ -1,0 +1,21 @@
+{
+  "id": "TetralogyFallotPS-RAA_-_Repaired",
+  "customs": [
+    {
+      "name": "VSD_closure",
+      "color": "#2b5dbf"
+    },
+    {
+      "name": "transannular patch",
+      "color": "#78e60a"
+    },
+    {
+      "name": "right aortic arch",
+      "color": "#e60a7f"
+    },
+    {
+      "name": "LPA stenosis",
+      "color": "#2a307e"
+    }
+  ]
+}

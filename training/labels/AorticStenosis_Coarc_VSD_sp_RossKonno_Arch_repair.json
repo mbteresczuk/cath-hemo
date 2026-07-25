@@ -1,0 +1,17 @@
+{
+  "id": "AorticStenosis_Coarc_VSD_sp_RossKonno_Arch_repair",
+  "customs": [
+    {
+      "name": "VSD_closure",
+      "color": "#2b5dbf"
+    },
+    {
+      "name": "Ross_procedure",
+      "color": "#2bbf87"
+    },
+    {
+      "name": "coarc_repair",
+      "color": "#aea80a"
+    }
+  ]
+}

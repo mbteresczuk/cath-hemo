@@ -302,13 +302,19 @@ Aorta  98  95/55  72</pre>
     <div style="width:60px"></div>
   </div>
 
-  <div class="search-wrap">
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-      <circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/>
-    </svg>
-    <input type="text" class="search-input" id="search-input"
-           placeholder="Search diagnosis (e.g. TOF, ASD, Fontan)"
-           oninput="onSearch(this.value)"/>
+  <div style="display:flex;gap:8px;align-items:center;margin-bottom:14px">
+    <div class="search-wrap" style="flex:1;margin-bottom:0">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/>
+      </svg>
+      <input type="text" class="search-input" id="search-input"
+             placeholder="Search diagnosis (e.g. TOF, ASD, Fontan)"
+             oninput="onSearch(this.value)"/>
+    </div>
+    <button class="btn btn-primary" onclick="goTo('s-mullins')"
+            style="width:auto;margin-bottom:0;padding:11px 14px;white-space:nowrap;font-size:13px">
+      Create a new diagram
+    </button>
   </div>
 
   <div id="diagram-grid"></div>
@@ -422,6 +428,47 @@ Aorta  98  95/55  72</pre>
   </div>
 </div>
 
+<!-- ── SCREEN: MULLINS DIAGRAM GENERATOR (Beta) ───────── -->
+<div id="s-mullins" class="screen">
+  <div class="nav">
+    <button class="back-btn" onclick="goTo('s-entry')">‹ Back</button>
+  </div>
+  <h1>Diagram Generator</h1>
+  <p class="sub">Type a diagnosis — get a Mullins diagram.</p>
+
+  <div id="mullins-input">
+    <div class="card">
+      <label for="mullins-dx">Diagnosis</label>
+      <input type="text" id="mullins-dx" placeholder="e.g. ASD with PDA"
+             autocorrect="off" autocapitalize="off" spellcheck="false"/>
+    </div>
+    <button class="btn btn-primary" onclick="runMullins()">Generate Diagram</button>
+    <div class="alert" style="background:#FFF8F0;border:none;border-left:3px solid var(--crimson);border-radius:0 8px 8px 0">
+      <b>Beta testing.</b> Not for clinical use — always verify the anatomy against the source.
+    </div>
+  </div>
+
+  <div id="mullins-loading" class="spinner-wrap" style="display:none">
+    <div class="spinner"></div>
+    <p id="mullins-step" style="color:var(--muted);font-size:14px">Placing structures…</p>
+  </div>
+
+  <div id="mullins-result" style="display:none">
+    <div class="section-label" style="margin-top:0">Generated diagram</div>
+    <div class="img-wrap"><img id="mullins-img" src="" alt="Generated Mullins diagram"/></div>
+    <p id="mullins-caption" style="font-size:12px;color:var(--muted);text-align:center;margin:-6px 0 14px"></p>
+    <div class="section-label">Detected findings</div>
+    <div class="chip-list" id="mullins-chips" style="margin-bottom:16px"></div>
+    <button class="btn btn-primary" onclick="useMullinsDiagram()">Place sats &amp; pressures →</button>
+    <div style="display:flex;gap:8px;margin-bottom:10px">
+      <button class="btn btn-outline" style="margin-bottom:0" onclick="saveMullins()">Save Image</button>
+      <button class="btn btn-secondary" style="margin-bottom:0" onclick="shareMullins()">Share</button>
+    </div>
+    <button class="btn btn-outline" onclick="showMullins('input')">↺ Generate another</button>
+  </div>
+  <div class="copyright">© 2026 Cath Hemo Report Dashboard</div>
+</div>
+
 <script>
 // ── How-to modal ──────────────────────────────────────────────────────
 function closeHowTo(e) {
@@ -435,6 +482,102 @@ let selectedDiagram = null
 let lastResult = null
 let parseTimer = null
 let searchTimer = null
+
+// ── Mullins diagram generator (Beta) ────────────────────────────────────
+let mullinsResult = null
+function showMullins(which) {
+  document.getElementById('mullins-input').style.display   = which === 'input'   ? 'block' : 'none'
+  document.getElementById('mullins-loading').style.display = which === 'loading' ? 'block' : 'none'
+  document.getElementById('mullins-result').style.display  = which === 'result'  ? 'block' : 'none'
+}
+async function runMullins() {
+  const text = (document.getElementById('mullins-dx').value || '').trim()
+  if (!text) return
+  showMullins('loading')
+  const steps = ['Placing structures…', 'Harmonizing line-art…']
+  let i = 0
+  const stepEl = document.getElementById('mullins-step')
+  stepEl.textContent = steps[0]
+  const tick = setInterval(() => { i = (i + 1) % steps.length; stepEl.textContent = steps[i] }, 2500)
+  try {
+    const res = await fetch('/api/mullins', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ text })
+    })
+    if (!res.ok) throw new Error('Server error ' + res.status)
+    const data = await res.json()
+    clearInterval(tick)
+    mullinsResult = data
+    document.getElementById('mullins-img').src = 'data:image/png;base64,' + data.image_b64
+    document.getElementById('mullins-caption').textContent =
+      (data.base_name || '') + (data.harmonized ? '' : '  ·  draft preview (harmonizer offline)')
+    const chips = (data.findings && data.findings.length) ? data.findings : ['Normal']
+    document.getElementById('mullins-chips').innerHTML =
+      chips.map(c => '<span class="chip">' + c + '</span>').join('')
+    showMullins('result')
+  } catch (e) {
+    clearInterval(tick)
+    alert('Could not generate diagram: ' + e.message)
+    showMullins('input')
+  }
+}
+function saveMullins() {
+  if (!mullinsResult) return
+  const a = document.createElement('a')
+  a.href = 'data:image/png;base64,' + mullinsResult.image_b64
+  a.download = (mullinsResult.base_id || 'mullins') + '.png'
+  a.click()
+}
+async function shareMullins() {
+  if (!mullinsResult) return
+  try {
+    const blob = await (await fetch('data:image/png;base64,' + mullinsResult.image_b64)).blob()
+    const file = new File([blob], 'mullins.png', { type: 'image/png' })
+    if (navigator.canShare && navigator.canShare({ files: [file] })) {
+      await navigator.share({ files: [file] })
+    } else { saveMullins() }
+  } catch (e) { saveMullins() }
+}
+// Carry the generated diagram into the sats/pressures report flow.
+async function useMullinsDiagram() {
+  if (!mullinsResult) return
+  if (!hemoText.trim()) {
+    alert('Enter hemodynamic data first (use "Type Values" on the data screen), then generate.')
+    return
+  }
+  goTo('s-output')
+  document.getElementById('output-loading').style.display = 'block'
+  document.getElementById('output-error').style.display = 'none'
+  document.getElementById('output-result').style.display = 'none'
+  try {
+    const patientData = JSON.parse(localStorage.getItem('patientDefaults') || '{}')
+    const res = await fetch('/api/report_generated', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        hemo_text: hemoText,
+        image_b64: mullinsResult.image_b64,
+        base_id: mullinsResult.base_id || '',
+        added_donors: mullinsResult.added_donors || [],
+        anatomy_type: mullinsResult.anatomy_type || 'biventricle',
+        location_set: mullinsResult.location_set || 'standard_biventricle',
+        patient_data: {
+          hgb: patientData.hgb != null ? patientData.hgb : null,
+          avo2: patientData.avo2 != null ? patientData.avo2 : null,
+          anesthesia: patientData.anesthesia || 'general anesthesia',
+          fio2: '21%'
+        }
+      })
+    })
+    const data = await res.json()
+    if (!res.ok) throw new Error(data.detail || 'Report generation failed')
+    lastResult = data
+    renderOutput(data)
+  } catch (e) {
+    document.getElementById('output-loading').style.display = 'none'
+    document.getElementById('output-error').style.display = 'block'
+    document.getElementById('output-error-msg').textContent = e.message
+  }
+}
 
 // ── Screen navigation ──────────────────────────────────────────────────
 // Every screen change also pushes a history entry, so the phone's own Back

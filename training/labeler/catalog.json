@@ -1,0 +1,53 @@
+{
+  "canvas": 512,
+  "background": "#000000",
+  "groups": {
+    "Chambers": [
+      { "short": "RA", "full": "Right atrium",     "color": "#d64545" },
+      { "short": "RV", "full": "Right ventricle",  "color": "#e8862e" },
+      { "short": "LA", "full": "Left atrium",      "color": "#e36aa8" },
+      { "short": "LV", "full": "Left ventricle",   "color": "#9b3fb5" }
+    ],
+    "Systemic arterial": [
+      { "short": "AAo",  "full": "Ascending aorta",  "color": "#b01e1e" },
+      { "short": "Arch", "full": "Aortic arch",      "color": "#c43c2e" },
+      { "short": "DAo",  "full": "Descending aorta", "color": "#7a1f1a" },
+      { "short": "H&N",  "full": "Head & neck vessels", "color": "#e07a5f" },
+      { "short": "Truncus", "full": "Truncus arteriosus", "color": "#a83232" }
+    ],
+    "Pulmonary arterial": [
+      { "short": "MPA", "full": "Main pulmonary artery",  "color": "#2e74b5" },
+      { "short": "RPA", "full": "Right pulmonary artery", "color": "#3aa0d8" },
+      { "short": "LPA", "full": "Left pulmonary artery",  "color": "#5ac3e8" }
+    ],
+    "Systemic venous": [
+      { "short": "SVC", "full": "Superior vena cava", "color": "#6c3483" },
+      { "short": "IVC", "full": "Inferior vena cava", "color": "#5b2c6f" },
+      { "short": "CS",  "full": "Coronary sinus",     "color": "#8e6fb0" }
+    ],
+    "Pulmonary venous": [
+      { "short": "PVs", "full": "Pulmonary veins",     "color": "#48c9b0" },
+      { "short": "PVC", "full": "Pulmonary venous confluence", "color": "#1abc9c" }
+    ],
+    "Valves": [
+      { "short": "TV",  "full": "Tricuspid valve", "color": "#1e8449" },
+      { "short": "MV",  "full": "Mitral valve",    "color": "#28b463" },
+      { "short": "AoV", "full": "Aortic valve",    "color": "#7dcea0" },
+      { "short": "PV",  "full": "Pulmonary valve", "color": "#52be80" }
+    ],
+    "Septa & defects": [
+      { "short": "IAS", "full": "Interatrial septum",       "color": "#95a5a6" },
+      { "short": "IVS", "full": "Interventricular septum",  "color": "#5d6d7e" },
+      { "short": "VSD", "full": "Ventricular septal defect", "color": "#f4d03f" },
+      { "short": "ASD", "full": "Atrial septal defect",      "color": "#f5b041" }
+    ],
+    "Shunts / conduits / devices": [
+      { "short": "PDA",     "full": "Patent ductus arteriosus",  "color": "#f9e79f" },
+      { "short": "Shunt",   "full": "Surgical shunt (BT/central)", "color": "#dc7633" },
+      { "short": "Conduit", "full": "RV-PA conduit",             "color": "#ca6f1e" },
+      { "short": "Band",    "full": "PA band",                   "color": "#935116" },
+      { "short": "Stent",   "full": "Stent",                     "color": "#717d7e" },
+      { "short": "Device",  "full": "Occluder device",           "color": "#909497" }
+    ]
+  }
+}

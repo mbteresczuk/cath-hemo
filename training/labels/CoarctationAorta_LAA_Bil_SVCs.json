@@ -1,0 +1,17 @@
+{
+  "id": "CoarctationAorta_LAA_Bil_SVCs",
+  "customs": [
+    {
+      "name": "Bicuspid valve",
+      "color": "#031e49"
+    },
+    {
+      "name": "LSVC_CS",
+      "color": "#779fdf"
+    },
+    {
+      "name": "coarc_repair",
+      "color": "#22c368"
+    }
+  ]
+}

@@ -1,0 +1,13 @@
+{
+  "id": "PA_IVS_with_PDA",
+  "customs": [
+    {
+      "name": "Hypoplastic RV",
+      "color": "#fd3908"
+    },
+    {
+      "name": "Pulmonary atresia",
+      "color": "#1c871e"
+    }
+  ]
+}

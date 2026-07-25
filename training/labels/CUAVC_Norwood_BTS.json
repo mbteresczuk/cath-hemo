@@ -1,0 +1,21 @@
+{
+  "id": "CUAVC_Norwood_BTS",
+  "customs": [
+    {
+      "name": "AV valve",
+      "color": "#316a87"
+    },
+    {
+      "name": "DKS",
+      "color": "#dd9c98"
+    },
+    {
+      "name": "BTT shunt",
+      "color": "#9293c4"
+    },
+    {
+      "name": "Hypoplastic LV",
+      "color": "#2c814a"
+    }
+  ]
+}

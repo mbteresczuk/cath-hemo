@@ -1,0 +1,21 @@
+{
+  "id": "PA_IVS_LTFF",
+  "customs": [
+    {
+      "name": "Glenn",
+      "color": "#1c4587"
+    },
+    {
+      "name": "Pulmonary atresia",
+      "color": "#1c871e"
+    },
+    {
+      "name": "Hypoplastic RV",
+      "color": "#fd3908"
+    },
+    {
+      "name": "Lateral tunnel Fontan",
+      "color": "#f109de"
+    }
+  ]
+}

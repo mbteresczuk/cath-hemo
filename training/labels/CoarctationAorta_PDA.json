@@ -1,0 +1,13 @@
+{
+  "id": "CoarctationAorta_PDA",
+  "customs": [
+    {
+      "name": "coarctation",
+      "color": "#22c368"
+    },
+    {
+      "name": "PDA",
+      "color": "#b0c322"
+    }
+  ]
+}

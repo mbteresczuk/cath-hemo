@@ -1,0 +1,25 @@
+{
+  "id": "HLHS_MS_AS_NORWOOD_ECFF",
+  "customs": [
+    {
+      "name": "Glenn",
+      "color": "#203db1"
+    },
+    {
+      "name": "DKS",
+      "color": "#dd9c98"
+    },
+    {
+      "name": "Fenestration",
+      "color": "#f9f57b"
+    },
+    {
+      "name": "Fontan pathway",
+      "color": "#f109de"
+    },
+    {
+      "name": "HLHS MS AA",
+      "color": "#be5b50"
+    }
+  ]
+}

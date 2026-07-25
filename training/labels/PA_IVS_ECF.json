@@ -1,0 +1,30 @@
+{
+  "id": "PA_IVS_ECF",
+  "customs": [
+    {
+      "name": "Glenn",
+      "color": "#203db1",
+      "_conflict": null
+    },
+    {
+      "name": "Fontan pathway",
+      "color": "#f109de",
+      "_conflict": null
+    },
+    {
+      "name": "Fenestration",
+      "color": "#f9f57b",
+      "_conflict": null
+    },
+    {
+      "name": "Hypoplastic RV",
+      "color": "#fd3908",
+      "_conflict": null
+    },
+    {
+      "name": "Pulmonary atresia",
+      "color": "#1c871e",
+      "_conflict": null
+    }
+  ]
+}

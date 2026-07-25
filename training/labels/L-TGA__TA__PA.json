@@ -1,0 +1,25 @@
+{
+  "id": "L-TGA__TA__PA",
+  "customs": [
+    {
+      "name": "BTT shunt",
+      "color": "#9293c4"
+    },
+    {
+      "name": "Tricuspid atresia",
+      "color": "#2235c3"
+    },
+    {
+      "name": "Hypoplastic RV",
+      "color": "#fd3908"
+    },
+    {
+      "name": "LSVC_CS",
+      "color": "#779fdf"
+    },
+    {
+      "name": "Pulmonary atresia",
+      "color": "#1c871e"
+    }
+  ]
+}

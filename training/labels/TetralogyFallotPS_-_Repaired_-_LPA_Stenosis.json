@@ -1,0 +1,20 @@
+{
+  "id": "TetralogyFallotPS_-_Repaired_-_LPA_Stenosis",
+  "customs": [
+    {
+      "name": "VSD_closure",
+      "color": "#2b5dbf",
+      "_conflict": null
+    },
+    {
+      "name": "transannular patch",
+      "color": "#78e60a",
+      "_conflict": null
+    },
+    {
+      "name": "LPA stenosis",
+      "color": "#2a307e",
+      "_conflict": null
+    }
+  ]
+}

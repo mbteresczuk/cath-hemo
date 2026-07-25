@@ -1,0 +1,21 @@
+{
+  "id": "ToF__Absent_PV",
+  "customs": [
+    {
+      "name": "Anterior Malalignment",
+      "color": "#0a0f52"
+    },
+    {
+      "name": "Dilated MPA",
+      "color": "#0a5212"
+    },
+    {
+      "name": "Dilated LPA",
+      "color": "#0a524d"
+    },
+    {
+      "name": "Dilated RPA",
+      "color": "#275451"
+    }
+  ]
+}

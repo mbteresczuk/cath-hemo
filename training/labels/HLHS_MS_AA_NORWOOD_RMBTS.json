@@ -1,0 +1,17 @@
+{
+  "id": "HLHS_MS_AA_NORWOOD_RMBTS",
+  "customs": [
+    {
+      "name": "BTT shunt",
+      "color": "#9293c4"
+    },
+    {
+      "name": "DKS",
+      "color": "#dd9c98"
+    },
+    {
+      "name": "HLHS MS AA",
+      "color": "#be5b50"
+    }
+  ]
+}

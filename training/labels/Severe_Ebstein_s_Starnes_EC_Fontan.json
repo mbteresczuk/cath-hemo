@@ -1,0 +1,17 @@
+{
+  "id": "Severe_Ebstein_s_Starnes_EC_Fontan",
+  "customs": [
+    {
+      "name": "Glenn",
+      "color": "#203db1"
+    },
+    {
+      "name": "Fontan pathway",
+      "color": "#f109de"
+    },
+    {
+      "name": "Ebstein_Starnes_RA_RV",
+      "color": "#9a84a4"
+    }
+  ]
+}

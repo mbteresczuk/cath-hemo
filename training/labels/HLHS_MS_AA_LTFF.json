@@ -1,0 +1,25 @@
+{
+  "id": "HLHS_MS_AA_LTFF",
+  "customs": [
+    {
+      "name": "Glenn",
+      "color": "#203db1"
+    },
+    {
+      "name": "HLHS MS AA",
+      "color": "#be5b50"
+    },
+    {
+      "name": "DKS",
+      "color": "#dd9c98"
+    },
+    {
+      "name": "Lateral tunnel Fontan",
+      "color": "#f109de"
+    },
+    {
+      "name": "Fenestration",
+      "color": "#f9f57b"
+    }
+  ]
+}

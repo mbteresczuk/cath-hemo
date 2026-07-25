@@ -1,0 +1,13 @@
+{
+  "id": "TAPVR_supracardiac",
+  "customs": [
+    {
+      "name": "Vertical vein",
+      "color": "#272959"
+    },
+    {
+      "name": "Bridging vein",
+      "color": "#096c58"
+    }
+  ]
+}

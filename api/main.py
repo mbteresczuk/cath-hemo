@@ -315,6 +315,142 @@ def generate_report(req: ReportRequest):
     }
 
 
+# ── Mullins diagram generator (text -> diagram) ───────────────────────────────
+
+class MullinsRequest(BaseModel):
+    text: str
+    scale: float = 0.9
+    res: int = 1024
+
+
+@app.post("/api/mullins")
+def generate_mullins(req: MullinsRequest):
+    """
+    Generate a Mullins diagram from a free-text diagnosis.
+
+    Pipeline: select_base + place (CPU, here) -> harmonize (Modal GPU, remote).
+    If MULLINS_HARMONIZE_URL is unset or the GPU call fails, the raw placed draft
+    is returned (harmonized=false) so the feature still works for testing.
+    """
+    from utils.mullins_generate import generate
+
+    result = generate(req.text)
+    draft_b64 = image_to_base64(result["image"])
+
+    image_b64 = draft_b64
+    harmonized = False
+    harmonize_url = os.environ.get("MULLINS_HARMONIZE_URL", "").strip()
+    if harmonize_url:
+        import json as _json
+        import urllib.request
+        try:
+            payload = _json.dumps({
+                "draft_b64": draft_b64, "scale": req.scale, "res": req.res,
+            }).encode()
+            rq = urllib.request.Request(
+                harmonize_url, data=payload,
+                headers={"Content-Type": "application/json"})
+            with urllib.request.urlopen(rq, timeout=240) as resp:
+                image_b64 = _json.loads(resp.read())["image_b64"]
+                harmonized = True
+        except Exception as e:  # noqa: BLE001 - degrade gracefully to the draft
+            print(f"[mullins] harmonize call failed, returning draft: {e}")
+
+    return {
+        "image_b64": image_b64,
+        "harmonized": harmonized,
+        "base_id": result["base_id"],
+        "base_name": result["base_name"],
+        "findings": result["findings"],
+        "added": result["added"],
+        "added_donors": result["added_donors"],
+        "base_id": result["base_id"],
+        "anatomy_type": result["anatomy_type"],
+        "location_set": result["location_set"],
+    }
+
+
+class GeneratedReportRequest(BaseModel):
+    hemo_text: str
+    image_b64: str                          # the generated diagram PNG (base64)
+    base_id: str = ""                       # base diagram — its coords are reused
+    added_donors: List[str] = []            # donors whose added-structure coords tag along
+    anatomy_type: str = "biventricle"
+    location_set: str = "standard_biventricle"
+    patient_data: PatientData = PatientData()
+    extra_locations: Optional[List[str]] = None
+
+
+@app.post("/api/report_generated")
+def generate_report_on_generated(req: GeneratedReportRequest):
+    """
+    Place sats/pressures on a GENERATED diagram (not a library diagram).
+
+    Coords are auto-configured for the image itself (content detection keyed by
+    location_set), so a freshly generated diagram flows into the same report
+    pipeline as a picked one.
+    """
+    import base64
+    import io as _io
+    import tempfile
+
+    from PIL import Image as _PILImage
+
+    img = _PILImage.open(_io.BytesIO(base64.b64decode(req.image_b64))).convert("RGB")
+    w, h = img.size
+    with tempfile.NamedTemporaryFile(suffix=".png", delete=False) as tf:
+        img.save(tf.name)
+        tmp_path = tf.name
+
+    hemodynamics = parse_hemodynamics(req.hemo_text, extra_locations=req.extra_locations)
+    meta = parse_metadata(req.hemo_text)
+    patient_data = {
+        "name": req.patient_data.name, "mrn": req.patient_data.mrn, "dob": req.patient_data.dob,
+        "hgb":  req.patient_data.hgb  if req.patient_data.hgb  is not None else meta.get("hgb"),
+        "avo2": req.patient_data.avo2 if req.patient_data.avo2 is not None else meta.get("avo2"),
+        "anesthesia": req.patient_data.anesthesia, "fio2": req.patient_data.fio2,
+        "anatomy_type": req.anatomy_type,
+    }
+    calcs = calculate_all(hemodynamics, patient_data)
+    step_ups = detect_step_ups(hemodynamics)
+    narrative = generate_hemodynamic_narrative(hemodynamics, calcs, patient_data, step_ups)
+
+    # Coordinates: reuse the BASE diagram's hand-tuned coords (the generated image
+    # keeps the base's layout), then bring along coords for any added structures
+    # from their donor diagrams. Only auto-configure if the base has none.
+    coords = load_coords(req.base_id) if req.base_id else None
+    if coords:
+        base_locs = coords.setdefault("locations", {})
+        for donor in req.added_donors:
+            dc = load_coords(donor)
+            if not dc:
+                continue
+            for loc, val in dc.get("locations", {}).items():
+                base_locs.setdefault(loc, val)   # add donor's new sampling sites
+    else:
+        coords = auto_configure("generated", w, h, req.anatomy_type, req.location_set,
+                                image_path=tmp_path)
+    try:
+        annotated = annotate_diagram(tmp_path, coords, hemodynamics,
+                                     anatomy_type=req.anatomy_type)
+        image_out = image_to_base64(annotated)
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Annotation failed: {e}")
+    finally:
+        try:
+            os.remove(tmp_path)
+        except OSError:
+            pass
+
+    return {
+        "annotated_image_b64": image_out,
+        "narrative": narrative,
+        "calculations": {k: v for k, v in calcs.items()} if calcs else {},
+        "step_ups": step_ups,
+        "parsed": hemodynamics,
+    }
+
+
 @app.get("/api/coords/{diagram_id}")
 def get_coords(diagram_id: str):
     """Return annotation coords for a diagram (or empty locations if not configured)."""

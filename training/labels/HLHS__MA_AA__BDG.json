@@ -1,0 +1,25 @@
+{
+  "id": "HLHS__MA_AA__BDG",
+  "customs": [
+    {
+      "name": "Atrial septectomy",
+      "color": "#20b166"
+    },
+    {
+      "name": "HLHS MA AA",
+      "color": "#91b120"
+    },
+    {
+      "name": "Glenn",
+      "color": "#203db1"
+    },
+    {
+      "name": "SVC stump",
+      "color": "#1d2234"
+    },
+    {
+      "name": "DKS",
+      "color": "#dd9c98"
+    }
+  ]
+}

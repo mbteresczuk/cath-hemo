@@ -1,0 +1,10 @@
+{
+  "id": "CAVC_balanced",
+  "customs": [
+    {
+      "name": "complete balanced AV canal",
+      "color": "#d637e1",
+      "_conflict": null
+    }
+  ]
+}

@@ -1,0 +1,17 @@
+{
+  "id": "PA_IVS_rmBT_shunt",
+  "customs": [
+    {
+      "name": "Hypoplastic RV",
+      "color": "#fd3908"
+    },
+    {
+      "name": "BTT shunt",
+      "color": "#9293c4"
+    },
+    {
+      "name": "Pulmonary atresia",
+      "color": "#1c871e"
+    }
+  ]
+}

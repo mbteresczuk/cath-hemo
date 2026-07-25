@@ -1,0 +1,13 @@
+{
+  "id": "ToF__PS",
+  "customs": [
+    {
+      "name": "Pulmonary stenosis",
+      "color": "#22c34b"
+    },
+    {
+      "name": "Anterior Malalignment",
+      "color": "#0a0f52"
+    }
+  ]
+}

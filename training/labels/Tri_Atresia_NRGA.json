@@ -1,0 +1,13 @@
+{
+  "id": "Tri_Atresia_NRGA",
+  "customs": [
+    {
+      "name": "Tricuspid atresia",
+      "color": "#2235c3"
+    },
+    {
+      "name": "Hypoplastic RV",
+      "color": "#c33b22"
+    }
+  ]
+}
