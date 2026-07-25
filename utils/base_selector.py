@@ -91,10 +91,16 @@ SURGICAL = {
 }
 
 
+# Connective/filler words that must not contribute to matching ("ASD and VSD"
+# should not match "Valvar AND subvalvar ... without VSD" on the word "and").
+STOP = {"and", "with", "the", "of", "a", "to", "in", "on", "for", "s", "p", "without"}
+
+
 def _score(diag_norm, raw_tokens, e) -> float:
     """Score one base against a normalized diagnosis (substrate + segmental)."""
-    dwords = set(diag_norm.split())
+    dwords = set(diag_norm.split()) - STOP
     twords = e["text_tokens"]
+    raw_tokens = raw_tokens - STOP
     score = len(dwords & twords) * 3                      # word overlap
     for kw, bonus in STRONG_KEYWORDS.items():             # strong category cues
         if kw in diag_norm and kw in e["text_norm"]:
@@ -110,7 +116,7 @@ def _score(diag_norm, raw_tokens, e) -> float:
     score -= 4 * len((twords & SURGICAL) - dwords)
     # Penalize extra specificity generally: base tokens beyond the query are
     # unrequested detail, so a simpler exact match wins.
-    score -= 0.6 * len(twords - dwords - {"the", "of", "with", "and", "a"})
+    score -= 0.6 * len(twords - dwords - STOP)
     return score
 
 

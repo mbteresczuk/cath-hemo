@@ -340,7 +340,10 @@ def generate_mullins(req: MullinsRequest):
     image_b64 = draft_b64
     harmonized = False
     harmonize_url = os.environ.get("MULLINS_HARMONIZE_URL", "").strip()
-    if harmonize_url:
+    # Only harmonize when we actually COMPOSED something (added features leave
+    # rough seams worth smoothing). If the base drawing is used as-is, it is
+    # already a clean, accurate Mullins diagram — harmonizing only degrades it.
+    if harmonize_url and result["added"]:
         import json as _json
         import urllib.request
         try:
