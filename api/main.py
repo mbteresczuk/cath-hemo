@@ -340,10 +340,12 @@ def generate_mullins(req: MullinsRequest):
     image_b64 = draft_b64
     harmonized = False
     harmonize_url = os.environ.get("MULLINS_HARMONIZE_URL", "").strip()
-    # Only harmonize when we actually COMPOSED something (added features leave
-    # rough seams worth smoothing). If the base drawing is used as-is, it is
-    # already a clean, accurate Mullins diagram — harmonizing only degrades it.
-    if harmonize_url and result["added"]:
+    # Diffusion harmonization is OFF by default: it degrades anatomic accuracy.
+    # We return real drawings (base as-is, or composed from real parts). Set
+    # MULLINS_HARMONIZE_ENABLED=1 to re-enable smoothing of composed drafts once
+    # the harmonizer is trusted. Even enabled, it only runs on composed diagrams.
+    harmonize_on = os.environ.get("MULLINS_HARMONIZE_ENABLED", "").strip().lower() in ("1", "true", "yes")
+    if harmonize_url and harmonize_on and result["added"]:
         import json as _json
         import urllib.request
         try:

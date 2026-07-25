@@ -95,6 +95,10 @@ SURGICAL = {
 # should not match "Valvar AND subvalvar ... without VSD" on the word "and").
 STOP = {"and", "with", "the", "of", "a", "to", "in", "on", "for", "s", "p", "without"}
 
+# Severe anatomic variants — prefer the canonical (less severe) form when the
+# query does not explicitly ask for them.
+SEVERITY = {"atresia", "absent", "interrupted", "hypoplasia", "hypoplastic"}
+
 
 def _score(diag_norm, raw_tokens, e) -> float:
     """Score one base against a normalized diagnosis (substrate + segmental)."""
@@ -114,6 +118,9 @@ def _score(diag_norm, raw_tokens, e) -> float:
     # Penalize surgical/palliation modifiers the query didn't ask for, so the
     # canonical lesion beats its "s/p repair" cousins.
     score -= 4 * len((twords & SURGICAL) - dwords)
+    # Bias away from SEVERE anatomic variants the query didn't ask for, so plain
+    # "tetralogy of Fallot" defaults to ToF/PS, not ToF/pulmonary atresia.
+    score -= 3 * len((twords & SEVERITY) - dwords)
     # Penalize extra specificity generally: base tokens beyond the query are
     # unrequested detail, so a simpler exact match wins.
     score -= 0.6 * len(twords - dwords - STOP)
