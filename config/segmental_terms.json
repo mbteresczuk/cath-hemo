@@ -1,0 +1,106 @@
+{
+  "_meta": {
+    "purpose": "Clinical term -> segmental FIELD VALUE. This is nomenclature, not a lesion table: one entry per term, and every value must already exist in the closed vocabulary of config/segmental_schema.json. It is the piece a textbook supplies — how the words map onto the taxonomy.",
+    "not_a_lesion_table": "Entries name a finding or a modifier, never a diagnosis-to-anatomy bundle. 'tetralogy' is deliberately absent: it is a NAME for a combination of findings, and combinations are read off the words present, not looked up.",
+    "defaults": "Where a term is ambiguous the most common form is used and flagged with `default: true` so the clinician can see and override it. A default is a clinical judgement and needs review.",
+    "source": "TBD — textbook citation for the nomenclature"
+  },
+
+  "terms": {
+    "dextrocardia":        {"aliases": ["dextrocardia"], "set": {"cardiac_position": "dextrocardia"}},
+    "levocardia":          {"aliases": ["levocardia"], "set": {"cardiac_position": "levocardia"}},
+    "mesocardia":          {"aliases": ["mesocardia"], "set": {"cardiac_position": "mesocardia"}},
+    "situs inversus":      {"aliases": ["situs inversus", "inversus"], "set": {"situs": "inversus"}},
+    "heterotaxy":          {"aliases": ["heterotaxy", "isomerism"], "set": {"situs": "ambiguous-right-isomerism"}, "default": true},
+
+    "right aortic arch":   {"aliases": ["right aortic arch", "raa"], "set": {"great_arteries.arch_side": "right"}},
+    "left aortic arch":    {"aliases": ["left aortic arch", "laa"], "set": {"great_arteries.arch_side": "left"}},
+    "double aortic arch":  {"aliases": ["double aortic arch"], "set": {"great_arteries.arch_side": "double"}},
+    "mirror image branching": {"aliases": ["mirror image branching", "mib", "mirror branching"], "set": {"great_arteries.arch_branching": "mirror-image"}},
+    "aberrant right subclavian": {"aliases": ["aberrant rsca", "aberrant right sca"], "set": {"great_arteries.arch_branching": "aberrant-right-SCA"}},
+    "aberrant left subclavian":  {"aliases": ["aberrant lsca", "aberrant left sca"], "set": {"great_arteries.arch_branching": "aberrant-left-SCA"}},
+
+    "coarctation":         {"aliases": ["coarctation", "coarc", "coa"], "set": {"great_arteries.coarctation": "present"}},
+    "re-coarctation":      {"aliases": ["re-coarctation", "recoarctation"], "set": {"great_arteries.coarctation": "re-coarctation"}},
+    "arch hypoplasia":     {"aliases": ["arch hypoplasia", "hypoplastic arch"], "set": {"great_arteries.arch_hypoplasia": "present"}},
+    "interrupted aortic arch": {"aliases": ["interrupted aortic arch", "iaa"], "set": {"great_arteries.interruption": "type-B"}, "default": true},
+
+    "patent ductus":       {"aliases": ["pda", "patent ductus arteriosus", "patent ductus"], "set": {"great_arteries.ductus": "patent"}},
+    "bilateral ductus":    {"aliases": ["bilateral pda", "bilateral ductus"], "set": {"great_arteries.ductus": "bilateral"}},
+    "ductal stent":        {"aliases": ["pda stent", "ductal stent"], "set": {"great_arteries.ductus": "stented"}},
+
+    "atrial septal defect":  {"aliases": ["asd", "atrial septal defect", "secundum asd"], "set": {"atria.septum": "secundum"}, "default": true},
+    "primum asd":            {"aliases": ["primum asd", "primum"], "set": {"atria.septum": "primum"}},
+    "sinus venosus defect":  {"aliases": ["sinus venosus"], "set": {"atria.septum": "sinus-venosus"}},
+    "patent foramen":        {"aliases": ["pfo", "patent foramen ovale"], "set": {"atria.septum": "PFO"}},
+    "common atrium":         {"aliases": ["common atrium", "single atrium"], "set": {"atria.septum": "common-atrium"}},
+    "intact atrial septum":  {"aliases": ["intact atrial septum", "septa intact", "septae intact"], "set": {"atria.septum": "intact"}},
+
+    "ventricular septal defect": {"aliases": ["vsd", "ventricular septal defect"], "set": {"ventricles.septum": "perimembranous"}, "default": true},
+    "muscular vsd":          {"aliases": ["muscular vsd", "multiple muscular"], "set": {"ventricles.septum": "muscular"}},
+    "inlet vsd":             {"aliases": ["inlet vsd"], "set": {"ventricles.septum": "inlet"}},
+    "anterior malalignment": {"aliases": ["anterior malalignment", "ant mal vsd", "anterior malalignment vsd"], "set": {"ventricles.septum": "outlet-malalignment-anterior"}},
+    "posterior malalignment":{"aliases": ["posterior malalignment"], "set": {"ventricles.septum": "outlet-malalignment-posterior"}},
+    "intact ventricular septum": {"aliases": ["ivs", "intact ventricular septum"], "set": {"ventricles.septum": "intact"}},
+
+    "double outlet right ventricle": {"aliases": ["dorv", "double outlet right ventricle"], "set": {"va_connections.type": "double-outlet-RV", "va_connections.aorta_from": "mRV", "va_connections.pa_from": "mRV"}},
+    "double outlet left ventricle":  {"aliases": ["dolv", "double outlet left ventricle"], "set": {"va_connections.type": "double-outlet-LV", "va_connections.aorta_from": "mLV", "va_connections.pa_from": "mLV"}},
+    "truncus arteriosus":    {"aliases": ["truncus arteriosus", "truncus", "common arterial trunk"], "set": {"va_connections.type": "single-outlet-truncus", "va_connections.aorta_from": "trunk", "va_connections.pa_from": "trunk", "va_connections.truncal_valve": "normal"}},
+
+    "pulmonary stenosis":   {"aliases": ["pulmonary stenosis", "pulmonic stenosis", "ps", "valvar ps"], "set": {"va_connections.pulmonary_valve": "stenotic"}},
+    "pulmonary atresia":    {"aliases": ["pulmonary atresia", "pulm atresia"], "set": {"va_connections.pulmonary_valve": "atretic"}},
+    "subpulmonary stenosis":{"aliases": ["subpulmonic stenosis", "sub ps", "subps", "subpulmonary stenosis"], "set": {"va_connections.subpulmonary": "obstruction"}},
+    "absent pulmonary valve": {"aliases": ["absent pulmonary valve", "apv"], "set": {"va_connections.pulmonary_valve": "absent"}},
+    "aortic stenosis":      {"aliases": ["aortic stenosis", "valvar as"], "set": {"va_connections.aortic_valve": "stenotic"}},
+    "aortic atresia":       {"aliases": ["aortic atresia"], "set": {"va_connections.aortic_valve": "atretic"}},
+    "bicuspid aortic valve":{"aliases": ["bicuspid av", "bicuspid aortic valve"], "set": {"va_connections.aortic_valve": "bicuspid"}},
+    "subaortic obstruction":{"aliases": ["subaortic membrane", "subaortic obstruction", "subaortic stenosis"], "set": {"va_connections.subaortic": "obstruction"}},
+
+    "tricuspid atresia":    {"aliases": ["tricuspid atresia"], "set": {"av_connections.type": "absent-right", "av_connections.right_side.state": "atretic"}},
+    "mitral atresia":       {"aliases": ["mitral atresia"], "set": {"av_connections.type": "absent-left", "av_connections.left_side.state": "atretic"}},
+    "tricuspid stenosis":   {"aliases": ["tricuspid stenosis", "tv stenosis"], "set": {"av_connections.right_side.state": "stenotic"}},
+    "mitral stenosis":      {"aliases": ["mitral stenosis"], "set": {"av_connections.left_side.state": "stenotic"}},
+    "ebstein":              {"aliases": ["ebstein", "ebstein anomaly"], "set": {"av_connections.right_side.state": "apically-displaced"}},
+    "common av valve":      {"aliases": ["complete av canal", "cavc", "complete avsd", "av canal", "avsd", "common av valve"], "set": {"av_connections.type": "common", "av_connections.right_side.valve": "common", "av_connections.left_side.valve": "common", "atria.septum": "primum", "ventricles.septum": "inlet"}},
+    "double inlet":         {"aliases": ["double inlet", "dilv", "div"], "set": {"av_connections.type": "double-inlet"}},
+
+    "hypoplastic right ventricle": {"aliases": ["hypoplastic rv", "small rv", "rv hypoplasia"], "set": {"ventricles.morphologic_RV.size": "hypoplastic"}},
+    "hypoplastic left ventricle":  {"aliases": ["hypoplastic lv", "small lv", "lv hypoplasia"], "set": {"ventricles.morphologic_LV.size": "hypoplastic"}},
+
+    "left svc to coronary sinus": {"aliases": ["lsvc to cs", "lsvc to coronary sinus", "left svc to cs"], "set": {"atria.systemic_veins.left_SVC": "to-coronary-sinus"}},
+    "bilateral svc":        {"aliases": ["bilateral svc", "bilateral svcs", "bil svcs"], "set": {"atria.systemic_veins.left_SVC": "to-coronary-sinus"}, "default": true},
+    "interrupted ivc":      {"aliases": ["ivc interrupted", "interrupted ivc"], "set": {"atria.systemic_veins.IVC": "interrupted"}},
+    "unroofed coronary sinus": {"aliases": ["unroofed coronary sinus"], "set": {"atria.systemic_veins.coronary_sinus": "unroofed"}},
+
+    "total anomalous supracardiac": {"aliases": ["tapvr supracardiac", "supracardiac tapvc", "tapvc supracardiac"], "set": {"atria.pulmonary_veins": "total-anomalous-supracardiac"}},
+    "total anomalous infracardiac": {"aliases": ["tapvr infracardiac", "infracardiac tapvc"], "set": {"atria.pulmonary_veins": "total-anomalous-infracardiac"}},
+    "total anomalous cardiac":      {"aliases": ["tapvr to ra", "tapvc to ra", "cardiac tapvc"], "set": {"atria.pulmonary_veins": "total-anomalous-cardiac"}},
+    "total anomalous mixed":        {"aliases": ["tapvr mixed", "mixed tapvc"], "set": {"atria.pulmonary_veins": "total-anomalous-mixed"}},
+    "partial anomalous":            {"aliases": ["papvr", "partial anomalous", "scimitar"], "set": {"atria.pulmonary_veins": "partial-anomalous"}},
+
+    "discontinuous pulmonary arteries": {"aliases": ["discontinuous branch pas", "discontinuous pulmonary arteries"], "set": {"great_arteries.pulmonary_arteries": "discontinuous"}},
+    "absent lpa":           {"aliases": ["absent lpa"], "set": {"great_arteries.pulmonary_arteries": "absent-LPA"}},
+    "absent rpa":           {"aliases": ["absent rpa"], "set": {"great_arteries.pulmonary_arteries": "absent-RPA"}},
+    "lpa stenosis":         {"aliases": ["lpa stenosis", "branch pa stenosis"], "set": {"great_arteries.branch_stenosis": "LPA"}},
+    "mapcas":               {"aliases": ["mapca", "mapcas"], "set": {"great_arteries.mapcas": "present"}},
+    "pa band":              {"aliases": ["pa band", "pa bands", "pab", "mpa band"], "set": {"great_arteries.mpa": "banded"}}
+  },
+
+  "interventions": {
+    "_note": "Recorded as an ordered list on the spec, each with the fields it changes. Surgery mutates the anatomy, so post-surgical hearts are DESCRIBED here rather than inferred from the lesion name.",
+    "vsd closure":       {"aliases": ["vsd closure", "vsd patch", "vsd closed"], "set": {"ventricles.septum": "surgically-closed"}},
+    "asd closure":       {"aliases": ["asd closure", "asd device", "asd closed"], "set": {"atria.septum": "surgically-closed"}},
+    "atrial septectomy": {"aliases": ["atrial septectomy", "septostomy", "septectomy"], "set": {"atria.septum": "septectomy"}},
+    "transannular patch":{"aliases": ["transannular patch", "tap"], "set": {"va_connections.pulmonary_valve": "absent", "va_connections.subpulmonary": "none"}},
+    "arterial switch":   {"aliases": ["arterial switch", "aso", "jatene", "lecompte"], "set": {"va_connections.type": "concordant", "va_connections.aorta_from": "mLV", "va_connections.pa_from": "mRV"}},
+    "coarctation repair":{"aliases": ["coarc repair", "coarctation repair", "arch repair"], "set": {"great_arteries.coarctation": "repaired"}},
+    "norwood":           {"aliases": ["norwood", "dks", "damus"], "set": {"great_arteries.ductus": "ligated"}},
+    "glenn":             {"aliases": ["glenn", "bdg", "bidirectional glenn", "hemifontan"], "set": {}},
+    "fontan":            {"aliases": ["fontan", "ecff", "ltff", "ecf", "extracardiac fontan", "lateral tunnel"], "set": {}},
+    "rv-pa conduit":     {"aliases": ["rv-pa conduit", "rv to pa conduit", "sano", "rastelli"], "set": {"va_connections.pulmonary_valve": "absent"}},
+    "systemic-pulmonary shunt": {"aliases": ["bt shunt", "bts", "mbts", "blalock", "central shunt", "potts"], "set": {"great_arteries.ductus": "ligated"}},
+    "pulmonary valve replacement": {"aliases": ["pvr", "pulmonary valve replacement"], "set": {"va_connections.pulmonary_valve": "normal"}},
+    "ross":              {"aliases": ["ross", "ross konno"], "set": {"va_connections.aortic_valve": "normal"}},
+    "warden":            {"aliases": ["warden"], "set": {}}
+  }
+}

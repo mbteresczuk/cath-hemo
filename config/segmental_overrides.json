@@ -1,0 +1,82 @@
+{
+  "ASD_VSD_PDA": {
+    "_field_notes": {},
+    "_findings": [],
+    "_interventions": [],
+    "_notes": "",
+    "_reviewed": true,
+    "atria.pulmonary_veins": "normal-to-LA",
+    "atria.systemic_veins.coronary_sinus": "normal",
+    "atria.systemic_veins.left_SVC": "absent",
+    "av_connections.left_side.state": "patent",
+    "av_connections.right_side.state": "patent",
+    "cardiac_position": "levocardia",
+    "great_arteries.arch_branching": "normal",
+    "great_arteries.arch_hypoplasia": "none",
+    "great_arteries.arch_side": "left",
+    "great_arteries.branch_stenosis": "none",
+    "great_arteries.coarctation": "none",
+    "great_arteries.interruption": "none",
+    "great_arteries.mapcas": "none",
+    "va_connections.aorta_from": "mLV",
+    "va_connections.aorta_vs_pa": "posterior-right",
+    "va_connections.aortic_valve": "normal",
+    "va_connections.pa_from": "mRV",
+    "va_connections.pulmonary_valve": "normal",
+    "va_connections.subaortic": "none",
+    "va_connections.subpulmonary": "none",
+    "va_connections.truncal_valve": "absent",
+    "va_connections.type": "concordant",
+    "ventricles.aortic_override_pct": "0-50",
+    "ventricles.morphologic_LV.size": "normal",
+    "ventricles.morphologic_RV.size": "normal"
+  },
+  "Cor_triatriatum": {
+    "_field_notes": {
+      "atria.pulmonary_veins": "veins drain to the proximal (upper) LA chamber, not directly to the true LA"
+    },
+    "_findings": [
+      {
+        "name": "LA membrane",
+        "note": "fibromuscular membrane divides the left atrium above the pulmonary venous entry; restrictive orifice"
+      }
+    ],
+    "_interventions": [],
+    "_notes": "Membrane is not representable in the closed vocabulary \u2014 recorded as an additional finding.",
+    "_reviewed": false
+  },
+  "ToF__PS": {
+    "_field_notes": {},
+    "_findings": [],
+    "_interventions": [],
+    "_notes": "",
+    "_reviewed": true,
+    "atria.pulmonary_veins": "normal-to-LA",
+    "atria.septum": "PFO",
+    "atria.systemic_veins.coronary_sinus": "normal",
+    "atria.systemic_veins.left_SVC": "absent",
+    "av_connections.left_side.state": "patent",
+    "av_connections.right_side.state": "patent",
+    "cardiac_position": "levocardia",
+    "great_arteries.arch_branching": "normal",
+    "great_arteries.arch_hypoplasia": "none",
+    "great_arteries.arch_side": "left",
+    "great_arteries.branch_stenosis": "none",
+    "great_arteries.coarctation": "none",
+    "great_arteries.ductus": "closed",
+    "great_arteries.interruption": "none",
+    "great_arteries.mapcas": "none",
+    "va_connections.aorta_from": "mLV",
+    "va_connections.aorta_vs_pa": "posterior-right",
+    "va_connections.aortic_valve": "normal",
+    "va_connections.pa_from": "mRV",
+    "va_connections.subaortic": "none",
+    "va_connections.subpulmonary": "obstruction",
+    "va_connections.truncal_valve": "absent",
+    "va_connections.type": "concordant",
+    "ventricles.aortic_override_pct": "50-100",
+    "ventricles.morphologic_LV.size": "normal",
+    "ventricles.morphologic_RV.size": "normal",
+    "ventricles.septum": "outlet-malalignment-anterior"
+  }
+}

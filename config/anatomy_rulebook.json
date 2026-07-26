@@ -1,0 +1,60 @@
+{
+  "_meta": {
+    "purpose": "Per-STRUCTURE placement only (host chambers + mode). There is deliberately no per-lesion section: diagnosis->anatomy is LEARNED from the painted corpus in utils/mullins_corpus.py, not declared here. Only 8 of the 87 structures need an entry; the rest fall through to name-token heuristics in mullins_segmap._placement(). Placement mode is itself derivable from where a donor's region sits relative to the septum and chambers, so this file should shrink further, not grow."
+  },
+  "components": {
+    "_note": "Placement per composable structure. The composer consults this first, then falls back to name-token heuristics. host=base chambers it occupies; mode=defect(keep small, sit on septum) | replace(area-match to host) | add(vessel over background).",
+    "VSD": {
+      "host": [
+        "IVS"
+      ],
+      "mode": "defect",
+      "note": "perimembranous default; a hole in the interventricular septum between the two ventricles"
+    },
+    "ASD": {
+      "host": [
+        "IAS"
+      ],
+      "mode": "defect",
+      "note": "secundum default; a hole in the interatrial septum"
+    },
+    "Ebsteins_RA_RV": {
+      "host": [
+        "RA",
+        "RV"
+      ],
+      "mode": "replace",
+      "note": "atrialized RV + enlarged RA"
+    },
+    "Tricuspid atresia": {
+      "host": [
+        "TV",
+        "RV"
+      ],
+      "mode": "replace",
+      "note": "absent tricuspid connection; hypoplastic RV"
+    },
+    "Hypoplastic RV": {
+      "host": [
+        "RV"
+      ],
+      "mode": "replace",
+      "note": ""
+    },
+    "Hypoplastic LV": {
+      "host": [
+        "LV"
+      ],
+      "mode": "replace",
+      "note": ""
+    },
+    "Pulmonary atresia": {
+      "host": [
+        "PV",
+        "MPA"
+      ],
+      "mode": "replace",
+      "note": ""
+    }
+  }
+}

@@ -1,0 +1,89 @@
+{
+  "_meta": {
+    "purpose": "The anatomy layer: a segmental description of a heart. Every field has a CLOSED vocabulary so a spec can be validated, compared field-by-field against another spec, and used to state what is ABSENT — which a list of structure names cannot do.",
+    "not_a_lesion_table": "There are deliberately no lesion entries here. This file defines the FIELDS and their ALLOWED VALUES — the taxonomy and nomenclature of the segmental approach (Van Praagh; Anderson). Individual hearts are described by filling these fields, and much of the filling is derivable from segmental notation by general rule (see utils/segmental.py).",
+    "unknown": "Every field defaults to 'unknown'. Unknown is a real, useful state: it means the description is incomplete and must not be silently assumed. Assuming D-loop by default is what produced a D-looped cc-TGA.",
+    "source": "TBD — textbook citation for the taxonomy itself, not per lesion"
+  },
+
+  "fields": {
+    "situs": {
+      "values": ["solitus", "inversus", "ambiguous-right-isomerism", "ambiguous-left-isomerism", "unknown"],
+      "note": "visceroatrial arrangement; first letter of the segmental set"
+    },
+    "cardiac_position": {
+      "values": ["levocardia", "dextrocardia", "mesocardia", "unknown"]
+    },
+
+    "atria.morphologic_RA.present": {"values": [true, false, "unknown"]},
+    "atria.morphologic_RA.side":    {"values": ["right", "left", "unknown"]},
+    "atria.morphologic_LA.present": {"values": [true, false, "unknown"]},
+    "atria.morphologic_LA.side":    {"values": ["right", "left", "unknown"]},
+    "atria.septum": {
+      "values": ["intact", "PFO", "secundum", "primum", "sinus-venosus", "common-atrium", "surgically-closed", "septectomy", "unknown"]
+    },
+    "atria.systemic_veins.right_SVC": {"values": ["present", "absent", "unknown"]},
+    "atria.systemic_veins.left_SVC":  {"values": ["absent", "to-coronary-sinus", "to-LA", "unknown"]},
+    "atria.systemic_veins.IVC":       {"values": ["present", "interrupted", "unknown"]},
+    "atria.systemic_veins.coronary_sinus": {"values": ["normal", "unroofed", "absent", "unknown"]},
+    "atria.pulmonary_veins": {
+      "values": ["normal-to-LA", "partial-anomalous", "total-anomalous-supracardiac", "total-anomalous-cardiac", "total-anomalous-infracardiac", "total-anomalous-mixed", "unknown"]
+    },
+
+    "av_connections.type": {
+      "values": ["concordant", "discordant", "double-inlet", "absent-right", "absent-left", "common", "unknown"],
+      "note": "concordant = mRA to mRV and mLA to mLV"
+    },
+    "av_connections.right_side.valve": {"values": ["tricuspid", "mitral", "common", "absent", "unknown"]},
+    "av_connections.right_side.state": {"values": ["patent", "stenotic", "atretic", "dysplastic", "apically-displaced", "regurgitant", "unknown"]},
+    "av_connections.left_side.valve":  {"values": ["tricuspid", "mitral", "common", "absent", "unknown"]},
+    "av_connections.left_side.state":  {"values": ["patent", "stenotic", "atretic", "dysplastic", "apically-displaced", "regurgitant", "unknown"]},
+    "av_connections.straddling":       {"values": ["none", "right-valve", "left-valve", "unknown"]},
+
+    "ventricles.loop": {
+      "values": ["D", "L", "X", "unknown"],
+      "note": "second letter of the segmental set; MEASURABLE from a painted segmap as sign(centroid(RV).x - centroid(LV).x)"
+    },
+    "ventricles.morphologic_RV.present": {"values": [true, false, "unknown"]},
+    "ventricles.morphologic_RV.side":    {"values": ["right", "left", "unknown"]},
+    "ventricles.morphologic_RV.size":    {"values": ["normal", "hypoplastic", "dilated", "unknown"]},
+    "ventricles.morphologic_LV.present": {"values": [true, false, "unknown"]},
+    "ventricles.morphologic_LV.side":    {"values": ["right", "left", "unknown"]},
+    "ventricles.morphologic_LV.size":    {"values": ["normal", "hypoplastic", "dilated", "unknown"]},
+    "ventricles.septum": {
+      "values": ["intact", "perimembranous", "muscular", "inlet", "outlet-malalignment-anterior", "outlet-malalignment-posterior", "multiple", "absent", "surgically-closed", "unknown"]
+    },
+    "ventricles.aortic_override_pct": {"values": ["0-50", "50-100", "unknown"]},
+
+    "va_connections.type": {
+      "values": ["concordant", "discordant", "double-outlet-RV", "double-outlet-LV", "single-outlet-truncus", "single-outlet-pulmonary-atresia", "unknown"]
+    },
+    "va_connections.aorta_from": {"values": ["mLV", "mRV", "both", "trunk", "unknown"]},
+    "va_connections.pa_from":    {"values": ["mRV", "mLV", "both", "trunk", "absent", "unknown"]},
+    "va_connections.aorta_vs_pa": {
+      "values": ["posterior-right", "anterior-right", "anterior-left", "posterior-left", "side-by-side", "unknown"],
+      "note": "third letter of the segmental set"
+    },
+    "va_connections.aortic_valve":    {"values": ["normal", "bicuspid", "stenotic", "atretic", "unknown"]},
+    "va_connections.pulmonary_valve": {"values": ["normal", "stenotic", "atretic", "absent", "unknown"]},
+    "va_connections.truncal_valve":   {"values": ["absent", "normal", "dysplastic", "unknown"]},
+    "va_connections.subaortic":       {"values": ["none", "obstruction", "unknown"]},
+    "va_connections.subpulmonary":    {"values": ["none", "obstruction", "unknown"]},
+
+    "great_arteries.arch_side":      {"values": ["left", "right", "double", "unknown"]},
+    "great_arteries.arch_branching": {"values": ["normal", "mirror-image", "aberrant-right-SCA", "aberrant-left-SCA", "unknown"]},
+    "great_arteries.coarctation":    {"values": ["none", "present", "repaired", "re-coarctation", "unknown"]},
+    "great_arteries.arch_hypoplasia":{"values": ["none", "present", "unknown"]},
+    "great_arteries.interruption":   {"values": ["none", "type-A", "type-B", "type-C", "unknown"]},
+    "great_arteries.ductus":         {"values": ["closed", "patent", "bilateral", "ligated", "stented", "unknown"]},
+    "great_arteries.pulmonary_arteries": {"values": ["confluent", "discontinuous", "absent-LPA", "absent-RPA", "unknown"]},
+    "great_arteries.mpa":            {"values": ["present", "absent", "banded", "unknown"]},
+    "great_arteries.branch_stenosis":{"values": ["none", "LPA", "RPA", "bilateral", "unknown"]},
+    "great_arteries.mapcas":         {"values": ["none", "present", "unknown"]},
+
+    "interventions": {
+      "values": "ordered list of {name, changes}",
+      "note": "applied after the native description; each records which fields it alters, so post-surgical anatomy is described rather than inferred"
+    }
+  }
+}
