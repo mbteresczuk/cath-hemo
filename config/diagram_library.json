@@ -299,6 +299,19 @@
           "image_height": 510
         },
         {
+          "id": "VSD_Single___RV_muscle_bundle__double_chambered_RV",
+          "filename": "VSD_Single + RV muscle bundle, double chambered RV.bmp",
+          "display_name": "VSD with RV muscle bundle (double-chambered RV)",
+          "path": "diagrams/ASD_VSD_CCAVC/VSD_Single + RV muscle bundle, double chambered RV.bmp",
+          "category_id": "ASD_VSD_CCAVC",
+          "anatomy_type": "biventricle",
+          "location_set": "standard_biventricle",
+          "has_coords": true,
+          "coord_file": "config/annotation_coords/VSD_Single___RV_muscle_bundle__double_chambered_RV.json",
+          "image_width": 561,
+          "image_height": 510
+        },
+        {
           "id": "VSD_sp_patchclosure",
           "filename": "VSD_sp_patchclosure.jpg",
           "display_name": "VSD s/p patchclosure",
@@ -493,6 +506,19 @@
           "coord_file": "config/annotation_coords/AorticStenosis_sp_Ross.json",
           "image_width": 662,
           "image_height": 518
+        },
+        {
+          "id": "HypertrophicCardiomyopathy_SubaorticObstruction",
+          "filename": "HypertrophicCardiomyopathy_SubaorticObstruction.bmp",
+          "display_name": "HCM with subaortic obstruction",
+          "path": "diagrams/Aortic_Stenosis/HypertrophicCardiomyopathy_SubaorticObstruction.bmp",
+          "category_id": "Aortic_Stenosis",
+          "anatomy_type": "biventricle",
+          "location_set": "standard_biventricle",
+          "has_coords": true,
+          "coord_file": "config/annotation_coords/HypertrophicCardiomyopathy_SubaorticObstruction.json",
+          "image_width": 628,
+          "image_height": 507
         },
         {
           "id": "SubvalvarAS_subaorticmembrane",
@@ -1128,6 +1154,19 @@
       "folder": "diagrams/DORV",
       "diagrams": [
         {
+          "id": "DORV_SubpulmonicVSD",
+          "filename": "DORV_SubpulmonicVSD.bmp",
+          "display_name": "DORV, subpulmonic VSD (Taussig-Bing)",
+          "path": "diagrams/DORV/DORV_SubpulmonicVSD.bmp",
+          "category_id": "DORV",
+          "anatomy_type": "biventricle",
+          "location_set": "standard_biventricle",
+          "has_coords": true,
+          "coord_file": "config/annotation_coords/DORV_SubpulmonicVSD.json",
+          "image_width": 382,
+          "image_height": 514
+        },
+        {
           "id": "DORV_SubpulmonicVSD_PA",
           "filename": "DORV_SubpulmonicVSD_PA.bmp",
           "display_name": "DORV SubpulmonicVSD PA",
@@ -1141,6 +1180,19 @@
           "image_height": 522
         },
         {
+          "id": "DORV_SubpulmonicVSD_PS",
+          "filename": "DORV_SubpulmonicVSD_PS.bmp",
+          "display_name": "DORV, subpulmonic VSD, PS",
+          "path": "diagrams/DORV/DORV_SubpulmonicVSD_PS.bmp",
+          "category_id": "DORV",
+          "anatomy_type": "biventricle",
+          "location_set": "standard_biventricle",
+          "has_coords": true,
+          "coord_file": "config/annotation_coords/DORV_SubpulmonicVSD_PS.json",
+          "image_width": 647,
+          "image_height": 509
+        },
+        {
           "id": "DORV_SubpulmonicVSD_PS_RAA",
           "filename": "DORV_SubpulmonicVSD_PS_RAA.bmp",
           "display_name": "DORV SubpulmonicVSD PS RAA",
@@ -1152,6 +1204,45 @@
           "coord_file": "config/annotation_coords/DORV_SubpulmonicVSD_PS_RAA.json",
           "image_width": 637,
           "image_height": 533
+        },
+        {
+          "id": "DORV_SubpulmonicVSD_PS_Rastelli",
+          "filename": "DORV_SubpulmonicVSD_PS_Rastelli.bmp",
+          "display_name": "DORV, subpulmonic VSD, PS, s/p Rastelli",
+          "path": "diagrams/DORV/DORV_SubpulmonicVSD_PS_Rastelli.bmp",
+          "category_id": "DORV",
+          "anatomy_type": "biventricle",
+          "location_set": "standard_biventricle",
+          "has_coords": true,
+          "coord_file": "config/annotation_coords/DORV_SubpulmonicVSD_PS_Rastelli.json",
+          "image_width": 694,
+          "image_height": 509
+        },
+        {
+          "id": "DORV_VSD",
+          "filename": "DORV_VSD.bmp",
+          "display_name": "DORV, VSD",
+          "path": "diagrams/DORV/DORV_VSD.bmp",
+          "category_id": "DORV",
+          "anatomy_type": "biventricle",
+          "location_set": "standard_biventricle",
+          "has_coords": true,
+          "coord_file": "config/annotation_coords/DORV_VSD.json",
+          "image_width": 1119,
+          "image_height": 1493
+        },
+        {
+          "id": "DORV_subpulmonicVSD_VSDpatchASO",
+          "filename": "DORV_subpulmonicVSD_VSDpatchASO.bmp",
+          "display_name": "DORV, subpulmonic VSD, s/p VSD patch + ASO",
+          "path": "diagrams/DORV/DORV_subpulmonicVSD_VSDpatchASO.bmp",
+          "category_id": "DORV",
+          "anatomy_type": "biventricle",
+          "location_set": "standard_biventricle",
+          "has_coords": true,
+          "coord_file": "config/annotation_coords/DORV_subpulmonicVSD_VSDpatchASO.json",
+          "image_width": 643,
+          "image_height": 514
         }
       ]
     },
@@ -1792,6 +1883,19 @@
           "coord_file": "config/annotation_coords/_S_D_D__RU-CAVC_DORV_PS_-_R_BDG.json",
           "image_width": 670,
           "image_height": 518
+        },
+        {
+          "id": "_S_D_D__RU-CAVC_DORV_PS_Kawashima",
+          "filename": "{S,D,D} RU-CAVC DORV PS Kawashima.bmp",
+          "display_name": "{S,D,D} RU-CAVC, DORV, PS - Kawashima",
+          "path": "diagrams/UCCAVC/{S,D,D} RU-CAVC DORV PS Kawashima.bmp",
+          "category_id": "UCCAVC",
+          "anatomy_type": "biventricle",
+          "location_set": "standard_biventricle",
+          "has_coords": true,
+          "coord_file": "config/annotation_coords/_S_D_D__RU-CAVC_DORV_PS_Kawashima.json",
+          "image_width": 704,
+          "image_height": 518
         }
       ]
     },
@@ -1800,6 +1904,19 @@
       "display_name": "DILV / Single Ventricle (Other)",
       "folder": "diagrams/DILV_Single_Ventricle",
       "diagrams": [
+        {
+          "id": "_S_L_X__SI_ventricles_DORV_ECFF",
+          "filename": "(S,L,X) SI ventricles DORV ECFF.bmp",
+          "display_name": "(S,L,X) SI ventricles, DORV - ECFF",
+          "path": "diagrams/DILV_Single_Ventricle/(S,L,X) SI ventricles DORV ECFF.bmp",
+          "category_id": "DILV_Single_Ventricle",
+          "anatomy_type": "post_fontan",
+          "location_set": "post_fontan",
+          "has_coords": true,
+          "coord_file": "config/annotation_coords/_S_L_X__SI_ventricles_DORV_ECFF.json",
+          "image_width": 659,
+          "image_height": 498
+        },
         {
           "id": "DILV__S_D_D__hypoplastic_RV_s-p_Norwood_rmBTS",
           "filename": "DILV (S,D,D) hypoplastic RV s-p Norwood rmBTS.bmp",
@@ -1899,7 +2016,7 @@
           "category_id": "DILV_Single_Ventricle",
           "anatomy_type": "biventricle",
           "location_set": "standard_biventricle",
-          "has_coords": false,
+          "has_coords": true,
           "coord_file": "config/annotation_coords/Dextrocardia__S_D_S__LAA_absent_RPA_LPA_stenosis.json",
           "image_width": 594,
           "image_height": 498
@@ -1912,7 +2029,7 @@
           "category_id": "DILV_Single_Ventricle",
           "anatomy_type": "post_glenn",
           "location_set": "post_glenn",
-          "has_coords": false,
+          "has_coords": true,
           "coord_file": "config/annotation_coords/TGA_VSD__S_L_L__Pulm_atresia_Small_LV_-_Glenn.json",
           "image_width": 563,
           "image_height": 553
@@ -1925,7 +2042,7 @@
           "category_id": "DILV_Single_Ventricle",
           "anatomy_type": "biventricle",
           "location_set": "standard_biventricle",
-          "has_coords": false,
+          "has_coords": true,
           "coord_file": "config/annotation_coords/TGA_VSD__S_L_L__SubPS.json",
           "image_width": 546,
           "image_height": 502
@@ -1938,10 +2055,30 @@
           "category_id": "DILV_Single_Ventricle",
           "anatomy_type": "biventricle",
           "location_set": "standard_biventricle",
-          "has_coords": false,
+          "has_coords": true,
           "coord_file": "config/annotation_coords/TGA_VSD__S_L_L__VSD_PS.json",
           "image_width": 531,
           "image_height": 514
+        }
+      ]
+    },
+    {
+      "id": "Other",
+      "display_name": "Other",
+      "folder": "diagrams/Other",
+      "diagrams": [
+        {
+          "id": "AbsentLPA_RAA",
+          "filename": "AbsentLPA_RAA.bmp",
+          "display_name": "Absent LPA, right aortic arch",
+          "path": "diagrams/Other/AbsentLPA_RAA.bmp",
+          "category_id": "Other",
+          "anatomy_type": "biventricle",
+          "location_set": "standard_biventricle",
+          "has_coords": true,
+          "coord_file": "config/annotation_coords/AbsentLPA_RAA.json",
+          "image_width": 624,
+          "image_height": 504
         }
       ]
     }

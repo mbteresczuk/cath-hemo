@@ -1,0 +1,136 @@
+{
+  "diagram_id": "_S_L_X__SI_ventricles_DORV_ECFF",
+  "image_width": 659,
+  "image_height": 498,
+  "auto_configured": true,
+  "locations": {
+    "SVC": {
+      "side": "right",
+      "annotation_type": "saturation_and_pressure",
+      "sat_x": 144,
+      "sat_y": 84,
+      "pressure_x": 108,
+      "pressure_y": 84
+    },
+    "RA": {
+      "side": "right",
+      "annotation_type": "saturation_and_pressure",
+      "sat_x": 198,
+      "sat_y": 309,
+      "pressure_x": 233,
+      "pressure_y": 338
+    },
+    "RPA": {
+      "side": "right",
+      "annotation_type": "saturation_and_pressure",
+      "sat_x": 126,
+      "sat_y": 134,
+      "pressure_x": 80,
+      "pressure_y": 133
+    },
+    "LPA": {
+      "side": "right",
+      "annotation_type": "saturation_and_pressure",
+      "sat_x": 327,
+      "sat_y": 124,
+      "pressure_x": 400,
+      "pressure_y": 119
+    },
+    "RPCWP": {
+      "side": "left",
+      "annotation_type": "pcwp",
+      "pressure_x": 61,
+      "pressure_y": 194
+    },
+    "LPCWP": {
+      "side": "left",
+      "annotation_type": "pcwp",
+      "pressure_x": 495,
+      "pressure_y": 200
+    },
+    "LA": {
+      "side": "left",
+      "annotation_type": "saturation_and_pressure",
+      "sat_x": 321,
+      "sat_y": 218,
+      "pressure_x": 355,
+      "pressure_y": 239
+    },
+    "Descending_Aorta": {
+      "side": "left",
+      "annotation_type": "saturation_and_pressure",
+      "sat_x": 333,
+      "sat_y": 459,
+      "pressure_x": 402,
+      "pressure_y": 457
+    },
+    "RUPV": {
+      "side": "left",
+      "annotation_type": "saturation_and_pressure",
+      "sat_x": 185,
+      "sat_y": 194,
+      "pressure_x": 97,
+      "pressure_y": 175
+    },
+    "LUPV": {
+      "side": "left",
+      "annotation_type": "saturation_and_pressure",
+      "sat_x": 401,
+      "sat_y": 201,
+      "pressure_x": 450,
+      "pressure_y": 187
+    },
+    "RLPV": {
+      "side": "left",
+      "annotation_type": "saturation_and_pressure",
+      "sat_x": 184,
+      "sat_y": 225,
+      "pressure_x": 93,
+      "pressure_y": 216
+    },
+    "LLPV": {
+      "side": "left",
+      "annotation_type": "saturation_and_pressure",
+      "sat_x": 409,
+      "sat_y": 233,
+      "pressure_x": 456,
+      "pressure_y": 227
+    },
+    "Ascending_aorta": {
+      "side": "right",
+      "annotation_type": "saturation_and_pressure",
+      "custom": true,
+      "sat_x": 300,
+      "sat_y": 255,
+      "pressure_x": 262,
+      "pressure_y": 215
+    },
+    "Fontan": {
+      "side": "right",
+      "annotation_type": "saturation_and_pressure",
+      "custom": true,
+      "sat_x": 142,
+      "sat_y": 360,
+      "pressure_x": 96,
+      "pressure_y": 357
+    },
+    "RV": {
+      "side": "right",
+      "annotation_type": "saturation_and_pressure",
+      "custom": true,
+      "sat_x": 306,
+      "sat_y": 365,
+      "pressure_x": 364,
+      "pressure_y": 376
+    },
+    "LV": {
+      "side": "right",
+      "annotation_type": "saturation_and_pressure",
+      "custom": true,
+      "sat_x": 375,
+      "sat_y": 305,
+      "pressure_x": 423,
+      "pressure_y": 305
+    }
+  }
+}

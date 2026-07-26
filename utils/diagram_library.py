@@ -89,6 +89,11 @@ CATEGORY_CONFIG = [
         "display_name": "DILV / Single Ventricle (Other)",
         "folder": "diagrams/DILV_Single_Ventricle",
     },
+    {
+        "id": "Other",
+        "display_name": "Other",
+        "folder": "diagrams/Other",
+    },
 ]
 
 LOCATION_SETS = {

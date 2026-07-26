@@ -1,3 +1,13 @@
 {
-  "TOF_PA__RV-PA_conduit__VSD_patch": "TOF, RV-PA conduit, VSD patch"
+  "TOF_PA__RV-PA_conduit__VSD_patch": "TOF, RV-PA conduit, VSD patch",
+  "DORV_SubpulmonicVSD": "DORV, subpulmonic VSD (Taussig-Bing)",
+  "DORV_SubpulmonicVSD_PS": "DORV, subpulmonic VSD, PS",
+  "DORV_SubpulmonicVSD_PS_Rastelli": "DORV, subpulmonic VSD, PS, s/p Rastelli",
+  "DORV_subpulmonicVSD_VSDpatchASO": "DORV, subpulmonic VSD, s/p VSD patch + ASO",
+  "DORV_VSD": "DORV, VSD",
+  "HypertrophicCardiomyopathy_SubaorticObstruction": "HCM with subaortic obstruction",
+  "AbsentLPA_RAA": "Absent LPA, right aortic arch",
+  "VSD_Single___RV_muscle_bundle__double_chambered_RV": "VSD with RV muscle bundle (double-chambered RV)",
+  "_S_D_D__RU-CAVC_DORV_PS_Kawashima": "{S,D,D} RU-CAVC, DORV, PS - Kawashima",
+  "_S_L_X__SI_ventricles_DORV_ECFF": "(S,L,X) SI ventricles, DORV - ECFF"
 }
