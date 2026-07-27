@@ -27,7 +27,7 @@ if _env_file.exists():
             _k, _v = _line.split("=", 1)
             os.environ.setdefault(_k.strip(), _v.strip())
 
-from fastapi import Body, FastAPI, File, HTTPException, Query, UploadFile
+from fastapi import Body, FastAPI, File, Form, HTTPException, Query, UploadFile
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse
 from fastapi.staticfiles import StaticFiles
@@ -37,6 +37,7 @@ from utils.annotator import annotate_diagram, image_to_base64
 from utils.auto_coords import auto_configure
 from utils.coordinator import load_coords, save_coords
 from utils.diagram_library import (
+    LOCATION_SETS,
     build_library_from_source,
     get_all_diagrams,
     get_diagram_by_id,
@@ -375,6 +376,254 @@ def generate_mullins(req: MullinsRequest):
     }
 
 
+# ── Uploaded diagrams (bring your own image) ──────────────────────────────────
+
+# Uploads are downscaled to this longest edge before coords are placed, so a
+# phone photo doesn't become a multi-megabyte base64 round trip.
+MAX_UPLOAD_DIM = 1600
+
+# An upload inherits its annotation positions from the hand-tuned coord file of
+# the canonical diagram for its circulation type, scaled to the upload's pixel
+# size. Content detection (auto_configure) reads dark-pixel centroids inside
+# fixed search boxes, which lands badly on an unfamiliar drawing — it scatters
+# the pulmonary veins and parks the wedge markers in empty margin. Mullins
+# diagrams all share one drawing convention, so a scaled reference set is a far
+# better starting point. Nothing here writes to the reference diagrams.
+UPLOAD_COORD_TEMPLATES = {
+    "standard_biventricle":     "Normal",
+    "single_ventricle_norwood": "HLHS__MA_AA__NORWOOD_BTS",
+    "post_glenn":               "HLHS__MA_AA__BDG",
+    "post_fontan":              "HLHS_MA_AA_ECC_FONTAN",
+    "post_mustard_senning":     "dTGA_s_p_Mustard",
+}
+
+
+# Extra breathing room beyond the outermost marker, as a fraction of the
+# drawing's size — covers the marker glyph itself and its text label.
+GLYPH_PAD_FRAC = 0.09
+
+
+def _ink_bounds(img):
+    """Bounding box of the drawn anatomy in a PIL image, or None."""
+    import tempfile
+
+    from utils.auto_coords import detect_anatomy_bounds
+
+    with tempfile.NamedTemporaryFile(suffix=".png", delete=False) as tf:
+        img.save(tf.name)
+        probe = tf.name
+    try:
+        return detect_anatomy_bounds(probe)
+    finally:
+        try:
+            os.remove(probe)
+        except OSError:
+            pass
+
+
+def _reference_margins(location_set: str):
+    """Margin needed on each side to fit every marker of this circulation type.
+
+    Derived from the reference coord set rather than guessed: the wedge (PCWP)
+    and branch-PA pressures are deliberately parked outside the anatomy, so the
+    required margin differs per circulation type. Returns (left, right, top,
+    bottom) as fractions of the drawing's width/height.
+    """
+    fallback = (0.14, 0.14, 0.14, 0.14)
+    ref_id = UPLOAD_COORD_TEMPLATES.get(location_set)
+    ref = load_coords(ref_id) if ref_id else None
+    ref_diag = get_diagram_by_id(_get_library(), ref_id) if ref_id else None
+    if not ref or not ref_diag:
+        return fallback
+
+    rb = _ink_bounds_for_path(str(BASE_DIR / ref_diag["path"]))
+    if not rb:
+        return fallback
+    bw, bh = rb[2] - rb[0], rb[3] - rb[1]
+    if bw <= 0 or bh <= 0:
+        return fallback
+
+    xs, ys = [], []
+    for val in ref["locations"].values():
+        for key, num in val.items():
+            if not isinstance(num, (int, float)):
+                continue
+            (xs if key.endswith("_x") else ys if key.endswith("_y") else []).append(num)
+    if not xs or not ys:
+        return fallback
+
+    return (
+        max(0.0, (rb[0] - min(xs)) / bw) + GLYPH_PAD_FRAC,
+        max(0.0, (max(xs) - rb[2]) / bw) + GLYPH_PAD_FRAC,
+        max(0.0, (rb[1] - min(ys)) / bh) + GLYPH_PAD_FRAC,
+        max(0.0, (max(ys) - rb[3]) / bh) + GLYPH_PAD_FRAC,
+    )
+
+
+def _ink_bounds_for_path(path: str):
+    from utils.auto_coords import detect_anatomy_bounds
+    return detect_anatomy_bounds(path)
+
+
+def _normalize_upload(img, location_set: str):
+    """Reframe an upload so the drawing sits in a known place on the canvas.
+
+    The anatomy is cropped out of whatever framing the upload happened to have
+    and re-mounted on white with exactly the margins the reference marker set
+    needs. Two benefits: a screenshot's wide borders no longer shrink the
+    anatomy on a phone, and every marker — including the ones that sit outside
+    the anatomy — is guaranteed room on the canvas instead of clipping at an edge.
+    """
+    from PIL import Image as _PILImage
+
+    bb = _ink_bounds(img)
+    if not bb:
+        return img
+    x0, y0, x1, y1 = bb
+    bw, bh = x1 - x0, y1 - y0
+    if bw <= 0 or bh <= 0:
+        return img
+
+    left, right, top, bottom = _reference_margins(location_set)
+    ml, mr = int(bw * left), int(bw * right)
+    mt, mb = int(bh * top), int(bh * bottom)
+
+    canvas = _PILImage.new("RGB", (ml + bw + mr, mt + bh + mb), "white")
+    canvas.paste(img.crop((x0, y0, x1, y1)), (ml, mt))
+    return canvas
+
+
+def _template_coords(location_set: str, w: int, h: int,
+                     upload_path: str) -> Optional[dict]:
+    """Reference coords for this circulation type, mapped onto a w x h image.
+
+    Mapping is done in the *drawing's* frame, not the canvas: both images are
+    reduced to the bounding box of their ink, and reference positions are placed
+    at the same position within that box. Scaling by canvas size instead drops
+    markers into whatever white margin the upload happens to have.
+    """
+    from utils.auto_coords import detect_anatomy_bounds
+
+    ref_id = UPLOAD_COORD_TEMPLATES.get(location_set)
+    ref = load_coords(ref_id) if ref_id else None
+    if not ref or not ref.get("locations"):
+        return None
+
+    rw = ref.get("image_width") or w
+    rh = ref.get("image_height") or h
+    # Default to plain canvas scaling; upgrade to ink-box alignment when both
+    # bounding boxes are readable.
+    sx, sy = w / rw, h / rh
+    ox = oy = 0.0
+    rx0 = ry0 = 0.0
+
+    ref_diag = get_diagram_by_id(_get_library(), ref_id)
+    if ref_diag:
+        rb = detect_anatomy_bounds(str(BASE_DIR / ref_diag["path"]))
+        ub = detect_anatomy_bounds(upload_path)
+        if rb and ub and rb[2] > rb[0] and rb[3] > rb[1]:
+            sx = (ub[2] - ub[0]) / (rb[2] - rb[0])
+            sy = (ub[3] - ub[1]) / (rb[3] - rb[1])
+            rx0, ry0 = rb[0], rb[1]
+            ox, oy = ub[0], ub[1]
+
+    locations = {}
+    for loc, val in ref["locations"].items():
+        scaled = dict(val)
+        for key, num in val.items():
+            if not isinstance(num, (int, float)):
+                continue
+            if key.endswith("_x"):
+                scaled[key] = round(ox + (num - rx0) * sx)
+            elif key.endswith("_y"):
+                scaled[key] = round(oy + (num - ry0) * sy)
+        locations[loc] = scaled
+
+    return {
+        "diagram_id": "uploaded",
+        "image_width": w,
+        "image_height": h,
+        "template_from": ref_id,
+        "locations": locations,
+    }
+
+
+@app.post("/api/upload_diagram")
+async def upload_diagram(
+    image: UploadFile = File(...),
+    anatomy_type: str = Form("biventricle"),
+    location_set: str = Form("standard_biventricle"),
+):
+    """
+    Accept a user-supplied anatomy diagram and auto-place annotation coords on it.
+
+    Nothing is written to the library: the image and its coords are returned to
+    the browser, which carries them into /api/report_generated. That keeps an
+    upload private to one session (Render's filesystem is ephemeral and shared).
+    """
+    import base64
+    import io as _io
+    import tempfile
+
+    from PIL import Image as _PILImage
+    from PIL import ImageOps as _ImageOps
+
+    raw = await image.read()
+    if not raw:
+        raise HTTPException(status_code=422, detail="No image data received.")
+
+    try:
+        img = _PILImage.open(_io.BytesIO(raw))
+        img = _ImageOps.exif_transpose(img).convert("RGB")
+    except Exception as e:
+        raise HTTPException(
+            status_code=422,
+            detail=f"Could not read that image — try a PNG or JPEG. ({e})",
+        )
+
+    # Resolve the circulation type first — it decides how much margin the
+    # reframing has to leave for markers that sit outside the anatomy.
+    if location_set not in LOCATION_SETS:
+        location_set = "standard_biventricle"
+        anatomy_type = "biventricle"
+
+    img = _normalize_upload(img, location_set)
+    if max(img.size) > MAX_UPLOAD_DIM:
+        img.thumbnail((MAX_UPLOAD_DIM, MAX_UPLOAD_DIM), _PILImage.LANCZOS)
+    w, h = img.size
+
+    buf = _io.BytesIO()
+    img.save(buf, format="PNG")
+    image_b64 = base64.b64encode(buf.getvalue()).decode()
+
+    with tempfile.NamedTemporaryFile(suffix=".png", delete=False) as tf:
+        img.save(tf.name)
+        tmp_path = tf.name
+    try:
+        coords = _template_coords(location_set, w, h, tmp_path)
+        if coords is None:
+            # No reference file for this circulation type — fall back to detection.
+            coords = auto_configure("uploaded", w, h, anatomy_type, location_set,
+                                    image_path=tmp_path)
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Could not place coordinates: {e}")
+    finally:
+        try:
+            os.remove(tmp_path)
+        except OSError:
+            pass
+
+    return {
+        "image_b64": image_b64,
+        "width": w,
+        "height": h,
+        "anatomy_type": anatomy_type,
+        "location_set": location_set,
+        "coords": coords,
+        "filename": image.filename or "uploaded diagram",
+    }
+
+
 class GeneratedReportRequest(BaseModel):
     hemo_text: str
     image_b64: str                          # the generated diagram PNG (base64)
@@ -384,6 +633,9 @@ class GeneratedReportRequest(BaseModel):
     location_set: str = "standard_biventricle"
     patient_data: PatientData = PatientData()
     extra_locations: Optional[List[str]] = None
+    # Positions the user dragged in the browser, in the pixel space of image_b64.
+    # When present they win over the base diagram's saved coords.
+    coords_override: Optional[dict] = None
 
 
 @app.post("/api/report_generated")
@@ -423,18 +675,20 @@ def generate_report_on_generated(req: GeneratedReportRequest):
     # Coordinates: reuse the BASE diagram's hand-tuned coords (the generated image
     # keeps the base's layout), then bring along coords for any added structures
     # from their donor diagrams. Only auto-configure if the base has none.
-    coords = load_coords(req.base_id) if req.base_id else None
-    if coords:
-        base_locs = coords.setdefault("locations", {})
-        for donor in req.added_donors:
-            dc = load_coords(donor)
-            if not dc:
-                continue
-            for loc, val in dc.get("locations", {}).items():
-                base_locs.setdefault(loc, val)   # add donor's new sampling sites
-    else:
-        coords = auto_configure("generated", w, h, req.anatomy_type, req.location_set,
-                                image_path=tmp_path)
+    coords = req.coords_override        # dragged positions win, and need no merging
+    if not coords:
+        coords = load_coords(req.base_id) if req.base_id else None
+        if coords:
+            base_locs = coords.setdefault("locations", {})
+            for donor in req.added_donors:
+                dc = load_coords(donor)
+                if not dc:
+                    continue
+                for loc, val in dc.get("locations", {}).items():
+                    base_locs.setdefault(loc, val)   # add donor's new sampling sites
+        else:
+            coords = auto_configure("generated", w, h, req.anatomy_type, req.location_set,
+                                    image_path=tmp_path)
 
     # The base coords are tuned for the base's own pixel size; the generated image
     # is a different size (e.g. 1024). Scale every x/y so markers land correctly.

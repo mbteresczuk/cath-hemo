@@ -76,6 +76,14 @@ textarea:focus,input:focus{outline:none;border-color:var(--crimson)}
 .search-wrap svg{position:absolute;left:10px;top:50%;transform:translateY(-50%);
   width:18px;height:18px;color:var(--muted)}
 .search-input{padding-left:36px!important;font-family:inherit!important}
+/* Search bar + "Upload" side by side on the diagram selector. */
+.search-row{display:flex;align-items:stretch;gap:8px;margin-bottom:14px}
+.upload-btn{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;
+  flex:0 0 auto;padding:0 14px;border:1.5px solid var(--crimson);border-radius:8px;
+  background:var(--surface);color:var(--crimson);font-family:inherit;font-size:11px;
+  font-weight:700;letter-spacing:.02em;cursor:pointer;white-space:nowrap}
+.upload-btn svg{width:18px;height:18px}
+.upload-btn:active{background:#F7EFEF}
 /* ── Category folders ── */
 .folder{border:1px solid var(--border);border-radius:12px;overflow:hidden;margin-bottom:10px;background:var(--surface)}
 .folder-hdr{display:flex;align-items:center;justify-content:space-between;
@@ -112,9 +120,13 @@ td:last-child{text-align:right;font-weight:600;font-family:monospace}
   margin-left:-16px;margin-right:-16px;padding:10px 16px}
 .back-btn{background:none;border:1.5px solid var(--crimson);color:var(--crimson);
   padding:8px 14px;border-radius:8px;font-weight:600;font-size:14px;cursor:pointer}
+/* Hugs the image (width:fit-content) so the absolutely-positioned marker
+   overlays, which use inset:0, stay exactly aligned at any aspect ratio. */
 .img-wrap{border-radius:12px;overflow:hidden;border:1px solid var(--border);
-  margin-bottom:14px;background:#fff;touch-action:pinch-zoom}
-.img-wrap img{width:100%;display:block}
+  margin:0 auto 14px;background:#fff;touch-action:pinch-zoom;
+  width:fit-content;max-width:100%}
+/* Cap the height so a tall diagram fits on screen without scrolling. */
+.img-wrap img{display:block;width:auto;max-width:100%;max-height:58vh}
 
 /* ── How-to modal ── */
 .modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.55);
@@ -302,13 +314,22 @@ Aorta  98  95/55  72</pre>
     <div style="width:60px"></div>
   </div>
 
-  <div class="search-wrap">
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-      <circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/>
-    </svg>
-    <input type="text" class="search-input" id="search-input"
-           placeholder="Search diagnosis (e.g. TOF, ASD, Fontan)"
-           oninput="onSearch(this.value)"/>
+  <div class="search-row">
+    <div class="search-wrap" style="flex:1;margin-bottom:0">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/>
+      </svg>
+      <input type="text" class="search-input" id="search-input"
+             placeholder="Search diagnosis (e.g. TOF, ASD, Fontan)"
+             oninput="onSearch(this.value)"/>
+    </div>
+    <button class="upload-btn" onclick="goToUpload()" title="Upload your own diagram">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+        <path d="M17 8l-5-5-5 5"/><path d="M12 3v13"/>
+      </svg>
+      Upload
+    </button>
   </div>
 
   <div id="diagram-grid"></div>
@@ -324,10 +345,57 @@ Aorta  98  95/55  72</pre>
   </p>
 </div>
 
+<!-- ── SCREEN: UPLOAD DIAGRAM ──────────────────────── -->
+<div id="s-upload" class="screen">
+  <div class="nav">
+    <button class="back-btn" onclick="goTo('s-selector')">← Back</button>
+    <h2 style="margin:0">Upload Diagram</h2>
+    <div style="width:60px"></div>
+  </div>
+  <p class="sub">Use your own diagram — annotation positions are placed on it automatically.</p>
+
+  <input type="file" id="upload-input" accept="image/*"
+         style="display:none" onchange="handleDiagramUpload(this)"/>
+
+  <div id="upload-idle">
+    <div class="card">
+      <label for="upload-anatomy">Circulation type</label>
+      <select class="device-select" id="upload-anatomy" style="width:100%">
+        <option value="biventricle|standard_biventricle">Standard biventricle</option>
+        <option value="single_ventricle|single_ventricle_norwood">Single ventricle / Norwood</option>
+        <option value="post_glenn|post_glenn">Post-Glenn</option>
+        <option value="post_fontan|post_fontan">Post-Fontan</option>
+        <option value="post_mustard|post_mustard_senning">Post-Mustard / Senning</option>
+      </select>
+      <div class="tip" style="margin-top:10px">
+        This decides which sampling sites are placed (e.g. a Fontan diagram has no RV).
+      </div>
+    </div>
+    <div class="camera-zone" onclick="document.getElementById('upload-input').click()">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+        <path d="M17 8l-5-5-5 5"/><path d="M12 3v13"/>
+      </svg>
+      Choose Diagram Image
+    </div>
+    <div class="alert" style="background:#FFF8F0;border:none;border-left:3px solid var(--crimson);border-radius:0 8px 8px 0">
+      <b>Beta testing.</b>
+    </div>
+  </div>
+
+  <div id="upload-loading" style="display:none" class="spinner-wrap">
+    <div class="spinner"></div>
+    <p style="color:var(--muted);font-size:14px">Placing annotation positions…</p>
+  </div>
+
+  <!-- No preview step: a finished upload goes straight to Edit Diagram in
+       "Move #s" mode, where the same markers are draggable. -->
+</div>
+
 <!-- ── SCREEN 3: EDIT DIAGRAM (devices) ────────────── -->
 <div id="s-edit" class="screen">
   <div class="nav">
-    <button class="back-btn" onclick="goTo('s-selector')">← Back</button>
+    <button class="back-btn" onclick="goTo(uploadedDiagram ? 's-upload' : 's-selector')">← Back</button>
     <h2 style="margin:0">Edit Diagram</h2>
     <div style="width:60px"></div>
   </div>
@@ -641,18 +709,22 @@ function goToSelector() {
 async function completeDiagram() {
   if (!selectedDiagram || !hemoText.trim()) return
   devEdit.sel = null
+  // Markers just moved on the Edit screen supersede anything dragged on an
+  // earlier printout, which would otherwise silently win as coords_override.
+  if (devEdit.annotDirty) sessionCoords = null
   // persist repositioned annotation markers so the report uses them (library
-  // diagrams only — generated diagrams have no server-side coord file to update)
-  if (!mullinsGen && devEdit.annotDirty && devEdit.annotCoords) {
+  // diagrams only — generated and uploaded diagrams have no server-side coord
+  // file to update; their positions ride along in the report request instead)
+  if (!mullinsGen && !uploadedDiagram && devEdit.annotDirty && devEdit.annotCoords) {
     try {
       await fetch(`/api/coords/${selectedDiagram.id}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(devEdit.annotCoords),
       })
-      devEdit.annotDirty = false
     } catch {}
   }
+  devEdit.annotDirty = false
   goTo('s-output')
   document.getElementById('output-loading').style.display = 'block'
   document.getElementById('output-error').style.display = 'none'
@@ -664,6 +736,7 @@ function reset() {
   hemoText = ''
   selectedDiagram = null
   mullinsGen = null
+  uploadedDiagram = null
   lastResult = null
   devEdit.devices = []
   devEdit.sel = null
@@ -675,6 +748,7 @@ function reset() {
   document.getElementById('hemo-text').value = ''
   document.getElementById('parse-preview').innerHTML = ''
   document.getElementById('btn-next').disabled = true
+  showUpload('idle')
   document.getElementById('btn-generate').disabled = true
   document.getElementById('btn-edit').disabled = true
   document.getElementById('scan-idle').style.display = 'block'
@@ -1040,6 +1114,7 @@ function selectDiagram(d) {
   }
   selectedDiagram = d
   mullinsGen = null   // picking a library diagram leaves the generated-diagram path
+  uploadedDiagram = null   // …and leaves the uploaded-diagram path
   document.querySelectorAll('.dcard').forEach(el => {
     el.classList.toggle('sel', el.dataset.id === selectedDiagram.id)
   })
@@ -1048,8 +1123,103 @@ function selectDiagram(d) {
   document.getElementById('sel-hint').style.display = 'none'
 }
 
+// ── Upload your own diagram ────────────────────────────────────────────
+// The image never touches the diagram library: it is held in the browser for
+// this session, and the server places annotation coords on it and later prints
+// the report onto it.
+let uploadedDiagram = null
+
+function goToUpload() {
+  goTo('s-upload')
+  showUpload('idle')
+}
+
+function showUpload(which) {
+  document.getElementById('upload-idle').style.display    = which === 'idle'    ? 'block' : 'none'
+  document.getElementById('upload-loading').style.display = which === 'loading' ? 'block' : 'none'
+}
+
+async function handleDiagramUpload(input) {
+  const file = input.files[0]
+  input.value = ''            // so re-picking the same file fires onchange again
+  if (!file) return
+  const [anatomyType, locationSet] =
+    document.getElementById('upload-anatomy').value.split('|')
+
+  showUpload('loading')
+  try {
+    const form = new FormData()
+    form.append('image', file)
+    form.append('anatomy_type', anatomyType)
+    form.append('location_set', locationSet)
+    const res = await fetch('/api/upload_diagram', { method: 'POST', body: form })
+    const data = await res.json()
+    if (!res.ok) throw new Error(data.detail || 'Upload failed')
+
+    uploadedDiagram = data
+    mullinsGen = null          // an upload leaves the generated-diagram path
+    // Treat it like a selected diagram so Edit Diagram / device baking work.
+    selectedDiagram = {
+      id: 'uploaded',
+      thumbnail_url: 'data:image/png;base64,' + data.image_b64,
+      anatomy_type: data.anatomy_type,
+      display_name: data.filename,
+    }
+    devEdit.devices = []
+    devEdit.sel = null
+    devEdit.annotCoords = null
+    devEdit.annotDirty = false
+    sessionCoords = null
+
+    // Straight to the screen where the placed markers can be dragged.
+    showUpload('idle')
+    goToEdit('annot')
+  } catch (e) {
+    alert('Could not use that image: ' + e.message)
+    showUpload('idle')
+  }
+}
+
+// Report for an uploaded diagram: same pipeline as a library diagram, except
+// the image and its coords ride along in the request instead of being looked up.
+async function runUploadedReport() {
+  try {
+    const patientData = JSON.parse(localStorage.getItem('patientDefaults') || '{}')
+    let imageB64 = uploadedDiagram.image_b64
+    if (devEdit.devices.length) {
+      try { imageB64 = await bakeBaseWithDevices() } catch {}
+    }
+    const res = await fetch('/api/report_generated', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        hemo_text: hemoText,
+        image_b64: imageB64,
+        base_id: '',
+        anatomy_type: uploadedDiagram.anatomy_type,
+        location_set: uploadedDiagram.location_set,
+        coords_override: sessionCoords || devEdit.annotCoords || uploadedDiagram.coords,
+        patient_data: {
+          hgb: patientData.hgb != null ? patientData.hgb : null,
+          avo2: patientData.avo2 != null ? patientData.avo2 : null,
+          anesthesia: patientData.anesthesia || 'general anesthesia',
+          fio2: '21%'
+        }
+      })
+    })
+    const data = await res.json()
+    if (!res.ok) throw new Error(data.detail || 'Report generation failed')
+    lastResult = data
+    renderOutput(data)
+  } catch (e) {
+    document.getElementById('output-loading').style.display = 'none'
+    document.getElementById('output-error').style.display = 'block'
+    document.getElementById('output-error-msg').textContent = e.message
+  }
+}
+
 // ── Report generation ──────────────────────────────────────────────────
 async function runReport() {
+  if (uploadedDiagram) return runUploadedReport()   // uploads carry their own image + coords
   if (mullinsGen) return runGeneratedReport()   // generated diagrams use their own path
   try {
     const patientData = JSON.parse(localStorage.getItem('patientDefaults') || '{}')
@@ -1451,7 +1621,10 @@ function _editHint(m) {
     draw: devEdit.drawTool === 'eraser'
       ? 'The eraser paints white over anything it crosses — pencil strokes AND diagram lines. Each wipe is an object: select it in Devices mode and tap ✕ to undo.'
       : 'Draw on the diagram with your finger or mouse. Strokes become objects — use the eraser or Devices mode to remove them.',
-    annot: 'Drag the red saturation markers and blue pressure markers to reposition the report numbers. New positions are saved for this diagram when you complete it.',
+    annot: 'Drag the red saturation markers and blue pressure markers to reposition the report numbers. ' +
+      (uploadedDiagram
+        ? 'An uploaded diagram keeps these positions for this report only.'
+        : 'New positions are saved for this diagram when you complete it.'),
     labels: 'Type a value, then tap <b>Sat</b> for a circled saturation, <b>Pressure</b> for a value with a line above it, or <b>Text</b> for plain text. Drag to position, <b>⤡</b> resize, <b>✕</b> delete.',
   }
   return hints[m]
@@ -1467,6 +1640,13 @@ function setDrawTool(t) {
 
 
 async function _loadAnnotCoords() {
+  // An uploaded diagram has no server-side coord file — its coords came back
+  // with the upload, so edit a copy of those.
+  if (uploadedDiagram) {
+    devEdit.annotCoords = JSON.parse(JSON.stringify(uploadedDiagram.coords))
+    renderDevices()
+    return
+  }
   try {
     let res = await fetch(`/api/coords/${selectedDiagram.id}`)
     let doc = await res.json()
@@ -1856,7 +2036,9 @@ function _uiScale() {
   return r.width > 0 ? devEdit.imgW / r.width : 1
 }
 
-function goToEdit() {
+// mode: which toolbar tab to open on ('devices' by default; uploads land
+// directly on 'annot' so the placed markers can be dragged straight away).
+function goToEdit(mode) {
   if (!selectedDiagram) return
   goTo('s-edit')
   const img = document.getElementById('edit-img')
@@ -1867,7 +2049,7 @@ function goToEdit() {
     const ov = _overlayEl()
     ov.setAttribute('viewBox', `0 0 ${devEdit.imgW} ${devEdit.imgH}`)
     ov.style.display = 'block'
-    setEditMode('devices')
+    setEditMode(typeof mode === 'string' ? mode : 'devices')
   }
   const targetSrc = new URL(selectedDiagram.thumbnail_url, location.href).href
   if (img.src === targetSrc && img.complete && img.naturalWidth) {
@@ -2022,6 +2204,16 @@ function _drawingSVG() {
            stroke-linecap="round" stroke-linejoin="round"/>`
 }
 
+// A label centred on a marker near the edge runs off the canvas and is clipped
+// by the SVG viewport. Near an edge, anchor the text inward instead of centring.
+function _labelAnchor(x, u) {
+  const w = devEdit.imgW || 1
+  const inset = 34 * u                       // roughly half a long label
+  if (x < inset)     return { anchor: 'start', x: Math.max(2 * u, x - 10 * u) }
+  if (x > w - inset) return { anchor: 'end',   x: Math.min(w - 2 * u, x + 10 * u) }
+  return { anchor: 'middle', x }
+}
+
 function _annotMarkersSVG() {
   if (devEdit.mode !== 'annot' || !devEdit.annotCoords) return ''
   const u = _uiScale()
@@ -2029,18 +2221,20 @@ function _annotMarkersSVG() {
   for (const [loc, c] of Object.entries(devEdit.annotCoords.locations || {})) {
     const label = loc.replace(/_/g, ' ')
     if (c.sat_x != null) {
+      const t = _labelAnchor(c.sat_x, u)
       out += `<g class="dev-handle" data-role="annot" data-loc="${loc}" data-kind="sat">
         <circle cx="${c.sat_x}" cy="${c.sat_y}" r="${10 * u}" fill="rgba(139,26,43,.8)"/>
-        <text x="${c.sat_x}" y="${c.sat_y + 17 * u}" text-anchor="middle" font-size="${8 * u}"
+        <text x="${t.x}" y="${c.sat_y + 17 * u}" text-anchor="${t.anchor}" font-size="${8 * u}"
               fill="#8B1A2B" stroke="#fff" stroke-width="${2.5 * u}" paint-order="stroke"
               pointer-events="none" font-weight="bold">${label}</text>
       </g>`
     }
     if (c.pressure_x != null) {
+      const t = _labelAnchor(c.pressure_x, u)
       out += `<g class="dev-handle" data-role="annot" data-loc="${loc}" data-kind="press">
         <rect x="${c.pressure_x - 8 * u}" y="${c.pressure_y - 8 * u}" width="${16 * u}" height="${16 * u}"
               rx="${3 * u}" fill="rgba(27,43,58,.8)"/>
-        <text x="${c.pressure_x}" y="${c.pressure_y - 12 * u}" text-anchor="middle" font-size="${8 * u}"
+        <text x="${t.x}" y="${c.pressure_y - 12 * u}" text-anchor="${t.anchor}" font-size="${8 * u}"
               fill="#1B2B3A" stroke="#fff" stroke-width="${2.5 * u}" paint-order="stroke"
               pointer-events="none" font-weight="bold">${label}</text>
       </g>`
