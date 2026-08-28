@@ -198,7 +198,7 @@ Aorta  98  95/55  72</pre>
       <p>Tap <strong>Select Diagram →</strong> then search by diagnosis (e.g. <em>TOF</em>, <em>ASD</em>, <em>HLHS Norwood</em>). Tap a card to select it.</p>
 
       <h3>Step 3 · Edit Diagram (optional)</h3>
-      <p>Tap <strong>Edit Diagram</strong> to add devices if needed: stent, ASD/VSD device, PDA closure, BTT shunt, RV–PA conduit, thickened valve, SAPIEN or Melody valve, vascular plug, PA band, ECMO or VAD cannula, Fontan baffle, or Fontan fenestration. Drag to position, use <strong>↻</strong> to rotate, <strong>⤡</strong> to resize, <strong>↔</strong> to lengthen/shorten, <strong>↕</strong> to set the Fontan conduit's height, <strong>✕</strong> to delete. Skip this step entirely by tapping <strong>Complete Diagram →</strong> right after selecting a diagram.</p>
+      <p>Tap <strong>Edit Diagram</strong> to add devices if needed: stent, ASD/VSD device, PDA device (Piccolo or ADO), BTT shunt, RV–PA conduit, thickened valve, SAPIEN or Melody valve, vascular plug, PA band, ECMO or VAD cannula, Fontan baffle, or Fontan fenestration. Drag to position, use <strong>↻</strong> to rotate, <strong>⤡</strong> to resize, <strong>↔</strong> to lengthen/shorten, <strong>↕</strong> to set the Fontan conduit's height, <strong>✕</strong> to delete. Skip this step entirely by tapping <strong>Complete Diagram →</strong> right after selecting a diagram.</p>
       <p><strong>Draw</strong> mode lets you sketch freehand on the diagram — each stroke becomes a movable object. <strong>Move #s</strong> shows draggable markers for where saturations (red) and pressures (blue) print; drag them to fix positions, which are remembered for that diagram. <strong>Sat/Press</strong> lets you type a value the program didn't recognize and drop it on the diagram as a circled saturation, a pressure with a line above it, or plain free text.</p>
 
       <h3>Step 4 · Complete Diagram</h3>
@@ -413,7 +413,8 @@ Aorta  98  95/55  72</pre>
         <option value="stent">Stent</option>
         <option value="asd_device">ASD device</option>
         <option value="vsd_device">VSD device</option>
-        <option value="pda_closure">PDA closure</option>
+        <option value="pda_piccolo">PDA device (Piccolo)</option>
+        <option value="pda_ado">PDA device (ADO)</option>
         <option value="btt_shunt">BTT shunt</option>
         <option value="rvpa_conduit">RV–PA conduit</option>
         <option value="thick_valve">Thickened valve (Ao/PV)</option>
@@ -1668,6 +1669,8 @@ const DEVICE_BOUNDS = {
   asd_device:   { hw: 30, hh: 17 },
   vsd_device:   { hw: 24, hh: 14 },
   pda_closure:  { hw: 17, hh: 13 },
+  pda_piccolo:  { hw: 17, hh: 13 },
+  pda_ado:      { hw: 18, hh: 15 },
   btt_shunt:    { hw: 30, hh: 42 },
   rvpa_conduit: { hw: 45, hh: 18 },
   thick_valve:  { hw: 20, hh: 14 },
@@ -1996,8 +1999,8 @@ function deviceGlyphSVG(type, stretch = 1, dev = null) {
     return `<g stroke="#000" stroke-width="1.7" fill="none">${_occluderSVG(56)}</g>`
   if (type === 'vsd_device')
     return `<g stroke="#000" stroke-width="1.6" fill="none">${_occluderSVG(44)}</g>`
-  if (type === 'pda_closure') {
-    // Piccolo-style occluder: low-profile mesh spool — central cylinder
+  if (type === 'pda_piccolo' || type === 'pda_closure') {
+    // Amplatzer Piccolo occluder: low-profile mesh spool — central cylinder
     // with two slightly wider retention discs at the ends
     const spool = 'M -16 -12 L -11 -12 L -11 -8.5 L 11 -8.5 L 11 -12 L 16 -12 ' +
                   'L 16 12 L 11 12 L 11 8.5 L -11 8.5 L -11 12 L -16 12 Z'
@@ -2016,6 +2019,27 @@ function deviceGlyphSVG(type, stretch = 1, dev = null) {
     }
     return `<g stroke="#000" stroke-width="1.5" fill="none">
       <path d="${spool}" fill="#fff" stroke-width="2.2"/>${mesh}</g>`
+  }
+  if (type === 'pda_ado') {
+    // Amplatzer Duct Occluder: flat retention disc on the aortic end,
+    // tapered conical mesh body toward the pulmonary end
+    const body = 'M -17 -14 L -12 -14 L -12 -10.5 L 16 -7 L 16 7 L -12 10.5 ' +
+                 'L -12 14 L -17 14 Z'
+    let mesh = ''
+    // crosshatch over the tapered cone body (edges follow the taper)
+    for (let x = -12; x < 16; x += 5.5) {
+      const t0 = 10.5 - (x + 12) * 3.5 / 28
+      const t1 = 10.5 - (Math.min(x + 5.5, 16) + 12) * 3.5 / 28
+      mesh += `<line x1="${x}" y1="${(-t0).toFixed(1)}" x2="${Math.min(x + 5.5, 16)}" y2="${t1.toFixed(1)}"/>
+               <line x1="${x}" y1="${t0.toFixed(1)}" x2="${Math.min(x + 5.5, 16)}" y2="${(-t1).toFixed(1)}"/>`
+    }
+    // hatch on the retention disc
+    mesh += `<line x1="-17" y1="-11" x2="-12" y2="-5"/>
+             <line x1="-17" y1="-5.5" x2="-12" y2="0.5"/>
+             <line x1="-17" y1="0" x2="-12" y2="6"/>
+             <line x1="-17" y1="5.5" x2="-12" y2="11.5"/>`
+    return `<g stroke="#000" stroke-width="1.5" fill="none">
+      <path d="${body}" fill="#fff" stroke-width="2.2"/>${mesh}</g>`
   }
   if (type === 'btt_shunt') {
     // curved Gore-Tex tube: black rim, open white lumen, drawn as double stroke
